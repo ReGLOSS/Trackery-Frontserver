@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Home</title>
+</head>
+<body>
+    <h1>콘페코</h1>
+    <div th:if="${message}" th:text="${message}"></div>
+    <div th:if="${error}" th:text="${error}" style="color: red;"></div>
+</body>
+</html>
