@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-      - feature/CICD
 jobs:
   build:
     name: Build and analyze
