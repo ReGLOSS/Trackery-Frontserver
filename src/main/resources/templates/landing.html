@@ -33,12 +33,12 @@
 
     #imageContainer {
       position: absolute;
-      top: 0;
+      top: -600px;
       left: 0;
       right: 0;
       width: 100%;
       max-width: 1500px;
-      height: 100vh;
+      height: calc(100vh + 600px);
       z-index: 1;
       overflow: hidden;
       display: flex;
@@ -134,8 +134,8 @@
 
      document.addEventListener('DOMContentLoaded', function() {
        const imageContainer = document.getElementById('imageContainer');
-       const columnCount = 5;
-       const imagesPerColumn = 6;
+       const columnCount = 5; // 열의 갯수
+       const imagesPerColumn = 6; // 각 열당 이미지 갯수
        const columnWidth = 1500 / columnCount;
        const columnSpeeds = [0.15, 0.2, 0.1, 0.25, 0.2];
 
@@ -205,7 +205,8 @@
                  position += columnSpeeds[col];
                  // 이미지가 완전히 내려가기 전에 위치 재설정
                  if (position >= (imagesPerColumn * 600)) {
-                   position = -600 + (position - (imagesPerColumn * 600));
+                   position = position - (imagesPerColumn * 600);
+
                    // 새로운 랜덤 이미지로 변경
                    img.src = DEFAULT_IMAGES[Math.floor(Math.random() * DEFAULT_IMAGES.length)];
                  }
