@@ -36,7 +36,8 @@
       top: 0;
       left: 0;
       right: 0;
-      width: 1500px;
+      width: 100%;
+      max-width: 1500px;
       height: 100vh;
       z-index: 1;
       overflow: hidden;
@@ -122,6 +123,15 @@
      </div>
    </div>
  <script>
+    const DEFAULT_IMAGES = [
+        '/images/default-image1.jpg',
+        '/images/default-image2.jpg',
+        '/images/default-image3.jpg',
+        '/images/default-image4.jpg',
+        '/images/default-image5.jpg',
+        '/images/default-image6.jpg',
+    ]
+
      document.addEventListener('DOMContentLoaded', function() {
        const imageContainer = document.getElementById('imageContainer');
        const columnCount = 5;
@@ -131,18 +141,10 @@
 
        // 기본 이미지 URL 배열 생성
        function createDefaultImageUrls() {
-         const defaultImages = [
-           '/images/default-image1.jpg',
-           '/images/default-image2.jpg',
-           '/images/default-image3.jpg',
-           '/images/default-image4.jpg',
-           '/images/default-image5.jpg'
-         ];
-
          // 필요한 개수만큼 이미지를 랜덤하게 반복
          return Array(columnCount * imagesPerColumn).fill().map(() => {
-           const randomIndex = Math.floor(Math.random() * defaultImages.length);
-           return defaultImages[randomIndex];
+           const randomIndex = Math.floor(Math.random() * DEFAULT_IMAGES.length);
+           return DEFAULT_IMAGES[randomIndex];
          });
        }
 
@@ -162,14 +164,14 @@
        }
 
        // 이미지 엘리먼트 생성
-       function createImageElement(defaultImages) {
+       function createImageElement() {
          const img = document.createElement('img');
-         const randomIndex = Math.floor(Math.random() * defaultImages.length);
-         img.src = defaultImages[randomIndex];
+         const randomIndex = Math.floor(Math.random() * DEFAULT_IMAGES.length);
+         img.src = DEFAULT_IMAGES[randomIndex];
          img.onerror = function() {
            // 이미지 로드 실패시 다른 기본 이미지로 교체
-           const newRandomIndex = Math.floor(Math.random() * defaultImages.length);
-           this.src = defaultImages[newRandomIndex];
+           const newRandomIndex = Math.floor(Math.random() * DEFAULT_IMAGES.length);
+           this.src = DEFAULT_IMAGES[newRandomIndex];
          };
          return img;
        }
@@ -178,14 +180,6 @@
        async function initializeImageColumns() {
          try {
            const urls = await fetchImageUrls();
-           const defaultImages = [
-             '/images/default-image1.jpg',
-             '/images/default-image2.jpg',
-             '/images/default-image3.jpg',
-             '/images/default-image4.jpg',
-             '/images/default-image5.jpg',
-             '/images/default-image6.jpg'
-           ];
 
            for (let col = 0; col < columnCount; col++) {
              const column = document.createElement('div');
@@ -201,7 +195,7 @@
                imgWrapper.style.left = '0';
                imgWrapper.style.transform = `translateY(${i * 600}px)`;
 
-               const img = createImageElement(defaultImages);
+               const img = createImageElement();
 
                imgWrapper.appendChild(img);
                column.appendChild(imgWrapper);
@@ -213,7 +207,7 @@
                  if (position >= (imagesPerColumn * 600)) {
                    position = -600 + (position - (imagesPerColumn * 600));
                    // 새로운 랜덤 이미지로 변경
-                   img.src = defaultImages[Math.floor(Math.random() * defaultImages.length)];
+                   img.src = DEFAULT_IMAGES[Math.floor(Math.random() * DEFAULT_IMAGES.length)];
                  }
                  imgWrapper.style.transform = `translateY(${position}px)`;
                  requestAnimationFrame(animate);
