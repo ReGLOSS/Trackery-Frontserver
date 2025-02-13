@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Trackery</title>
   <style>
+    /* 기존 스타일 유지 */
     body {
       margin: 0;
       padding: 0;
@@ -28,6 +29,34 @@
       max-width: 1500px;
       height: 100%;
       margin: 0 auto;
+    }
+
+    #imageContainer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      width: 1500px;
+      height: 100vh;
+      z-index: 1;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+    }
+
+    .falling-image {
+      position: absolute;
+      top: 0;
+      opacity: 0.8;
+      width: 300px;
+      height: 600px;
+    }
+
+    .falling-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
     .gradient-container {
@@ -92,8 +121,116 @@
        <button class="btn btn-primary btn-start">시작하기</button>
      </div>
    </div>
-   <script>
+ <script>
+     document.addEventListener('DOMContentLoaded', function() {
+       const imageContainer = document.getElementById('imageContainer');
+       const columnCount = 5;
+       const imagesPerColumn = 6;
+       const columnWidth = 1500 / columnCount;
+       const columnSpeeds = [0.15, 0.2, 0.1, 0.25, 0.2];
 
+       // 기본 이미지 URL 배열 생성
+       function createDefaultImageUrls() {
+         const defaultImages = [
+           '/images/default-image1.jpg',
+           '/images/default-image2.jpg',
+           '/images/default-image3.jpg',
+           '/images/default-image4.jpg',
+           '/images/default-image5.jpg'
+         ];
+
+         // 필요한 개수만큼 이미지를 랜덤하게 반복
+         return Array(columnCount * imagesPerColumn).fill().map(() => {
+           const randomIndex = Math.floor(Math.random() * defaultImages.length);
+           return defaultImages[randomIndex];
+         });
+       }
+
+       // 이미지 URL 가져오기
+       async function fetchImageUrls() {
+         try {
+           const response = await fetch('/api/images');
+           if (!response.ok) {
+             throw new Error(`HTTP error! status: ${response.status}`);
+           }
+           const data = await response.json();
+           return data.imageUrls && data.imageUrls.length > 0 ? data.imageUrls : createDefaultImageUrls();
+         } catch (error) {
+           console.error('이미지 URL을 가져오는데 실패했습니다:', error);
+           return createDefaultImageUrls();
+         }
+       }
+
+       // 이미지 엘리먼트 생성
+       function createImageElement(defaultImages) {
+         const img = document.createElement('img');
+         const randomIndex = Math.floor(Math.random() * defaultImages.length);
+         img.src = defaultImages[randomIndex];
+         img.onerror = function() {
+           // 이미지 로드 실패시 다른 기본 이미지로 교체
+           const newRandomIndex = Math.floor(Math.random() * defaultImages.length);
+           this.src = defaultImages[newRandomIndex];
+         };
+         return img;
+       }
+
+       // 컬럼 생성 및 애니메이션
+       async function initializeImageColumns() {
+         try {
+           const urls = await fetchImageUrls();
+           const defaultImages = [
+             '/images/default-image1.jpg',
+             '/images/default-image2.jpg',
+             '/images/default-image3.jpg',
+             '/images/default-image4.jpg',
+             '/images/default-image5.jpg',
+             '/images/default-image6.jpg'
+           ];
+
+           for (let col = 0; col < columnCount; col++) {
+             const column = document.createElement('div');
+             column.style.position = 'absolute';
+             column.style.left = `${col * columnWidth}px`;
+             column.style.width = `${columnWidth}px`;
+             column.style.height = '100%';
+             column.style.overflow = 'hidden';
+
+             for (let i = 0; i < imagesPerColumn; i++) {
+               const imgWrapper = document.createElement('div');
+               imgWrapper.className = 'falling-image';
+               imgWrapper.style.left = '0';
+               imgWrapper.style.transform = `translateY(${i * 600}px)`;
+
+               const img = createImageElement(defaultImages);
+
+               imgWrapper.appendChild(img);
+               column.appendChild(imgWrapper);
+
+               let position = i * 600;
+               function animate() {
+                 position += columnSpeeds[col];
+                 // 이미지가 완전히 내려가기 전에 위치 재설정
+                 if (position >= (imagesPerColumn * 600)) {
+                   position = -600 + (position - (imagesPerColumn * 600));
+                   // 새로운 랜덤 이미지로 변경
+                   img.src = defaultImages[Math.floor(Math.random() * defaultImages.length)];
+                 }
+                 imgWrapper.style.transform = `translateY(${position}px)`;
+                 requestAnimationFrame(animate);
+               }
+               animate();
+             }
+
+             imageContainer.appendChild(column);
+           }
+         } catch (error) {
+           console.error('이미지 초기화 중 오류 발생:', error);
+         }
+       }
+
+       // 애니메이션 시작
+       initializeImageColumns();
+     });
    </script>
 </body>
 </html>
