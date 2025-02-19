@@ -15,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 25. 02. 06.        narilee       최초 생성
+ * 25. 02. 19.        narilee       주석 추가
  */
 @Configuration
 public class RestTemplateConfig {
