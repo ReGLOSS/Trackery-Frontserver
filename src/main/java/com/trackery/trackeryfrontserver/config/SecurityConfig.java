@@ -33,8 +33,11 @@ public class SecurityConfig {
 		http
 			.csrf(csrf -> csrf.disable())
 			.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/**").permitAll()
-			);
+				.requestMatchers("/", "/css/**", "/js/**", "/images/**", "/error", "/proxy/**").permitAll()
+				.anyRequest().authenticated()
+			)
+			.formLogin(login -> login.disable())
+			.httpBasic(httpBasic -> httpBasic.disable());
 
 		return http.build();
 	}
