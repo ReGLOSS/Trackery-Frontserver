@@ -1,113 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <title>Trackery</title>
-  <style>
-    /* 기존 스타일 유지 */
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: #2a2a36;
-      overflow: hidden;
-      height: 100vh;
-      width: 100vw;
-    }
-
-    .main-container {
-      position: relative;
-      width: 100%;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .content-wrapper {
-      position: relative;
-      width: 100%;
-      max-width: 1500px;
-      height: 100%;
-      margin: 0 auto;
-    }
-
-    #imageContainer {
-      position: absolute;
-      top: -600px;
-      left: 0;
-      right: 0;
-      width: 100%;
-      max-width: 1500px;
-      height: calc(100vh + 600px);
-      z-index: 1;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-    }
-
-    .falling-image {
-      position: absolute;
-      top: 0;
-      opacity: 0.8;
-      width: 300px;
-      height: 600px;
-    }
-
-    .falling-image img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-
-    .gradient-container {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      width: 100%;
-      height: 50%;
-      background: linear-gradient(to top, rgba(26,26,26,1) 0%, rgba(26,26,26,0.8) 50%, rgba(26,26,26,0) 100%);
-      z-index: 2;
-    }
-
-    .content-overlay {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 3;
-      padding: 2rem;
-      text-align: center;
-      height: 40%;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      align-items: center;
-      width: 100%;
-      max-width: 1500px;
-      margin: 0 auto;
-    }
-
-    .promotion-text {
-      color: white;
-      font-size: min(1.4rem, 4vw);
-      margin-bottom: 5rem;
-      font-weight: 500;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-
-    .btn-start {
-      padding: 0.75rem 10rem;
-      font-size: min(1.1rem, 3vw);
-      color: white;
-      border-radius: 50px;
-      background: #65558F;
-      border: none;
-      transition: transform 0.2s;
-      margin-bottom: 2rem;
-    }
-  </style>
+    <link rel="stylesheet" href="/css/tabler.css">
+    <link rel="stylesheet" data-th-href="@{/css/landing.css}">
 </head>
 <body>
    <div class="main-container">
@@ -129,15 +26,14 @@
         '/images/default-image3.jpg',
         '/images/default-image4.jpg',
         '/images/default-image5.jpg',
-        '/images/default-image6.jpg',
     ]
 
      document.addEventListener('DOMContentLoaded', function() {
        const imageContainer = document.getElementById('imageContainer');
        const columnCount = 5; // 열의 갯수
        const imagesPerColumn = 6; // 각 열당 이미지 갯수
-       const columnWidth = 1500 / columnCount;
-       const columnSpeeds = [0.15, 0.2, 0.1, 0.25, 0.2];
+       const columnWidth = 1500 / columnCount; // 각 열의 너비
+       const columnSpeeds = [0.15, 0.2, 0.1, 0.25, 0.2]; // 각 열의 떨어지는 속도
 
        // 기본 이미지 URL 배열 생성
        function createDefaultImageUrls() {
@@ -148,15 +44,23 @@
          });
        }
 
-       // 이미지 URL 가져오기
+       // 서버에서 이미지 URL 가져오기
        async function fetchImageUrls() {
          try {
-           const response = await fetch('/api/images');
+           const response = await fetch(`/proxy/api/home/images`);
            if (!response.ok) {
              throw new Error(`HTTP error! status: ${response.status}`);
            }
            const data = await response.json();
-           return data.imageUrls && data.imageUrls.length > 0 ? data.imageUrls : createDefaultImageUrls();
+           console.log('백엔드 응답:', data);
+           console.log('이미지 URLs:', data.data.imageUrls);
+
+           const urls = data.data.imageUrls && data.data.imageUrls.length > 0
+             ? data.data.imageUrls
+             : createDefaultImageUrls();
+           console.log('사용할 이미지 URLs:', urls);
+
+           return urls;
          } catch (error) {
            console.error('이미지 URL을 가져오는데 실패했습니다:', error);
            return createDefaultImageUrls();
@@ -170,8 +74,8 @@
          img.src = DEFAULT_IMAGES[randomIndex];
          img.onerror = function() {
            // 이미지 로드 실패시 다른 기본 이미지로 교체
-           const newRandomIndex = Math.floor(Math.random() * DEFAULT_IMAGES.length);
-           this.src = DEFAULT_IMAGES[newRandomIndex];
+         const defaultRandomIndex = Math.floor(Math.random() * DEFAULT_IMAGES.length);
+         this.src = DEFAULT_IMAGES[defaultRandomIndex];
          };
          return img;
        }
@@ -181,6 +85,7 @@
          try {
            const urls = await fetchImageUrls();
 
+           // 열 생성
            for (let col = 0; col < columnCount; col++) {
              const column = document.createElement('div');
              column.style.position = 'absolute';
@@ -189,17 +94,19 @@
              column.style.height = '100%';
              column.style.overflow = 'hidden';
 
+             // 각 열마다 이미지 생성 및 애니메이션 적용
              for (let i = 0; i < imagesPerColumn; i++) {
                const imgWrapper = document.createElement('div');
                imgWrapper.className = 'falling-image';
                imgWrapper.style.left = '0';
                imgWrapper.style.transform = `translateY(${i * 600}px)`;
 
-               const img = createImageElement();
+               const img = createImageElement(urls);
 
                imgWrapper.appendChild(img);
                column.appendChild(imgWrapper);
 
+               // 애니메이션 함수
                let position = i * 600;
                function animate() {
                  position += columnSpeeds[col];
