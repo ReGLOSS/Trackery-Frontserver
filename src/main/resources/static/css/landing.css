@@ -1,0 +1,102 @@
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #2a2a36;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    .main-container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .content-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 1500px;
+      height: 100%;
+      margin: 0 auto;
+    }
+
+    #imageContainer {
+      position: absolute;
+      top: -600px;
+      left: 0;
+      right: 0;
+      width: 100%;
+      max-width: 1500px;
+      height: calc(100vh + 600px);
+      z-index: 1;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+    }
+
+    .falling-image {
+      position: absolute;
+      top: 0;
+      opacity: 0.8;
+      width: 300px;
+      height: 600px;
+    }
+
+    .falling-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .gradient-container {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      height: 50%;
+      background: linear-gradient(to top, rgba(26,26,26,1) 0%, rgba(26,26,26,0.8) 50%, rgba(26,26,26,0) 100%);
+      z-index: 2;
+    }
+
+    .content-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 3;
+      padding: 2rem;
+      text-align: center;
+      height: 40%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      width: 100%;
+      max-width: 1500px;
+      margin: 0 auto;
+    }
+
+    .promotion-text {
+      color: white;
+      font-size: min(1.4rem, 4vw);
+      margin-bottom: 5rem;
+      font-weight: 500;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .btn-start {
+      padding: 0.75rem 10rem;
+      font-size: min(1.1rem, 3vw);
+      color: white;
+      border-radius: 50px;
+      background: #65558F;
+      border: none;
+      transition: transform 0.2s;
+      margin-bottom: 2rem;
+    }
