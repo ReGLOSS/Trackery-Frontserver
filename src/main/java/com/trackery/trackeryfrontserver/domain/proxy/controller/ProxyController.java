@@ -1,5 +1,7 @@
 package com.trackery.trackeryfrontserver.domain.proxy.controller;
 
+import jakarta.servlet.ServletOutputStream;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +38,9 @@ public class ProxyController {
 	 */
 	private final ProxyService proxyService;
 
+	@Value("${PROJECT_URL}")
+	private String projectUrl;
+
 	/**
 	 * 모든 API 요청을 처리하는 메서드입니다.
 	 * /api 이하의 모든 경로를 매칭합니다.
@@ -50,8 +55,12 @@ public class ProxyController {
 		@RequestBody(required = false) String body,
 		@RequestHeader HttpHeaders headers) {
 
+		String baseurl = request.getRequestURL().toString().replace(projectUrl, "");
+		String queryString  = request.getQueryString();
+		String fullUrl = (queryString != null) ? baseurl + "?" + queryString : baseurl;
+
 		return proxyService.forwardRequest(
-			request.getRequestURI(),
+			fullUrl,
 			HttpMethod.valueOf(request.getMethod()),
 			headers,
 			body
