@@ -1,0 +1,114 @@
+.modal-container .modal-content {
+    position: relative;
+    padding: 20px;
+    background-color: #d3d9e8;
+    max-width: 70%;
+    max-height: 100vh;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.modal-close {
+    position: absolute;
+    top: 10px;
+    right: 30px;
+    font-size: 50px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.title-section {
+    /* border: 1px solid gray; */
+    font-size: 48px;
+    font-weight: bold;
+    align-items: center;
+    margin-top: 10px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.profile-image-section {
+    /* border: 1px solid gray; */
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.profile-image {
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.input-form-section {
+    /* border: 1px solid gray; */
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-bottom: 30px;
+}
+
+.email-input-section {
+    margin-bottom: 30px;
+}
+
+.email-input-form {
+    display:flex;
+}
+
+.email-verify-btn {
+    margin-left: 40px;
+}
+
+.username-input-form {
+    display:flex;
+}
+
+.username-verify-btn {
+    margin-left: 40px;
+}
+
+.oauth-register-section {
+    /* border: 1px solid gray; */
+    margin-bottom: 30px;
+}
+
+.oauth-title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.provider-logos {
+    text-align: center;
+}
+
+.naver-logo {
+    width: 74px;
+    height: 74px;
+    margin-right: 20px;
+    cursor: pointer;
+}
+
+.kakao-logo {
+    width: 74px;
+    height: 74px;
+    margin-right: 20px;
+    cursor: pointer;
+}
+
+.google-logo {
+    width: 74px;
+    height: 74px;
+    cursor: pointer;
+}
+
+.save-section {
+    width: 90%;
+    margin: auto auto 30px;
+}
+
+.save-btn {
+    text-align: center;
+    height: 500px;
+}
