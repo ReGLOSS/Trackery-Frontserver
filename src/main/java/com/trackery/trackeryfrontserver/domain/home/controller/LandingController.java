@@ -1,4 +1,4 @@
-package com.trackery.trackeryfrontserver.controller;
+package com.trackery.trackeryfrontserver.domain.home.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 25. 02. 11.        narilee       최초 생성
+ * 25. 02. 26.        narilee       경로 수정
  */
 @Controller
 public class LandingController {
