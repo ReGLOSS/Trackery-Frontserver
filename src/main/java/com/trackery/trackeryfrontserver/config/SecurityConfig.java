@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
@@ -21,6 +22,9 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
+	private final String[] publicUris = {"/register/**"};
+
+	//TODO "/api/**/" permitAll() 삭제 후 퍼블릭 API를 제외하고 권한 인증 필요하게 수정
 	/**
 	 * Spring Security 필터 체인을 구성합니다.
 	 *
@@ -31,13 +35,14 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http
-			.csrf(csrf -> csrf.disable())
+			.csrf(AbstractHttpConfigurer::disable)
 			.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/", "/css/**", "/js/**", "/images/**", "/error", "/proxy/**").permitAll()
+				.requestMatchers("/", "/resources/**", "/css/**", "/js/**", "/images/**", "/error", "/api/**").permitAll()
+				.requestMatchers(publicUris).permitAll()
 				.anyRequest().authenticated()
 			)
-			.formLogin(login -> login.disable())
-			.httpBasic(httpBasic -> httpBasic.disable());
+			.formLogin(AbstractHttpConfigurer::disable)
+			.httpBasic(AbstractHttpConfigurer::disable);
 
 		return http.build();
 	}

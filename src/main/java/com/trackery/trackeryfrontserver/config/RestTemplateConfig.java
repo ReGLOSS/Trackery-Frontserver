@@ -8,13 +8,14 @@ import org.springframework.web.client.RestTemplate;
  * packageName    : com.trackery.trackeryfrontserver.config
  * fileName       : RestTemplateConfig
  * author         : inari
- * date           : 25. 2. 19.
+ * date           : 25. 2. 06.
  * description    : RestTemplate 설정 클래스입니다.
  * 					HTTP 요청을 보내기 위한 RestTemplate 빈을 생성합니다.
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 25. 2. 19.        inari       최초 생성
+ * 25. 02. 06.        narilee       최초 생성
+ * 25. 02. 19.        narilee       주석 추가
  */
 @Configuration
 public class RestTemplateConfig {
