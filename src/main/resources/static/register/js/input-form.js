@@ -9,8 +9,12 @@ function initModalFunctions() {
     const saveButton = document.getElementById("save-btn");
     const usernameVerifyButton = document.getElementById("username-verify-btn");
 
-    // 버튼 클릭 이벤트
+    document.getElementById("register-modal-close").addEventListener("click", function () {
+        document.getElementById("content-overlay").style.display = "flex";
+        document.getElementById("register-modal-container").style.display = "none";
+    })
 
+    // 버튼 클릭 이벤트
     saveButton.addEventListener("click", function () {
         fetch("/api/users/register", {
             method: "POST",

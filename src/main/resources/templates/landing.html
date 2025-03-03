@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Trackery</title>
   <style>
-    /* 기존 스타일 유지 */
     body {
       margin: 0;
       padding: 0;
@@ -21,6 +20,7 @@
       display: flex;
       justify-content: center;
       overflow: hidden;
+      background-color: #2a2a36;
     }
 
     .content-wrapper {
@@ -88,7 +88,7 @@
       margin: 0 auto;
     }
 
-    .promotion-text {
+    .content-overlay .promotion-text {
       color: white;
       font-size: min(1.4rem, 4vw);
       margin-bottom: 5rem;
@@ -96,7 +96,7 @@
       text-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
-    .btn-start {
+    .content-overlay .btn-start {
       padding: 0.75rem 10rem;
       font-size: min(1.1rem, 3vw);
       color: white;
@@ -114,12 +114,16 @@
        <div id="imageContainer"></div>
      </div>
      <div class="gradient-container"></div>
-     <div class="content-overlay">
+     <div id = "content-overlay" class="content-overlay">
        <div class="promotion-text">
          "트래커리(Trackery)로 지도 위에 여행을 기록하고, 추억을 나누세요."
        </div>
-       <button class="btn btn-primary btn-start">시작하기</button>
+       <button id="startButton" class="btn btn-primary btn-start">시작하기</button>
      </div>
+   </div>
+   <div>
+     <div class="register-modal-container" id="register-modal-container"></div>
+     <div class="login-modal-container" id="login-modal-container"></div>
    </div>
  <script>
      document.addEventListener('DOMContentLoaded', function() {
@@ -232,5 +236,6 @@
        initializeImageColumns();
      });
    </script>
+  <script src="/js/landing.js"></script>
 </body>
 </html>

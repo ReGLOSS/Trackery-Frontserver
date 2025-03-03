@@ -73,7 +73,13 @@ function initModalScript() {
     //로그인 모달 닫기
     document.getElementById("login-modal-close")
         .addEventListener("click", function () {
-                document.getElementById("login-modal-container").style.display = "none";
-            }
-        );
+            document.getElementById("content-overlay").style.display = "flex";
+            document.getElementById("login-modal-container").style.display = "none";
+        });
+
+    document.getElementById("startButton")
+        .addEventListener("click", function () {
+            document.getElementById("content-overlay").style.display = "none";
+            document.getElementById("login-modal-container").style.display = "flex";
+        });
 }
