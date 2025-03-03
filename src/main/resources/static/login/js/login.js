@@ -29,7 +29,7 @@ function initModalScript() {
                     return response.json();
                 }
             }).then(data => {
-                alert("로그인에 성공했습니다.")
+                window.location.replace("/register/temporal-main");
             });
         });
 
