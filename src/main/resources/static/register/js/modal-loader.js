@@ -47,7 +47,7 @@ function loadModalScript() {
 function loadLoginModalScript() {
     console.log("스크립트 로딩중");
     const script = document.createElement("script");
-    script.src = "/login/js/input-form.js";
+    script.src = "/login/js/login.js";
     script.onload = () => {
         initModalScript();
     }

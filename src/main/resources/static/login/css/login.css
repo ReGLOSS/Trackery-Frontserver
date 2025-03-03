@@ -23,8 +23,13 @@
     box-sizing: border-box;
 }
 
+.login-modal-close {
+    font-size: 30px;
+    text-align: right;
+    cursor: pointer;
+}
+
 .title {
-    margin-top: 20px;
     margin-bottom: 20px;
     text-align: center;
     font-size: 28px;
