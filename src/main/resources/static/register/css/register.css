@@ -26,7 +26,9 @@
 .register-modal-close {
     font-weight: bold;
     font-size: 30px;
-    text-align: right;
+    position: absolute;
+    top: 2%;
+    right: 5%;
     cursor: pointer;
 }
 

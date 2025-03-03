@@ -8,6 +8,7 @@
     }
 
     .main-container {
+      background-color: #2a2a36;
       position: relative;
       width: 100%;
       height: 100vh;
@@ -82,7 +83,7 @@
       margin: 0 auto;
     }
 
-    .promotion-text {
+    .content-overlay .promotion-text {
       color: white;
       font-size: min(1.4rem, 4vw);
       margin-bottom: 5rem;
@@ -90,7 +91,7 @@
       text-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
-    .btn-start {
+    .content-overlay .btn-start {
       padding: 0.75rem 10rem;
       font-size: min(1.1rem, 3vw);
       color: white;
