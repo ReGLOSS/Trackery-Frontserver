@@ -12,22 +12,20 @@
     <p class="title">로그인</p>
     <!-- 입력폼 섹션 -->
     <div class="input-form">
-        <form>
             <div class="mb-3">
-                <input type="text" class="form-control" placeholder="유저명">
+                <input type="text" id="loginUsername" class="form-control" placeholder="유저명">
             </div>
             <div class="mb-3">
                 <div class="input-group input-group-flat">
-                    <input type="password" class="form-control" autocomplete="off" placeholder="비밀번호" />
+                    <input type="password" id="loginPassword" class="form-control" autocomplete="off" placeholder="비밀번호" />
                     <span class="input-group-text">
                         <a href="#" class="input-group-link">비밀번호 표시</a>
                     </span>
                 </div>
             </div>
             <div class="mb-3">
-                <button type="submit" class="btn btn-dark w-100 mb-2">로그인</button>
+                <button type="button" id="submit" class="btn btn-dark w-100 mb-2">로그인</button>
             </div>
-        </form>
 
         <div class="account-action">
             <a href="#" class="text-muted">계정을 잃어버리셨나요?</a>
