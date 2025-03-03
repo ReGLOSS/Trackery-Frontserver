@@ -15,9 +15,9 @@
 
 .login-modal-container .modal-content {
     position: relative;
-    padding: 20px;
+    padding: 2%;
     background-color: #d3d9e8;
-    max-width: 50%;
+    max-width: 50vh;
     max-height: 100vh;
     overflow-y: auto;
     box-sizing: border-box;

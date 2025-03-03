@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     fetch("/register/modal-html")
         .then(response => response.text())
         .then(html => {
-            document.getElementById("modal-container").innerHTML = html;
+            document.getElementById("register-modal-container").innerHTML = html;
             loadModalScript();
         })
         .catch(error => console.error("회원가입 모달을 불러오는 중 오류 발생:", error));
@@ -20,11 +20,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 function openModal() {
-    document.getElementById("modal-container").style.display = "flex";
+    document.getElementById("register-modal-container").style.display = "flex";
 }
 
 function closeModal() {
-    document.getElementById("modal-container").style.display = "none";
+    document.getElementById("register-modal-container").style.display = "none";
 }
 
 function openLoginModal() {

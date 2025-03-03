@@ -3,6 +3,7 @@ function initModalScript() {
     const userNameInput = document.getElementById("loginUsername");
     const passwordInput = document.getElementById("loginPassword");
     const togglePassword = document.getElementById("togglePassword");
+    const registerGuide = document.getElementById("register-guide");
 
     //로그인 폼 제출
     submitButton.addEventListener("click", function() {
@@ -62,5 +63,10 @@ function initModalScript() {
         }
     });
 
-
+    //회원가입 모달 오픈
+    registerGuide.addEventListener("click", function () {
+        console.log("sex");
+        document.getElementById("login-modal-container").style.display = "none";
+        document.getElementById("register-modal-container").style.display = "flex";
+    });
 }
