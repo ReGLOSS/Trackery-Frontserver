@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <link rel="stylesheet" href="/login/css/login.css" type="text/css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>login-modal</title>
+</head>
+<body>
+<div class="modal-content">
+    <span class="login-modal-close" id="login-modal-close">&times;</span>
+
+    <!-- 타이틀 섹션 -->
+    <p class="title">로그인</p>
+    <!-- 입력폼 섹션 -->
+    <div class="input-form">
+        <div class="mb-3">
+            <input type="text" id="loginUsername" class="form-control" placeholder="유저명">
+        </div>
+        <div class="mb-3">
+            <div class="input-group input-group-flat">
+                <input type="password" id="loginPassword" class="form-control" autocomplete="off" placeholder="비밀번호"/>
+                <span class="input-group-text">
+                        <a href="#" id="togglePassword">
+                            <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-eye-closed">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M21 9c-2.4 2.667 -5.4 4 -9 4c-3.6 0 -6.6 -1.333 -9 -4" />
+                                <path d="M3 15l2.5 -3.8" /><path d="M21 14.976l-2.492 -3.776" />
+                                <path d="M9 17l.5 -4" /><path d="M15 17l-.5 -4" />
+                            </svg>
+                        </a>
+                </span>
+            </div>
+        </div>
+        <div class="mb-3">
+            <button type="button" id="submit" class="btn btn-dark w-100 mb-2">로그인</button>
+        </div>
+
+        <div class="account-action">
+            <a href="#" class="text-muted">계정을 잃어버리셨나요?</a>
+            <a href="#" class="text-muted" id="register-guide">아직 회원이 아니신가요?</a>
+        </div>
+    </div>
+    <hr>
+    <!-- 간편 로그인 섹션 -->
+    <div class="oauth-login mb-3">
+        <p class="oauth-title">소셜 로그인</p>
+        <div class="oauth-providers">
+            <img src="/images/google-logo.png" class="oauth-icon" alt="구글 로그인">
+            <img src="/images/kakao-logo.png" class="oauth-icon" alt="카카오 로그인">
+            <img src="/images/naver-logo.png" class="oauth-icon" alt="네이버 로그인">
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

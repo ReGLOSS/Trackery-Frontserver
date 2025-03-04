@@ -1,21 +1,38 @@
 document.addEventListener("DOMContentLoaded", function () {
-    fetch("/register/modal-html", {
-        method: "GET"
-    })
+    // 회원가입 모달 가져오기
+    fetch("/register/modal-html")
         .then(response => response.text())
         .then(html => {
-            document.getElementById("modal-container").innerHTML = html;
+            document.getElementById("register-modal-container").innerHTML = html;
             loadModalScript();
         })
-        .catch(error => console.error("모달을 불러오는 중 오류 발생:", error));
+        .catch(error => console.error("회원가입 모달을 불러오는 중 오류 발생:", error));
+
+    // 로그인 모달 가져오기
+    fetch("/login/modal-html")
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById("login-modal-container").innerHTML = html;
+            loadLoginModalScript();
+        })
+        .catch(error => console.error("로그인 모달을 불러오는 중 오류 발생:", error)); // ✅ 추가된 부분
 });
 
+
 function openModal() {
-    document.getElementById("modal-container").style.display = "flex";
+    document.getElementById("register-modal-container").style.display = "flex";
 }
 
 function closeModal() {
-    document.getElementById("modal-container").style.display = "none";
+    document.getElementById("register-modal-container").style.display = "none";
+}
+
+function openLoginModal() {
+    document.getElementById("login-modal-container").style.display = "flex";
+}
+
+function closeLoginModal() {
+    document.getElementById("login-modal-container").style.display = "none";
 }
 
 function loadModalScript() {
@@ -26,3 +43,15 @@ function loadModalScript() {
     }
     document.body.appendChild(script);
 }
+
+function loadLoginModalScript() {
+    console.log("스크립트 로딩중");
+    const script = document.createElement("script");
+    script.src = "/login/js/login.js";
+    script.onload = () => {
+        initModalScript();
+    }
+    document.body.appendChild(script);
+}
+
+

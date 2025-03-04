@@ -12,12 +12,16 @@
        <div id="imageContainer"></div>
      </div>
      <div class="gradient-container"></div>
-     <div class="content-overlay">
+     <div id = "content-overlay" class="content-overlay">
        <div class="promotion-text">
          "트래커리(Trackery)로 지도 위에 여행을 기록하고, 추억을 나누세요."
        </div>
-       <button class="btn btn-primary btn-start">시작하기</button>
+       <button id="startButton" class="btn btn-primary btn-start">시작하기</button>
      </div>
+   </div>
+   <div>
+     <div class="register-modal-container" id="register-modal-container"></div>
+     <div class="login-modal-container" id="login-modal-container"></div>
    </div>
  <script>
     const DEFAULT_IMAGES = [
@@ -134,5 +138,6 @@
        initializeImageColumns();
      });
    </script>
+  <script src="/js/landing.js"></script>
 </body>
 </html>
