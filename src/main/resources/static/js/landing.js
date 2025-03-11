@@ -9,13 +9,21 @@ document.addEventListener("DOMContentLoaded", function () {
         .catch(error => console.error("회원가입 모달을 불러오는 중 오류 발생:", error));
 
     // 로그인 모달 가져오기
-    fetch("/login/modal-html")
+    fetch("/login/login-modal-html")
         .then(response => response.text())
         .then(html => {
             document.getElementById("login-modal-container").innerHTML = html;
             loadLoginModalScript();
         })
         .catch(error => console.error("로그인 모달을 불러오는 중 오류 발생:", error));
+
+    fetch("/login/find-account-modal-html")
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById("find-account-modal-container").innerHTML = html;
+            loadFindAccountModalScript();
+        })
+        .catch(error => console.error("회원 정보 찾기 모달을 불러오는 중 오류 발생:", error));
 
     function loadRegisterModalScript() {
         const script = document.createElement("script");
@@ -30,6 +38,15 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("스크립트 로딩중");
         const script = document.createElement("script");
         script.src = "/login/js/login.js";
+        script.onload = () => {
+            initModalScript();
+        }
+        document.body.appendChild(script);
+    }
+
+    function loadFindAccountModalScript() {
+        const script = document.createElement("script");
+        script.src = "/login/js/find-account.js";
         script.onload = () => {
             initModalScript();
         }
