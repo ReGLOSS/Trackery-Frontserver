@@ -70,6 +70,13 @@ function initModalScript() {
             }
         );
 
+    //계정 찾기 모달 오픈
+    document.getElementById("find-account-guide")
+        .addEventListener("click", function () {
+            document.getElementById("login-modal-container").style.display="none";
+            document.getElementById("find-account-modal-container").style.display = "flex";
+        })
+
     //로그인 모달 닫기
     document.getElementById("login-modal-close")
         .addEventListener("click", function () {

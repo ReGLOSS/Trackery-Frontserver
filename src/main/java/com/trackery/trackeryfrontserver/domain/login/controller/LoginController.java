@@ -19,9 +19,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/login")
 public class LoginController {
 
-	@GetMapping("/modal-html")
-	public String modalHtml() {
+	@GetMapping("/login-modal-html")
+	public String getLoginModalHtml() {
 		return "login/login-modal";
+	}
+
+	@GetMapping("/find-account-modal-html")
+	public String getFindAccountModalHtml() {
+		return "login/find-account-modal";
 	}
 
 }

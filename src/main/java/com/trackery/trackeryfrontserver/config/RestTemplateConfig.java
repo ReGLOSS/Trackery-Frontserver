@@ -1,7 +1,16 @@
 package com.trackery.trackeryfrontserver.config;
 
+import java.time.Duration;
+
+import org.apache.hc.client5.http.config.ConnectionConfig;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.core5.util.Timeout;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -26,6 +35,24 @@ public class RestTemplateConfig {
 	 */
 	@Bean
 	public RestTemplate restTemplate() {
-		return new RestTemplate();
+		RequestConfig requestConfig = RequestConfig.custom()
+			.setResponseTimeout(Timeout.of(Duration.ofSeconds(5)))
+			.build();
+
+		CloseableHttpClient httpClient = HttpClients.custom()
+			.setDefaultRequestConfig(requestConfig)
+			.setConnectionManager(
+				PoolingHttpClientConnectionManagerBuilder.create()
+					.setDefaultConnectionConfig(ConnectionConfig.custom()
+						.setSocketTimeout(Timeout.of(Duration.ofSeconds(5)))
+						.build())
+					.build()
+			)
+			.build();
+
+		HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
+		return new RestTemplate(factory);
 	}
+
+
 }

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <link rel="stylesheet" href="/login/css/find-account.css" type="text/css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>계정 찾기 모달</title>
+</head>
+<body>
+<div class="modal-content">
+    <span class="find-account-modal-close" id="find-account-modal-close">&times;</span>
+
+    <!-- 타이틀 섹션 -->
+    <p class="title">회원 정보 찾기</p>
+
+    <!--    유저명, 비밀번호 선택-->
+    <div class="finder-selector">
+        <nav class="nav nav-segmented nav-2 w-100" role="tablist">
+            <button class="nav-link active" role="tab" data-bs-toggle="tab" aria-selected="true" aria-current="page">
+                Account
+            </button>
+            <button class="nav-link" role="tab" data-bs-toggle="tab" aria-selected="false" tabindex="-1">Password
+            </button>
+        </nav>
+    </div>
+
+    <!--비밀번호 찾기 섹션-->
+    <div class="reset-password">
+        <!--        스텝1. 이메일 인증-->
+        <div class="verify-email">
+            <h3 style="text-align: center; margin-bottom:15px;"> 이메일 인증 </h3>
+            <div class="input-email">
+                <label class="form-label">이메일</label>
+                <div class="email-input-form">
+                    <input type="text" class="form-control" id="find-password-email" name="email" style="height: 50px"
+                           placeholder="이메일을 입력해주세요."/>
+                    <div class="password-code-send-btn">
+                        <a href="#" class="btn btn-dark" id="find-password-email-verification-code-send-btn"
+                           style="height: 50px">인증 번호 전송</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-verify">
+                <label class="form-label">인증 번호</label>
+                <div class="auth-number-input-form">
+                    <input type="text" class="form-control" id="find-password-auth-number" name="email"
+                           style="height: 50px"
+                           placeholder="인증번호를 입력해주세요."/>
+                    <div class="password-email-verify-btn">
+                        <a href="#" class="btn btn-dark" id="find-password-auth-number-verify-btn" style="height: 50px">인증
+                            번호 확인</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--        스텝2. 비밀번호 입력 및 검증-->
+        <div class="input-password">
+            <h3 style="text-align: center; margin-bottom:15px;"> 비밀번호 변경 </h3>
+
+            <div class="new-password-input" style="margin-bottom:15px;">
+                <div class="new-password-label">
+                    <label class="form-label">새 비밀번호</label>
+                    <small class="form-text text-muted" style="margin-left:10px;">최소 16자리에 영문 대소문자 + 숫자 + 특수문자로 작성해주세요.</small>
+                </div>
+                <div class="input-group input-group-flat">
+                    <input type="password" id="newPassword" class="form-control" autocomplete="off"
+                           placeholder="새 비밀번호"/>
+                    <span class="input-group-text">
+                        <a href="#" id="toggleNewPassword">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                 fill="none" stroke="black" stroke-width="2" stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 class="icon icon-tabler icons-tabler-outline icon-tabler-eye-closed">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M21 9c-2.4 2.667 -5.4 4 -9 4c-3.6 0 -6.6 -1.333 -9 -4"/>
+                                <path d="M3 15l2.5 -3.8"/><path d="M21 14.976l-2.492 -3.776"/>
+                                <path d="M9 17l.5 -4"/><path d="M15 17l-.5 -4"/>
+                            </svg>
+                        </a>
+                </span>
+                </div>
+            </div>
+
+            <div class="new-password-confirm-input" style="margin-bottom:30px;">
+                <label class="form-label">새 비밀번호 확인</label>
+                <div class="input-group input-group-flat">
+                    <input type="password" id="newPasswordConfirm" class="form-control" autocomplete="off"
+                           placeholder="새 비밀번호 확인"/>
+                    <span class="input-group-text">
+                        <a href="#" id="toggleNewPasswordConfirm">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                 fill="none" stroke="black" stroke-width="2" stroke-linecap="round"
+                                 stroke-linejoin="round"
+                                 class="icon icon-tabler icons-tabler-outline icon-tabler-eye-closed">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M21 9c-2.4 2.667 -5.4 4 -9 4c-3.6 0 -6.6 -1.333 -9 -4"/>
+                                <path d="M3 15l2.5 -3.8"/><path d="M21 14.976l-2.492 -3.776"/>
+                                <path d="M9 17l.5 -4"/><path d="M15 17l-.5 -4"/>
+                            </svg>
+                        </a>
+                </span>
+                </div>
+            </div>
+
+            <div class="submit-reset-password">
+                <button type="button" id="submit-new-password-btn" class="btn btn-dark w-100 mb-2" disabled>비밀번호 변경</button>
+            </div>
+        </div>
+
+        <!--        스텝3. 완료창 -->
+        <div class="result-page">
+            <h3>비밀번호 변경 완료</h3>
+            <p>변경된 비밀번호로 로그인해주십시오.</p>
+            <button type="button" id="return-to-login-btn" class="btn btn-dark w-100 mb-2">확인</button>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
