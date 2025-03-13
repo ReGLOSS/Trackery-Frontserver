@@ -11,8 +11,49 @@
     <span class="find-account-modal-close" id="find-account-modal-close">&times;</span>
 
     <!-- 타이틀 섹션 -->
-    <p class="title">로그인</p>
+    <p class="title">회원 정보 찾기</p>
 
+<!--    유저명, 비밀번호 선택-->
+    <div class="finder-selector">
+        <nav class="nav nav-segmented nav-2 w-100" role="tablist">
+            <button class="nav-link active" role="tab" data-bs-toggle="tab" aria-selected="true" aria-current="page">Account</button>
+            <button class="nav-link" role="tab" data-bs-toggle="tab" aria-selected="false" tabindex="-1">Password</button>
+        </nav>
+    </div>
+
+    <!--비밀번호 찾기 섹션-->
+    <div class="reset-password">
+<!--        스텝1. 이메일 인증-->
+        <div class="verify-email">
+            <div class="input-email">
+                <label class="form-label">이메일</label>
+                <div class="email-input-form">
+                    <input type="text" class="form-control" id="find-password-email" name="email" style="height: 50px"
+                           placeholder="이메일을 입력해주세요."/>
+                    <div class="password-code-send-btn">
+                        <a href="#" class="btn btn-dark" id="find-password-email-verification-code-send-btn" style="height: 50px">인증 번호 전송</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-verify">
+                <label class="form-label">인증 번호</label>
+                <div class="auth-number-input-form">
+                    <input type="text" class="form-control" id="find-password-auth-number" name="email" style="height: 50px"
+                           placeholder="인증번호를 입력해주세요."/>
+                    <div class="password-email-verify-btn">
+                        <a href="#" class="btn btn-dark" id="find-password-auth-number-verify-btn" style="height: 50px">인증 번호 확인</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+<!--        스텝2. 비밀번호 입력 및 검증-->
+        <div class="input-password">
+            <p>비밀번호 입력</p>>
+        </div>
+<!--        스텝3. 완료창 -->
+        <div class="result-page"></div>
+    </div>
 
 </div>
 

@@ -17,7 +17,7 @@
     position: relative;
     padding: 2%;
     background-color: #d3d9e8;
-    max-width: 50vh;
+    max-width: 60vh;
     max-height: 100vh;
     overflow-y: auto;
     box-sizing: border-box;
@@ -31,3 +31,42 @@
     right: 5%;
     cursor: pointer;
 }
+
+.verify-email .input-email {
+    margin-bottom:15px;
+}
+
+.password-code-send-btn {
+    margin-left : 30px;
+}
+
+.verify-email .input-verify {
+    margin-bottom:15px;
+}
+
+.password-email-verify-btn {
+    margin-left: 30px;
+}
+
+.input-verify .auth-number-input-form {
+    display:flex;
+}
+
+.verify-email {
+    display:none;
+    border-radius: 10px;
+    background-color:#d8e0e6;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+.reset-password .input-password {
+    display:block;
+    border-radius: 10px;
+    background-color:#d8e0e6;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+
+
