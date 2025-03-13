@@ -2,10 +2,11 @@ function initModalScript() {
     //로그인 모달 닫기
     document.getElementById("find-account-modal-close")
         .addEventListener("click", function () {
-            console.log("click");
             document.getElementById("content-overlay").style.display = "flex";
             document.getElementById("find-account-modal-container").style.display = "none";
         });
+
+
 
     //인증번호 전송
     const pwdEmailCodeSendButton = document.getElementById("find-password-email-verification-code-send-btn");
@@ -38,7 +39,7 @@ function initModalScript() {
                         });
                     }
                 })
-                .catch(error => console.log(error));
+                .catch(error => console.error(error));
         } else {
             buttonDisableToggle(pwdEmailCodeSendButton, false);
             pwdEmailCodeSendButton.textContent = "인증 번호 발송";
@@ -98,7 +99,7 @@ function initModalScript() {
                         });
                     }
                 })
-                .catch(error => console.log(error));
+                .catch(error => console.error(error));
         } else {
             alert("인증번호를 입력해주십시오.");
         }
@@ -174,14 +175,20 @@ function initModalScript() {
     function toggleValidationClass(input, isValid) {
         input.classList.toggle("is-valid", isValid);
         input.classList.toggle("is-invalid", !isValid);
+        checkRequiredFields();
+    }
+
+    const requiredInputsGroups = [newPasswordConfirmInputGroup, newPasswordInputGroup];
+
+    function checkRequiredFields() {
+        const allValid = requiredInputsGroups.every(inputGroup => inputGroup.classList.contains("is-valid"));
+        submitNewPasswordButton.disabled = !allValid;
     }
 
     //비밀번호 업데이트 쿼리 전송
     const submitNewPasswordButton = document.getElementById("submit-new-password-btn");
 
     submitNewPasswordButton.addEventListener("click", function() {
-        console.log("버튼 클릭");
-        console.log(newPasswordInput.value);
         fetch("/api/users/password-reset", {
             method: "PATCH",
             headers: {
@@ -196,13 +203,13 @@ function initModalScript() {
                 if (response.ok) {
                     document.getElementsByClassName("input-password")[0].style.display = "none";
                     document.getElementsByClassName("result-page")[0].style.display = "block";
+                } else if (response.status === 401) {
+                    alert("비밀번호 변경 절차를 처음부터 다시 진행해주시기 바랍니다.");
                 } else {
-                    return response.json().then(data => {
-                        alert(data.message);
-                    });
+                    alert("잠시 후에 다시 시도해주십시오.")
                 }
             })
-            .catch(error => console.log(error));
+            .catch(error => console.error(error));
     })
 
     //로그인 화면으로 돌아가기
