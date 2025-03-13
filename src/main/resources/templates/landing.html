@@ -26,11 +26,12 @@
    </div>
  <script>
     const DEFAULT_IMAGES = [
-        '/images/default-image1.jpg',
-        '/images/default-image2.jpg',
-        '/images/default-image3.jpg',
-        '/images/default-image4.jpg',
-        '/images/default-image5.jpg',
+        '/images/default-image1.webp',
+        '/images/default-image2.webp',
+        '/images/default-image3.webp',
+        '/images/default-image4.webp',
+        '/images/default-image5.webp',
+        '/images/default-image6.webp'
     ]
 
      document.addEventListener('DOMContentLoaded', function() {
@@ -52,7 +53,7 @@
        // 서버에서 이미지 URL 가져오기
        async function fetchImageUrls() {
          try {
-           const response = await fetch(`/proxy/api/home/images`);
+           const response = await fetch(`/api/home/images`);
            if (!response.ok) {
              throw new Error(`HTTP error! status: ${response.status}`);
            }
