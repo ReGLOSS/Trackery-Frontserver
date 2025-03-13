@@ -53,7 +53,7 @@
 }
 
 .verify-email {
-    display:none;
+    display:block;
     border-radius: 10px;
     background-color:#d8e0e6;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -61,12 +61,36 @@
 }
 
 .reset-password .input-password {
-    display:block;
+    display:none;
     border-radius: 10px;
     background-color:#d8e0e6;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     padding: 20px;
 }
+
+.new-password-label {
+    display: flex;
+}
+
+.input-group.is-valid {
+    border: 1px double #2fb344;
+    border-radius: 5px;
+}
+
+.input-group.is-invalid {
+    border: 1px double #D63939FF;
+    border-radius: 5px;
+}
+
+.result-page {
+    text-align: center;
+    display:none;
+    border-radius: 10px;
+    background-color:#d8e0e6;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
 
 
 
