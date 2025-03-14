@@ -13,6 +13,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
+import com.trackery.trackeryfrontserver.domain.proxy.HttpClientErrorExceptionHandler;
+
 /**
  * packageName    : com.trackery.trackeryfrontserver.config
  * fileName       : RestTemplateConfig
@@ -34,7 +36,7 @@ public class RestTemplateConfig {
 	 * Spring의 DI 컨테이너에 RestTemplate 객체를 등록합니다.
 	 */
 	@Bean
-	public RestTemplate restTemplate() {
+	public RestTemplate restTemplate(HttpClientErrorExceptionHandler errorHandler) {
 		RequestConfig requestConfig = RequestConfig.custom()
 			.setResponseTimeout(Timeout.of(Duration.ofSeconds(5)))
 			.build();
@@ -51,7 +53,11 @@ public class RestTemplateConfig {
 			.build();
 
 		HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
-		return new RestTemplate(factory);
+
+		RestTemplate restTemplate = new RestTemplate(factory);
+		restTemplate.setErrorHandler(errorHandler);
+
+		return restTemplate;
 	}
 
 
