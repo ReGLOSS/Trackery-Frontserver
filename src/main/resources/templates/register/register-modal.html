@@ -15,11 +15,6 @@
     <!-- 1. 제목 섹션 -->
     <div class="title-section">회원가입</div>
 
-    <!-- 2. 프로필 이미지 섹션 -->
-    <div class="profile-image-section">
-        <img src="/images/profile.jpg" alt="프로필 이미지" class="profile-image">
-    </div>
-
     <!-- 3. 입력 섹션 -->
     <div class="input-form-section">
 
@@ -28,10 +23,18 @@
             <div class="email-input-form">
                 <input type="text" class="form-control" id="email" name="email" style="height: 50px"
                        placeholder="이메일을 입력해주세요."/>
-                <div class="email-verify-btn">
-                    <a href="#" class="btn btn-dark w-100" style="height: 50px">이메일 인증(미구현)</a>
+                <div class="email-verify-btn" style="margin-bottom:15px">
+                    <button class="btn btn-dark" id="registerEmailRequestVerifyBtn" style="margin-left:40px; height: 50px">이메일 인증
+                    </button>
                 </div>
             </div>
+            <div class="register-email-verification">
+                <input type="text" class="form-control" id="registerEmailAuthNumber" style="height: 50px"
+                       placeholder="이메일을 입력해주세요."/>
+                <button class="btn btn-dark" id="registerEmailAuthBtn" style="margin-left:40px; height: 50px">인증
+                </button>
+            </div>
+
         </div>
 
         <div class="username-input-section" style="margin-bottom: 20px">
@@ -40,11 +43,15 @@
                 <small class="form-text text-muted">&nbsp&nbsp 4~15자 길이에 영문 대소문자, 숫자, 밑줄(_)로 작성해주세요.</small>
             </div>
             <div class="username-input-form">
-                          <span class="input-group-text">
+                <div class="input-group input-group-flat">
+                    <span class="input-group-text">
                               @
                             </span>
-                <input type="text" class="form-control" id="username" name="username" style="height: 50px;"
-                       placeholder="사용자명을 입력해주세요." autocomplete="off"/>
+                    <input type="text" class="form-control" id="username" name="username" style="height: 50px;"
+                           placeholder="사용자명을 입력해주세요." autocomplete="off"/>
+                </div>
+
+
                 <div class="username-verify-btn">
                     <a href="#" id="username-verify-btn" class="btn btn-dark w-100 disabled" style="height: 50px">&nbsp&nbsp중복
                         확인&nbsp&nbsp</a>
