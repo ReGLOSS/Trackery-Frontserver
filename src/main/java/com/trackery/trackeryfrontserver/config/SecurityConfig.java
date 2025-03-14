@@ -17,12 +17,20 @@ import org.springframework.security.web.SecurityFilterChain;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 25. 02. 06.        narilee       최초 생성
+ * 25. 03. 10.        narilee       간편 로그인 추가
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-	private final String[] publicUris = {"/register/**", "/login/**"};
+	private final String[] publicUris = {
+		"/register/**",
+		"/login/**",
+		"/users/oauth/**",
+		"/oauth/**",
+		"/oauth-account/**",
+		"/oauth-redirect/**"
+	};
 
 	//TODO "/api/**/" permitAll() 삭제 후 퍼블릭 API를 제외하고 권한 인증 필요하게 수정
 	/**

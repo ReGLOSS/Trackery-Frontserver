@@ -33,6 +33,9 @@ function initModalScript() {
             });
         });
 
+    // OAuth 로그인 버튼 이벤트 리스너 추가
+    setupOAuthButtons();
+
     //비밀번호 숨기기 토글
     document.getElementById("togglePassword")
         .addEventListener("click", function () {
@@ -90,3 +93,30 @@ function initModalScript() {
             document.getElementById("login-modal-container").style.display = "flex";
         });
 }
+
+// OAuth 로그인 설정 함수
+function setupOAuthButtons() {
+    // OAuth 제공자 정의
+    const oauthProviders = [
+        { id: "google-login", provider: "google" },
+        { id: "kakao-login", provider: "kakao" },
+        { id: "naver-login", provider: "naver" },
+        { id: "github-login", provider: "github" }
+    ];
+
+    // 각 OAuth 버튼에 이벤트 리스너 추가
+    oauthProviders.forEach(({id, provider}) => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener("click", function() {
+                // 클릭 시 프론트엔드 OAuth 컨트롤러로 리다이렉트
+                window.location.href = `/oauth/${provider}`;
+            });
+        }
+    });
+}
+
+// 페이지 로드 시 OAuth 버튼 설정
+document.addEventListener('DOMContentLoaded', function() {
+    setupOAuthButtons();
+});

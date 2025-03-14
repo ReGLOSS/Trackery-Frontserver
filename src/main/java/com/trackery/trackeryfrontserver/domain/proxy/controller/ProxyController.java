@@ -1,6 +1,5 @@
 package com.trackery.trackeryfrontserver.domain.proxy.controller;
 
-import jakarta.servlet.ServletOutputStream;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
