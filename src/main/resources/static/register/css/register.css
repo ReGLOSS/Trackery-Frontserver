@@ -74,10 +74,6 @@
     display:flex;
 }
 
-.username-verify-btn {
-    margin-left: 40px;
-}
-
 .oauth-register-section {
     /* border: 1px solid gray; */
     margin-bottom: 30px;

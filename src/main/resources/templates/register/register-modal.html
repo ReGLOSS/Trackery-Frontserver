@@ -24,14 +24,14 @@
                 <input type="text" class="form-control" id="email" name="email" style="height: 50px"
                        placeholder="이메일을 입력해주세요."/>
                 <div class="email-verify-btn" style="margin-bottom:15px">
-                    <button class="btn btn-dark" id="registerEmailRequestVerifyBtn" style="margin-left:40px; height: 50px">이메일 인증
+                    <button class="btn btn-dark" id="registerEmailRequestVerifyBtn" style="margin-left:40px; height: 50px; width: 120px; flex-shrink: 0; padding: 8px 12px;">이메일 인증
                     </button>
                 </div>
             </div>
             <div class="register-email-verification">
                 <input type="text" class="form-control" id="registerEmailAuthNumber" style="height: 50px"
-                       placeholder="이메일을 입력해주세요."/>
-                <button class="btn btn-dark" id="registerEmailAuthBtn" style="margin-left:40px; height: 50px">인증
+                       placeholder="인증번호를 입력해주세요."/>
+                <button class="btn btn-dark" id="registerEmailAuthBtn" style="margin-left:40px; height: 50px; width: 120px; flex-shrink: 0; padding: 8px 12px;">인증
                 </button>
             </div>
 
@@ -53,8 +53,7 @@
 
 
                 <div class="username-verify-btn">
-                    <a href="#" id="username-verify-btn" class="btn btn-dark w-100 disabled" style="height: 50px">&nbsp&nbsp중복
-                        확인&nbsp&nbsp</a>
+                    <button id="username-verify-btn" class="btn btn-dark disabled" style="margin-left:40px; height: 50px; width: 120px; flex-shrink: 0; padding: 8px 12px;">중복 확인</button>
                 </div>
             </div>
         </div>
@@ -79,12 +78,6 @@
             <input type="text" class="form-control" id="password-confirm" name="password-confirm"
                    style="height: 50px;"
                    placeholder="비밀번호를 다시 입력해주세요."/>
-        </div>
-
-        <div class="prefered-location-input-form">
-            <label class="form-label required">선호 지역</label>
-            <input type="text" class="form-control" id="prefered-location" name="prefered-location"
-                   style="height: 50px;" placeholder="선호지역(미구현)"/>
         </div>
 
     </div>
