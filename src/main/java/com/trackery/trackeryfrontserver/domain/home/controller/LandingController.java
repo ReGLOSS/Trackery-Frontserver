@@ -21,7 +21,7 @@ public class LandingController {
 	/**
 	 * 유저가 접속시 최초로 보게 되는 웹페이지 입니다.
 	 *
-	 * @return
+	 * @return 랜딩페이지
 	 */
 	@GetMapping("/")
 	public String landing() {

@@ -1,7 +1,5 @@
 package com.trackery.trackeryfrontserver.domain.proxy.service;
 
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -12,12 +10,14 @@ import org.springframework.web.client.RestTemplate;
 
 import com.trackery.trackeryfrontserver.domain.proxy.ServerException;
 
+import lombok.RequiredArgsConstructor;
+
 /**
  * packageName    : com.trackery.trackeryfrontserver.domain.proxy.controller
  * fileName       : ProxyService
  * author         : inari
  * date           : 25. 2. 19.
- * description    : 프록시 요청을 실제로 처리하는  서비스 클래스입니다.
+ * description    : 프록시 요청을 실제로 처리하는 서비스 클래스입니다.
  * 					프론트엔드에서 받는 요청을 백엔드 서버로 전달하고 응답을 받아옵니다.
  * ===========================================================
  * DATE              AUTHOR             NOTE
