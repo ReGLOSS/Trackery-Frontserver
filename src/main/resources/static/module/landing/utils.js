@@ -33,3 +33,11 @@ export function startCountdown(button, callbackFunction) {
 export function validatePassword(password) {
     return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s])^\S{16,}$/.test(password);
 }
+
+export function debounce(callback, delay = 500) {
+    let debounceTimer;
+    return function (...args) {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => callback(...args), delay);
+    };
+}

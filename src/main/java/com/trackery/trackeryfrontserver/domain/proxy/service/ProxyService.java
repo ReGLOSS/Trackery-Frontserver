@@ -72,7 +72,6 @@ public class ProxyService {
 			return restTemplate.exchange(fullUrl, method, httpEntity, String.class);
 		} catch (ServerException | RestClientException e) {
 			log.error("프록시 작업 중 서버 에러 발생 : {}", e.getMessage());
-
 			return ResponseEntity.status(500).body("{\"code\":\"500\",\"message\":\"현재 요청을 처리할 수 없습니다.\"}");
 		}
 	}

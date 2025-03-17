@@ -1,3 +1,5 @@
+import {togglePasswordVisibility, closeAndOpenElements, startCountdown, validatePassword, debounce} from "/module/landing/utils.js";
+
 const emailInput = document.getElementById("email");
 const usernameInput = document.getElementById("username");
 const nicknameInput = document.getElementById("nickname");
@@ -7,11 +9,14 @@ const saveButton = document.getElementById("save-btn");
 const usernameVerifyButton = document.getElementById("username-verify-btn");
 
 document.getElementById("register-modal-close").addEventListener("click", function () {
-    document.getElementById("content-overlay").style.display = "flex";
-    document.getElementById("register-modal-container").style.display = "none";
+    closeAndOpenElements(
+        document.getElementById("register-modal-container"),
+        document.getElementById("content-overlay"),
+        "flex"
+    );
 })
 
-// 버튼 클릭 이벤트
+// 변경 사항 저장 버튼
 saveButton.addEventListener("click", function () {
     fetch("/api/users/register", {
         method: "POST",
@@ -66,15 +71,6 @@ usernameVerifyButton.addEventListener("click", function () {
         })
 });
 
-// 입력폼 디바운싱
-function debounce(callback, delay = 500) {
-    let debounceTimer;
-    return function (...args) {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => callback(...args), delay);
-    };
-}
-
 registerPasswordInput.addEventListener("input", debounce(() => applyValidationClass(registerPasswordInput, validatePassword(registerPasswordInput.value))));
 registerPasswordConfirmInput.addEventListener("input", debounce(() => checkPasswordMatch(registerPasswordInput, registerPasswordConfirmInput)));
 usernameInput.addEventListener("input", debounce(() => applyUsernameValidationClass(usernameInput, validateUsername(usernameInput.value))));
@@ -103,10 +99,6 @@ function toggleButtonState(button, isValid) {
 
 function validateUsername(username) {
     return /^\w{4,15}$/.test(username);
-}
-
-function validatePassword(password) {
-    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s])^\S{16,}$/.test(password);
 }
 
 function validateNickname(nickname) {
