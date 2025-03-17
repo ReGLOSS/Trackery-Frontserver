@@ -44,24 +44,40 @@ document.getElementById("togglePassword")
 //회원가입 모달 오픈
 document.getElementById("register-guide")
     .addEventListener("click", function () {
-        closeAndOpenElements("login-modal-container", "register--modal-container", "flex");
+            closeAndOpenElements(
+                document.getElementById("login-modal-container"),
+                document.getElementById("register-modal-container"),
+                "flex"
+            );
         }
     );
 
 //계정 찾기 모달 오픈
 document.getElementById("find-account-guide")
     .addEventListener("click", function () {
-        closeAndOpenElements("login-modal-container", "find-account-modal-container", "flex");
+        closeAndOpenElements(
+            document.getElementById("login-modal-container"),
+            document.getElementById("find-account-modal-container"),
+            "flex"
+        );
     })
 
 //로그인 모달 닫기
 document.getElementById("login-modal-close")
     .addEventListener("click", function () {
-        closeAndOpenElements("login-modal-container", "content-overlay", "flex");
+        closeAndOpenElements(
+            document.getElementById("login-modal-container"),
+            document.getElementById("content-overlay"),
+            "flex"
+        );
     });
 
 //로그인 모달 오픈
 document.getElementById("startButton")
     .addEventListener("click", function () {
-        closeAndOpenElements("content-overlay", "login-modal-container", "flex");
+        closeAndOpenElements(
+            document.getElementById("content-overlay"),
+            document.getElementById("login-modal-container"),
+            "flex"
+        );
     });

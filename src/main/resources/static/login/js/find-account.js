@@ -1,4 +1,4 @@
-import {togglePasswordVisibility} from "/module/landing/utils.js";
+import {togglePasswordVisibility, startCountdown, validatePassword, closeAndOpenElements} from "/module/landing/utils.js";
 
 //로그인 모달 닫기
 document.getElementById("find-account-modal-close")
@@ -29,7 +29,10 @@ pwdEmailCodeSendButton.addEventListener("click", function () {
             .then(response => {
                 if (response.ok) {
                     emailInput.readOnly = true;
-                    startCountdown(pwdEmailCodeSendButton);
+                    startCountdown(pwdEmailCodeSendButton, function() {
+                        buttonDisableToggle(pwdEmailCodeSendButton, false);
+                        pwdEmailCodeSendButton.textContent = '인증 번호 발송';
+                    });
                 } else {
                     return response.json().then(data => {
                         buttonDisableToggle(pwdEmailCodeSendButton, false);
@@ -45,24 +48,6 @@ pwdEmailCodeSendButton.addEventListener("click", function () {
         alert('이메일을 입력해주십시오.');
     }
 })
-
-function startCountdown(button) {
-    let timeLeft = 180;
-
-    const timer = setInterval(function () {
-        const minutes = Math.floor(timeLeft / 60);
-        const seconds = timeLeft % 60;
-        button.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-
-        timeLeft -= 1;
-
-        if (timeLeft < 0) {
-            clearInterval(timer);
-            buttonDisableToggle(button, false);
-            button.textContent = '인증 번호 발송';
-        }
-    }, 1000);
-}
 
 //인증번호 확인
 const authNumberVerifyButton = document.getElementById("find-password-auth-number-verify-btn");
@@ -139,10 +124,6 @@ function debounce(callback, delay = 500) {
 newPasswordInput.addEventListener("input", debounce(() => toggleValidationClass(newPasswordInputGroup, validatePassword(newPasswordInput.value))));
 newPasswordConfirmInput.addEventListener("input", debounce(() => toggleValidationClass(newPasswordConfirmInputGroup, newPasswordInput.value === newPasswordConfirmInput.value && newPasswordConfirmInput.value !== "")));
 
-function validatePassword(password) {
-    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s])^\S{16,}$/.test(password);
-}
-
 function toggleValidationClass(input, isValid) {
     input.classList.toggle("is-valid", isValid);
     input.classList.toggle("is-invalid", !isValid);
@@ -172,8 +153,11 @@ submitNewPasswordButton.addEventListener("click", function () {
     })
         .then(response => {
             if (response.ok) {
-                document.getElementsByClassName("input-password")[0].style.display = "none";
-                document.getElementsByClassName("result-page")[0].style.display = "block";
+                closeAndOpenElements(
+                    document.getElementsByClassName("input-password")[0],
+                    document.getElementsByClassName("result-page")[0],
+                    "block"
+                );
             } else if (response.status === 400) {
                 alert("비밀번호 변경 절차를 처음부터 다시 진행해주시기 바랍니다.");
             } else {
@@ -185,8 +169,11 @@ submitNewPasswordButton.addEventListener("click", function () {
 
 //로그인 화면으로 돌아가기
 document.getElementById("return-to-login-btn").addEventListener("click", function () {
-    document.getElementsByClassName("result-page")[0].style.display = "none";
-    document.getElementsByClassName("verify-email")[0].style.display = "block";
-    document.getElementsByClassName("find-account-modal-container")[0].style.display = "none";
-    document.getElementsByClassName("login-modal-container")[0].style.display = "flex";
+    const resultPage = document.getElementsByClassName("result-page")[0];
+    const verifyEmail = document.getElementsByClassName("verify-email")[0];
+    const findAccountModal = document.getElementsByClassName("find-account-modal-container")[0];
+    const loginModal = document.getElementsByClassName("login-modal-container")[0];
+
+    closeAndOpenElements(resultPage, verifyEmail, "block");
+    closeAndOpenElements(findAccountModal, loginModal, "flex");
 })
