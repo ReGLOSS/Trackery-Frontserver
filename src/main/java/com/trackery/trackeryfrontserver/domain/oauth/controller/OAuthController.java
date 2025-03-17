@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
  * fileName       : OAuthController
  * author         : inari
  * date           : 25. 3. 10.
- * description    : OAuth 로그인 후 백엔드에서 리디렉션을 처리하는 컨트롤러입니다.
+ * description    : 사용자를 각 소셜 로그인 제공자(구글, 카카오, 네이버, 깃허브)로 리디렉션하는 컨트롤러입니다.
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

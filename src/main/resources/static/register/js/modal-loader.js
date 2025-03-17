@@ -53,5 +53,3 @@ function loadLoginModalScript() {
     }
     document.body.appendChild(script);
 }
-
-

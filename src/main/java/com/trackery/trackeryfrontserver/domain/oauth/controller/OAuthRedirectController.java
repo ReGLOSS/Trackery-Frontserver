@@ -24,11 +24,12 @@ import lombok.extern.slf4j.Slf4j;
  * fileName       : OAuthRedirectController
  * author         : inari
  * date           : 25. 3. 13.
- * description    : OAuth 제공자로부터 인증 코드를 받아 처리하는 리다이렉트 컨트롤러입니다.
+ * description    : OAuth 제공자로부터 인증 코드를 받아 처리하는 백엔드로 리다이렉트하는 컨트롤러입니다.
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 25. 3. 13.        inari       최초 생성
+ * 25. 3. 16.        inari       팝업으로 변경
  */
 @Slf4j
 @Controller
@@ -81,8 +82,6 @@ public class OAuthRedirectController {
 				apiUrl.append("&state=").append(state);
 			}
 
-			log.debug("백엔드 API 호출 URL: {}", apiUrl.toString());
-
 			// 백엔드 API 호출
 			HttpHeaders headers = new HttpHeaders();
 			ResponseEntity<String> apiResponse = proxyService.forwardRequest(
@@ -93,7 +92,6 @@ public class OAuthRedirectController {
 
 			// 응답 본문 파싱 및 로깅
 			String responseBody = apiResponse.getBody();
-			log.debug("백엔드 응답 본문: {}", responseBody);
 
 			JsonNode jsonResponse = objectMapper.readTree(responseBody);
 
@@ -116,8 +114,7 @@ public class OAuthRedirectController {
 				return "oauth/link-account";
 			}
 
-			// 로그인 성공 또는 연동 성공 시 메인 페이지로
-			return "redirect:/register/temporal-main";
+			return "oauth/close-popup";
 
 		} catch (Exception e) {
 			log.error("OAuth 리다이렉트 처리 중 오류 발생: ", e);
@@ -127,7 +124,7 @@ public class OAuthRedirectController {
 	}
 
 	/**
-	 * HTTP 헤더(주로 쿠키)를 소스에서 대상 응답으로 복사합니다.
+	 * HTTP 헤더(쿠키)를 소스에서 대상 응답으로 복사합니다.
 	 *
 	 * @param sourceHeaders 소스 HTTP 헤더
 	 * @param response 대상 HTTP 응답 객체

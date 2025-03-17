@@ -30,11 +30,12 @@ import lombok.extern.slf4j.Slf4j;
  * fileName       : OAuthAccountController
  * author         : inari
  * date           : 25. 3. 14.
- * description    : OAuth를 통한 계정 연동을 처리하는 컨트롤러입니다.
+ * description    : OAuth를 통한 기존 계정과 계정 연동을 처리하는 컨트롤러입니다.
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 25. 3. 14.        inari       최초 생성
+ * 25. 3. 16.        inari       팝업으로 변경
  */
 @Slf4j
 @Controller
@@ -204,7 +205,8 @@ public class OAuthAccountController {
 				session.removeAttribute("link_account_intent");
 
 				// 연동 성공 시 메인 페이지로
-				return "redirect:/register/temporal-main";
+				return "oauth/close-popup";
+
 			} else {
 				// 오류 발생 - 오류 페이지로
 				String errorMessage = responseBody.path("message").asText("계정 연동 중 오류가 발생했습니다");

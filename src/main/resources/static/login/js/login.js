@@ -104,16 +104,33 @@ function setupOAuthButtons() {
         { id: "github-login", provider: "github" }
     ];
 
-    // 각 OAuth 버튼에 이벤트 리스너 추가
-    oauthProviders.forEach(({id, provider}) => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.addEventListener("click", function() {
-                // 클릭 시 프론트엔드 OAuth 컨트롤러로 리다이렉트
-                window.location.href = `/oauth/${provider}`;
-            });
-        }
-    });
+   // 각 OAuth 버튼에 이벤트 리스너 추가
+   oauthProviders.forEach(({id, provider}) => {
+       const element = document.getElementById(id);
+       if (element) {
+           element.addEventListener("click", function(e) {
+               e.preventDefault();
+
+               // 새 창에서 OAuth 로그인 처리
+               const oauthWindow = window.open(
+                   `/oauth/${provider}`,
+                   `${provider}Login`,
+                   'width=600,height=700,top=100,left=100'
+               );
+
+               // 창 참조 저장
+               window.oauthPopupRef = oauthWindow;
+
+               // 메시지 이벤트 리스너 등록
+               window.addEventListener('message', function(event) {
+                   if (event.data && event.data.oauthComplete) {
+                       // 인증 완료 시 temporal-main 페이지로 이동
+                       window.location.href = '/register/temporal-main';
+                   }
+               });
+           });
+       }
+   });
 }
 
 // 페이지 로드 시 OAuth 버튼 설정
