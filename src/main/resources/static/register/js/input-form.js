@@ -29,7 +29,7 @@ saveButton.addEventListener("click", function () {
         .then(response => {
             if (!response.ok) {
                 return response.json().then(data => {
-                    alert(data.message || "요청 처리 중 문제가 발생했습니다.");
+                    alert(data.message);
                     throw new Error(data.message);
                 })
             }
@@ -41,6 +41,7 @@ saveButton.addEventListener("click", function () {
         });
 });
 
+//유저명 중복확인 버튼
 usernameVerifyButton.addEventListener("click", function () {
     fetch("/api/users/exists/username?value=" + encodeURIComponent(usernameInput.value), {
         method: "GET",
@@ -48,8 +49,7 @@ usernameVerifyButton.addEventListener("click", function () {
         .then(response => {
             if (!response.ok) {
                 return response.json().then(data => {
-                    alert(data.message || "요청 처리 중 문제가 발생했습니다.");
-                    throw new Error(data.message);
+                    alert(data.message);
                 })
             }
             return response.json();
@@ -59,7 +59,7 @@ usernameVerifyButton.addEventListener("click", function () {
                 usernameInput.disabled = true;
                 usernameVerifyButton.textContent = "확인 완료";
                 usernameVerifyButton.classList.add("is-valid");
-                toggleButtonState(usernameVerifyButton, false);
+                usernameVerifyButton.disabled = false;
             } else {
                 toggleValidationClass(usernameInput, false)
             }
