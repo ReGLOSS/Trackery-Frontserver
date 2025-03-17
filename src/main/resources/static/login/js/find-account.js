@@ -6,8 +6,6 @@ function initModalScript() {
             document.getElementById("find-account-modal-container").style.display = "none";
         });
 
-
-
     //인증번호 전송
     const pwdEmailCodeSendButton = document.getElementById("find-password-email-verification-code-send-btn");
 
@@ -203,7 +201,7 @@ function initModalScript() {
                 if (response.ok) {
                     document.getElementsByClassName("input-password")[0].style.display = "none";
                     document.getElementsByClassName("result-page")[0].style.display = "block";
-                } else if (response.status === 401) {
+                } else if (response.status === 400) {
                     alert("비밀번호 변경 절차를 처음부터 다시 진행해주시기 바랍니다.");
                 } else {
                     alert("잠시 후에 다시 시도해주십시오.")

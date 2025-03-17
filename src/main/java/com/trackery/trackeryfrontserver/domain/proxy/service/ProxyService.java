@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.trackery.trackeryfrontserver.domain.proxy.ServerException;
+
 /**
  * packageName    : com.trackery.trackeryfrontserver.domain.proxy.controller
  * fileName       : ProxyService
@@ -56,6 +58,10 @@ public class ProxyService {
 			: new HttpEntity<>(null, headers);
 
 		// 실제 HTTP 요청을 보내고 응답을 받아옴
-		return restTemplate.exchange(fullUrl, method, httpEntity, String.class);
+		try {
+			return restTemplate.exchange(fullUrl, method, httpEntity, String.class);
+		} catch (ServerException e) {
+			return ResponseEntity.status(500).body(e.getMessage());
+		}
 	}
 }
