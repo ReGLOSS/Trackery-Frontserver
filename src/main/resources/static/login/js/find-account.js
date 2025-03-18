@@ -1,4 +1,5 @@
 import {togglePasswordVisibility, startCountdown, validatePassword, closeAndOpenElements} from "/module/landing/utils.js";
+import {sendRequestVerificationEmail, authNumberVerification} from "/module/landing/email-verification.js";
 
 //로그인 모달 닫기
 document.getElementById("find-account-modal-close")
@@ -13,40 +14,7 @@ const pwdEmailCodeSendButton = document.getElementById("find-password-email-veri
 pwdEmailCodeSendButton.addEventListener("click", function () {
     const emailInput = document.getElementById("find-password-email").value;
 
-    buttonDisableToggle(pwdEmailCodeSendButton, true);
-    pwdEmailCodeSendButton.textContent = "잠시만 기다려주십시오";
-
-    if (emailInput) {
-        fetch('/api/mail/request-verify/email', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                email: emailInput
-            })
-        })
-            .then(response => {
-                if (response.ok) {
-                    emailInput.readOnly = true;
-                    startCountdown(pwdEmailCodeSendButton, function() {
-                        buttonDisableToggle(pwdEmailCodeSendButton, false);
-                        pwdEmailCodeSendButton.textContent = '인증 번호 발송';
-                    });
-                } else {
-                    return response.json().then(data => {
-                        buttonDisableToggle(pwdEmailCodeSendButton, false);
-                        pwdEmailCodeSendButton.textContent = "인증 번호 발송";
-                        alert(data.message);
-                    });
-                }
-            })
-            .catch(error => console.error(error));
-    } else {
-        buttonDisableToggle(pwdEmailCodeSendButton, false);
-        pwdEmailCodeSendButton.textContent = "인증 번호 발송";
-        alert('이메일을 입력해주십시오.');
-    }
+    sendRequestVerificationEmail(pwdEmailCodeSendButton, emailInput);
 })
 
 //인증번호 확인
@@ -56,37 +24,7 @@ authNumberVerifyButton.addEventListener("click", function () {
     const authNumberInput = document.getElementById("find-password-auth-number").value;
     const emailInput = document.getElementById("find-password-email").value;
 
-    if (authNumberInput) {
-        buttonDisableToggle(authNumberVerifyButton, true);
-        authNumberVerifyButton.textContent = "잠시만 기다려주십시오";
-
-        fetch('/api/mail/verify/email', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                email: emailInput,
-                authNumber: authNumberInput
-            })
-        })
-            .then(response => {
-                if (response.ok) {
-                    emailInput.readOnly = true;
-                    document.getElementsByClassName("verify-email")[0].style.display = "none";
-                    document.getElementsByClassName("input-password")[0].style.display = "block";
-                } else {
-                    return response.json().then(data => {
-                        buttonDisableToggle(authNumberVerifyButton, false);
-                        authNumberVerifyButton.textContent = "인증 번호 확인";
-                        alert(data.message);
-                    });
-                }
-            })
-            .catch(error => console.error(error));
-    } else {
-        alert("인증번호를 입력해주십시오.");
-    }
+    authNumberVerification(authNumberVerifyButton, authNumberInput, emailInput, )
 })
 
 //버튼 비활성 토글

@@ -1,12 +1,20 @@
-import {togglePasswordVisibility, closeAndOpenElements, startCountdown, validatePassword, debounce} from "/module/landing/utils.js";
+import {
+    togglePasswordVisibility,
+    closeAndOpenElements,
+    validatePassword,
+    debounce
+} from "/module/landing/utils.js";
+import {sendRequestVerificationEmail, authNumberVerification} from "/module/landing/email-verification.js";
 
 const emailInput = document.getElementById("email");
+const authNumberInput = document.getElementById("registerEmailAuthNumber");
 const usernameInput = document.getElementById("username");
 const nicknameInput = document.getElementById("nickname");
 const registerPasswordInput = document.getElementById("password");
 const registerPasswordConfirmInput = document.getElementById("password-confirm");
 const saveButton = document.getElementById("save-btn");
 const usernameVerifyButton = document.getElementById("username-verify-btn");
+const verifiedText = "인증 완료";
 
 document.getElementById("register-modal-close").addEventListener("click", function () {
     closeAndOpenElements(
@@ -62,20 +70,37 @@ usernameVerifyButton.addEventListener("click", function () {
         .then(data => {
             if (data.data === true) {
                 usernameInput.disabled = true;
-                usernameVerifyButton.textContent = "확인 완료";
-                usernameVerifyButton.classList.add("is-valid");
-                usernameVerifyButton.disabled = false;
+                usernameVerifyButton.textContent = verifiedText;
+                toggleValidationClass(usernameVerifyButton, true);
+                usernameVerifyButton.disabled = true;
             } else {
                 toggleValidationClass(usernameInput, false)
             }
         })
 });
 
+//이메일 인증
+const requestEmailVerifyButton = document.getElementById("registerEmailRequestVerifyBtn");
+const verifyAuthNumberButton = document.getElementById("registerEmailAuthBtn");
+
+//이메일 인증 요청 버튼
+requestEmailVerifyButton.addEventListener("click", function () {
+    sendRequestVerificationEmail(requestEmailVerifyButton, emailInput);
+})
+
+//인증 버튼
+verifyAuthNumberButton.addEventListener("click", function () {
+    authNumberVerification(verifyAuthNumberButton, authNumberInput, emailInput, function () {
+        applyValidationClass(emailInput, true);
+        applyValidationClass(requestEmailVerifyButton, true);
+        applyValidationClass(verifyAuthNumberButton, true);
+    })
+})
+
 registerPasswordInput.addEventListener("input", debounce(() => applyValidationClass(registerPasswordInput, validatePassword(registerPasswordInput.value))));
 registerPasswordConfirmInput.addEventListener("input", debounce(() => checkPasswordMatch(registerPasswordInput, registerPasswordConfirmInput)));
 usernameInput.addEventListener("input", debounce(() => applyUsernameValidationClass(usernameInput, validateUsername(usernameInput.value))));
 nicknameInput.addEventListener("input", debounce(() => applyValidationClass(nicknameInput, validateNickname(nicknameInput.value))));
-emailInput.addEventListener("input", debounce(() => applyValidationClass(emailInput, validateEmail(emailInput.value))));
 
 function applyValidationClass(input, isValid) {
     toggleValidationClass(input, isValid);
@@ -85,6 +110,7 @@ function applyValidationClass(input, isValid) {
 function applyUsernameValidationClass(input, isValid) {
     toggleValidationClass(input, isValid);
     toggleButtonState(usernameVerifyButton, isValid);
+    checkRequiredFields();
 }
 
 function toggleValidationClass(input, isValid) {
@@ -114,7 +140,7 @@ function checkPasswordMatch(origPassword, confirmPassword) {
     applyValidationClass(confirmPassword, origPassword.value === confirmPassword.value && confirmPassword.value !== "");
 }
 
-const requiredInputs = [emailInput, usernameInput, registerPasswordInput, registerPasswordConfirmInput, usernameVerifyButton];
+const requiredInputs = [emailInput, requestEmailVerifyButton, verifyAuthNumberButton, usernameInput, registerPasswordInput, registerPasswordConfirmInput, usernameVerifyButton];
 
 function checkRequiredFields() {
     const allValid = requiredInputs.every(input => input.classList.contains("is-valid"));

@@ -16,7 +16,11 @@ export function togglePasswordVisibility(icon, passwordInput) {
 export function startCountdown(button, callbackFunction) {
     let timeLeft = 180;
 
-    const timer = setInterval(function () {
+    if (button.verificationTimer) {
+        clearInterval(button.verificationTimer);
+    }
+
+    button.verificationTimer = setInterval(function () {
         const minutes = Math.floor(timeLeft / 60);
         const seconds = timeLeft % 60;
         button.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
@@ -24,7 +28,8 @@ export function startCountdown(button, callbackFunction) {
         timeLeft -= 1;
 
         if (timeLeft < 0) {
-            clearInterval(timer);
+            clearInterval(button.verificationTimer);
+            button.verificationTimer = null;
             callbackFunction();
         }
     }, 1000);
