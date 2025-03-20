@@ -37,16 +37,8 @@
     margin-bottom:15px;
 }
 
-.password-code-send-btn {
-    margin-left : 30px;
-}
-
 .verify-email .input-verify {
     margin-bottom:15px;
-}
-
-.password-email-verify-btn {
-    margin-left: 30px;
 }
 
 .input-verify .auth-number-input-form {
@@ -90,10 +82,6 @@
     background-color:#d8e0e6;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     padding: 20px;
-}
-
-.finder-selector {
- !important;
 }
 
 

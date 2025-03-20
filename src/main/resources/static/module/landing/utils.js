@@ -46,3 +46,10 @@ export function debounce(callback, delay = 500) {
         debounceTimer = setTimeout(() => callback(...args), delay);
     };
 }
+
+function checkRequiredFields(requiredInputsGroups, contains, callback) {
+    const allValid = requiredInputsGroups.every(requiredInputsGroups => requiredInputsGroups.classList.contains(contains));
+    if(allValid) {
+        callback();
+    }
+}

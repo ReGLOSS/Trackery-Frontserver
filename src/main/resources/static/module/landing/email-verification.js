@@ -1,10 +1,10 @@
 import {startCountdown} from "./utils.js";
 
-export function sendRequestVerificationEmail(button, emailInput) {
+export function sendRequestVerificationEmail(sendEmailButton, authNumberButton, emailInput) {
     const emailValue = emailInput.value;
     if (emailValue) {
-        button.disabled = true;
-        button.textContent = "...";
+        sendEmailButton.disabled = true;
+        sendEmailButton.textContent = "...";
 
         fetch('/api/mail/request-verify/email', {
             method: 'POST',
@@ -18,19 +18,20 @@ export function sendRequestVerificationEmail(button, emailInput) {
             .then(response => {
                 if (response.ok) {
                     emailInput.readOnly = true;
-                    startCountdown(button, function () {
-                        restoreSendVerificationEmailButton(button);
+                    startCountdown(sendEmailButton, function () {
+                        restoreSendVerificationEmailButton(sendEmailButton);
                     });
+                    authNumberButton.disabled = false;
                 } else {
                     return response.json().then(data => {
-                        restoreSendVerificationEmailButton(button);
+                        restoreSendVerificationEmailButton(sendEmailButton);
                         alert(data.message);
                     });
                 }
             })
             .catch(error => console.error(error));
     } else {
-        restoreSendVerificationEmailButton(button);
+        restoreSendVerificationEmailButton(sendEmailButton);
         alert('이메일을 입력해주십시오.');
     }
 }
@@ -45,58 +46,58 @@ export function authNumberVerification(sendEmailButton, authNumberButton, authNu
     const emailValue = emailInput.value;
     const authNumberValue = authNumberInput.value;
 
-    if (authNumberValue) {
-        authNumberButton.disabled = true;
-        authNumberButton.textContent = "...";
+    console.log("emailValue: {}", emailValue);
+    console.log("authNumberValue: {}", authNumberValue);
 
-        fetch('/api/mail/verify/email', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                email: emailValue,
-                authNumber: authNumberValue
-            })
-        })
-            .then(response => {
-                if (response.ok) {
-                    authNumberButton.disabled = true;
-                    authNumberInput.readOnly = true;
-                    emailInput.readOnly = true;
-
-                    authNumberButton.textContent = verifiedText;
-                    sendEmailButton.textContent = verifiedText;
-
-                    clearInterval(sendEmailButton.verificationTimer);
-
-                    sendEmailButton.disabled = true;
-                    authNumberInput.style.display = "none";
-                    authNumberButton.style.display = "none";
-
-                    callback();
-                } else {
-                    return response.text().then(text => {
-                        try {
-                            const data = JSON.parse(text);
-                            restoreAuthNumberVerificationButton(authNumberButton);
-                            alert(data.message);
-                        } catch (error) {
-                            restoreAuthNumberVerificationButton(authNumberButton);
-                            alert("응답을 처리하는 중 오류가 발생했습니다.");
-                        }
-                    });
-                }
-            })
-            .catch(error => {
-                restoreAuthNumberVerificationButton(authNumberButton);
-                console.error(error);
-                alert("네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
-            });
-
-    } else {
-        alert("인증번호를 입력해주십시오.");
+    if (!emailValue) {
+        alert("이메일을 입력해주십시오.");
+        return;
     }
+
+    if (!authNumberValue) {
+        alert("인증 번호를 입력해주십시오.");
+        return;
+    }
+
+    authNumberButton.disabled = true;
+    authNumberButton.textContent = "...";
+
+    fetch('/api/mail/verify/email', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            email: emailValue,
+            authNumber: authNumberValue
+        })
+    })
+        .then(response => {
+            if (response.ok) {
+                authNumberButton.disabled = true;
+                authNumberInput.readOnly = true;
+                emailInput.readOnly = true;
+
+                authNumberButton.textContent = verifiedText;
+                sendEmailButton.textContent = verifiedText;
+
+                clearInterval(sendEmailButton.verificationTimer);
+
+                sendEmailButton.disabled = true;
+                authNumberInput.style.display = "none";
+                authNumberButton.style.display = "none";
+
+                callback();
+            } else if (response.status === 400) {
+                restoreAuthNumberVerificationButton(authNumberButton);
+                alert("인증번호가 올바르지 않습니다.");
+            } else {
+                return response.json().then(data => {
+                    restoreAuthNumberVerificationButton(authNumberButton);
+                    alert(data.message);
+                });
+            }
+        })
 }
 
 function restoreAuthNumberVerificationButton(button) {

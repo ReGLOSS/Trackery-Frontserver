@@ -1,4 +1,4 @@
-import {togglePasswordVisibility, startCountdown, validatePassword, closeAndOpenElements} from "/module/landing/utils.js";
+import {togglePasswordVisibility, validatePassword, closeAndOpenElements, debounce} from "/module/landing/utils.js";
 import {sendRequestVerificationEmail, authNumberVerification} from "/module/landing/email-verification.js";
 
 //로그인 모달 닫기
@@ -10,31 +10,27 @@ document.getElementById("find-account-modal-close")
 
 //인증번호 전송
 const pwdEmailCodeSendButton = document.getElementById("find-password-email-verification-code-send-btn");
+const authNumberVerifyButton = document.getElementById("find-password-auth-number-verify-btn");
 
 pwdEmailCodeSendButton.addEventListener("click", function () {
-    const emailInput = document.getElementById("find-password-email").value;
+    const emailInput = document.getElementById("find-password-email");
 
-    sendRequestVerificationEmail(pwdEmailCodeSendButton, emailInput);
+    sendRequestVerificationEmail(pwdEmailCodeSendButton, authNumberVerifyButton, emailInput);
 })
 
 //인증번호 확인
-const authNumberVerifyButton = document.getElementById("find-password-auth-number-verify-btn");
-
 authNumberVerifyButton.addEventListener("click", function () {
-    const authNumberInput = document.getElementById("find-password-auth-number").value;
-    const emailInput = document.getElementById("find-password-email").value;
+    const authNumberInput = document.getElementById("find-password-auth-number");
+    const emailInput = document.getElementById("find-password-email");
 
-    authNumberVerification(authNumberVerifyButton, authNumberInput, emailInput, )
+    authNumberVerification(pwdEmailCodeSendButton, authNumberVerifyButton, authNumberInput, emailInput, function() {
+        closeAndOpenElements(
+            document.getElementsByClassName("verify-email")[0],
+            document.getElementsByClassName("input-password")[0],
+            "block"
+        );
+    })
 })
-
-//버튼 비활성 토글
-function buttonDisableToggle(button, boolean) {
-    if (boolean) {
-        button.classList.add("disabled", boolean);
-    } else {
-        button.classList.remove("disabled");
-    }
-}
 
 document.getElementById("toggleNewPassword").addEventListener("click", function () {
     togglePasswordVisibility(this.querySelector("img"), document.getElementById("newPassword"));
@@ -50,14 +46,6 @@ const newPasswordConfirmInput = document.getElementById("newPasswordConfirm");
 
 const newPasswordInputGroup = document.querySelector("#newPassword").closest(".input-group.input-group-flat");
 const newPasswordConfirmInputGroup = document.querySelector("#newPasswordConfirm").closest(".input-group.input-group-flat");
-
-function debounce(callback, delay = 500) {
-    let debounceTimer;
-    return function (...args) {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => callback(...args), delay);
-    };
-}
 
 newPasswordInput.addEventListener("input", debounce(() => toggleValidationClass(newPasswordInputGroup, validatePassword(newPasswordInput.value))));
 newPasswordConfirmInput.addEventListener("input", debounce(() => toggleValidationClass(newPasswordConfirmInputGroup, newPasswordInput.value === newPasswordConfirmInput.value && newPasswordConfirmInput.value !== "")));
@@ -96,10 +84,8 @@ submitNewPasswordButton.addEventListener("click", function () {
                     document.getElementsByClassName("result-page")[0],
                     "block"
                 );
-            } else if (response.status === 400) {
-                alert("비밀번호 변경 절차를 처음부터 다시 진행해주시기 바랍니다.");
             } else {
-                alert("잠시 후에 다시 시도해주십시오.")
+                alert("오류가 발생했습니다. 잠시 후에 다시 시도해주십시오.")
             }
         })
         .catch(error => console.error(error));

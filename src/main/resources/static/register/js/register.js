@@ -9,9 +9,13 @@ import {sendRequestVerificationEmail, authNumberVerification} from "/module/land
 const emailInput = document.getElementById("email");
 const authNumberInput = document.getElementById("registerEmailAuthNumber");
 const usernameInput = document.getElementById("username");
+const userNameInputGroup = document.querySelector(("#username")).closest(".input-group.input-group-flat");
 const nicknameInput = document.getElementById("nickname");
 const registerPasswordInput = document.getElementById("password");
 const registerPasswordConfirmInput = document.getElementById("password-confirm");
+const registerPasswordInputGroup = document.querySelector("#password").closest(".input-group.input-group-flat");
+const registerPasswordConfirmInputGroup = document.querySelector("#password-confirm").closest(".input-group.input-group-flat");
+
 const saveButton = document.getElementById("save-btn");
 const usernameVerifyButton = document.getElementById("username-verify-btn");
 const verifiedText = "인증 완료";
@@ -74,7 +78,7 @@ usernameVerifyButton.addEventListener("click", function () {
                 toggleValidationClass(usernameVerifyButton, true);
                 usernameVerifyButton.disabled = true;
             } else {
-                toggleValidationClass(usernameInput, false)
+                toggleValidationClass(userNameInputGroup, false)
             }
         })
 });
@@ -85,21 +89,21 @@ const verifyAuthNumberButton = document.getElementById("registerEmailAuthBtn");
 
 //이메일 인증 요청 버튼
 requestEmailVerifyButton.addEventListener("click", function () {
-    sendRequestVerificationEmail(requestEmailVerifyButton, emailInput);
+    sendRequestVerificationEmail(requestEmailVerifyButton, verifyAuthNumberButton, emailInput);
 })
 
 //인증 버튼
 verifyAuthNumberButton.addEventListener("click", function () {
-    authNumberVerification(verifyAuthNumberButton, authNumberInput, emailInput, function () {
+    authNumberVerification(requestEmailVerifyButton ,verifyAuthNumberButton, authNumberInput, emailInput, function () {
         applyValidationClass(emailInput, true);
         applyValidationClass(requestEmailVerifyButton, true);
         applyValidationClass(verifyAuthNumberButton, true);
     })
 })
 
-registerPasswordInput.addEventListener("input", debounce(() => applyValidationClass(registerPasswordInput, validatePassword(registerPasswordInput.value))));
+registerPasswordInput.addEventListener("input", debounce(() => applyValidationClass(registerPasswordInputGroup, validatePassword(registerPasswordInput.value))));
 registerPasswordConfirmInput.addEventListener("input", debounce(() => checkPasswordMatch(registerPasswordInput, registerPasswordConfirmInput)));
-usernameInput.addEventListener("input", debounce(() => applyUsernameValidationClass(usernameInput, validateUsername(usernameInput.value))));
+usernameInput.addEventListener("input", debounce(() => applyUsernameValidationClass(userNameInputGroup, validateUsername(usernameInput.value))));
 nicknameInput.addEventListener("input", debounce(() => applyValidationClass(nicknameInput, validateNickname(nicknameInput.value))));
 
 function applyValidationClass(input, isValid) {
@@ -137,12 +141,23 @@ function validateEmail(email) {
 }
 
 function checkPasswordMatch(origPassword, confirmPassword) {
-    applyValidationClass(confirmPassword, origPassword.value === confirmPassword.value && confirmPassword.value !== "");
+    applyValidationClass(registerPasswordConfirmInputGroup, origPassword.value === confirmPassword.value && confirmPassword.value !== "");
 }
 
-const requiredInputs = [emailInput, requestEmailVerifyButton, verifyAuthNumberButton, usernameInput, registerPasswordInput, registerPasswordConfirmInput, usernameVerifyButton];
+const requiredInputs = [emailInput, requestEmailVerifyButton, verifyAuthNumberButton, userNameInputGroup, registerPasswordInputGroup, registerPasswordConfirmInputGroup, usernameVerifyButton];
 
 function checkRequiredFields() {
     const allValid = requiredInputs.every(input => input.classList.contains("is-valid"));
     toggleButtonState(saveButton, allValid);
 }
+
+document.getElementById("registerTogglePassword").addEventListener("click", function() {
+    const icon = this.querySelector("img");
+    togglePasswordVisibility(icon, registerPasswordInput);
+});
+
+document.getElementById("registerTogglePasswordConfirm").addEventListener("click", function() {
+    const icon = this.querySelector("img");
+    togglePasswordVisibility(icon, registerPasswordConfirmInput);
+})
+

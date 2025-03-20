@@ -56,6 +56,6 @@ public class HttpClientErrorExceptionHandler implements ResponseErrorHandler {
 
 		log.error("프록시 컨트롤러 500 에러 발생: {}", errorResponse);
 
-		throw new ServerException("현재 요청을 처리할 수 없습니다.");
+		throw new ServerException("현재 요청을 처리할 수 없습니다. \n잠시 후에 다시 시도해주십시오.");
 	}
 }
