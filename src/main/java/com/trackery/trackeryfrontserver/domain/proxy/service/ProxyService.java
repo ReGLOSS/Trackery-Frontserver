@@ -1,15 +1,23 @@
 package com.trackery.trackeryfrontserver.domain.proxy.service;
 
-import lombok.RequiredArgsConstructor;
+import java.util.HashMap;
+import java.util.Map;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.apache.hc.client5.http.HttpHostConnectException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trackery.trackeryfrontserver.domain.proxy.ServerException;
 
 /**
@@ -24,6 +32,7 @@ import com.trackery.trackeryfrontserver.domain.proxy.ServerException;
  * -----------------------------------------------------------
  * 25. 2. 19.        inari       최초 생성
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProxyService {
@@ -32,6 +41,7 @@ public class ProxyService {
 	 * HTTP 요청을 보내기 위한 RestTemplate 객체
 	 */
 	private final RestTemplate restTemplate;
+	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	/**
 	 * 백엔드 API 서버의 주소
@@ -60,8 +70,9 @@ public class ProxyService {
 		// 실제 HTTP 요청을 보내고 응답을 받아옴
 		try {
 			return restTemplate.exchange(fullUrl, method, httpEntity, String.class);
-		} catch (ServerException e) {
-			return ResponseEntity.status(500).body(e.getMessage());
+		} catch (ServerException | RestClientException e) {
+			log.error("프록시 작업 중 서버 에러 발생 : {}", e.getMessage());
+			return ResponseEntity.status(500).body("{\"code\":\"500\",\"message\":\"현재 요청을 처리할 수 없습니다. 잠시 후에 다시 시도해주십시오.\"}");
 		}
 	}
 }

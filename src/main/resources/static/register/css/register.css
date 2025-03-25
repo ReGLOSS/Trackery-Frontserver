@@ -17,7 +17,7 @@
     position: relative;
     padding: 20px;
     background-color: #d3d9e8;
-    max-width: 70%;
+    max-width: 70vh;
     max-height: 100vh;
     overflow-y: auto;
     box-sizing: border-box;
@@ -42,19 +42,6 @@
     text-align: center;
 }
 
-.profile-image-section {
-    /* border: 1px solid gray; */
-    margin-bottom: 30px;
-    text-align: center;
-}
-
-.profile-image {
-    width: 250px;
-    height: 250px;
-    border-radius: 50%;
-    cursor: pointer;
-}
-
 .input-form-section {
     /* border: 1px solid gray; */
     margin-left: 5%;
@@ -62,24 +49,12 @@
     margin-bottom: 30px;
 }
 
-.email-input-section {
-    margin-bottom: 30px;
-}
-
 .email-input-form {
     display:flex;
 }
 
-.email-verify-btn {
-    margin-left: 40px;
-}
-
 .username-input-form {
     display:flex;
-}
-
-.username-verify-btn {
-    margin-left: 40px;
 }
 
 .oauth-register-section {
@@ -125,4 +100,8 @@
 
 .save-btn {
     text-align: center;
+}
+
+.register-email-verification {
+    display: flex;
 }
