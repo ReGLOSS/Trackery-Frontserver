@@ -1,30 +1,30 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <title>Trackery</title>
-    <link rel="stylesheet" href="/css/tabler.css">
+    <meta charset="UTF-8">
+    <title>Trackery</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@latest/dist/css/tabler.min.css">
     <link rel="stylesheet" data-th-href="@{/css/landing.css}">
 </head>
 <body>
-   <div class="main-container">
-     <div class="content-wrapper">
-       <div id="imageContainer"></div>
-     </div>
-     <div class="gradient-container"></div>
-     <div id = "content-overlay" class="content-overlay">
-       <div class="promotion-text">
-         "트래커리(Trackery)로 지도 위에 여행을 기록하고, 추억을 나누세요."
-       </div>
-       <button id="startButton" class="btn btn-primary btn-start">시작하기</button>
-     </div>
-   </div>
-   <div>
-     <div class="register-modal-container" id="register-modal-container"></div>
-     <div class="login-modal-container" id="login-modal-container"></div>
-     <div class="find-account-modal-container" id="find-account-modal-container"></div>
-   </div>
- <script>
+<div class="main-container">
+    <div class="content-wrapper">
+        <div id="imageContainer"></div>
+    </div>
+    <div class="gradient-container"></div>
+    <div id="content-overlay" class="content-overlay">
+        <div class="promotion-text">
+            "트래커리(Trackery)로 지도 위에 여행을 기록하고, 추억을 나누세요."
+        </div>
+        <button id="startButton" class="btn btn-primary btn-start">시작하기</button>
+    </div>
+</div>
+<div>
+    <div class="register-modal-container" id="register-modal-container"></div>
+    <div class="login-modal-container" id="login-modal-container"></div>
+    <div class="find-account-modal-container" id="find-account-modal-container"></div>
+</div>
+<script>
     const DEFAULT_IMAGES = [
         '/images/default-image1.webp',
         '/images/default-image2.webp',
@@ -34,112 +34,115 @@
         '/images/default-image6.webp'
     ]
 
-     document.addEventListener('DOMContentLoaded', function() {
-       const imageContainer = document.getElementById('imageContainer');
-       const columnCount = 5; // 열의 갯수
-       const imagesPerColumn = 6; // 각 열당 이미지 갯수
-       const columnWidth = 1500 / columnCount; // 각 열의 너비
-       const columnSpeeds = [0.15, 0.2, 0.1, 0.25, 0.2]; // 각 열의 떨어지는 속도
+    document.addEventListener('DOMContentLoaded', function () {
+        const imageContainer = document.getElementById('imageContainer');
+        const columnCount = 5; // 열의 갯수
+        const imagesPerColumn = 6; // 각 열당 이미지 갯수
+        const columnWidth = 1500 / columnCount; // 각 열의 너비
+        const columnSpeeds = [0.15, 0.2, 0.1, 0.25, 0.2]; // 각 열의 떨어지는 속도
 
-       // 기본 이미지 URL 배열 생성
-       function createDefaultImageUrls() {
-         // 필요한 개수만큼 이미지를 랜덤하게 반복
-         return Array(columnCount * imagesPerColumn).fill().map(() => {
-           const randomIndex = Math.floor(Math.random() * DEFAULT_IMAGES.length);
-           return DEFAULT_IMAGES[randomIndex];
-         });
-       }
+        // 기본 이미지 URL 배열 생성
+        function createDefaultImageUrls() {
+            // 필요한 개수만큼 이미지를 랜덤하게 반복
+            return Array(columnCount * imagesPerColumn).fill().map(() => {
+                const randomIndex = Math.floor(Math.random() * DEFAULT_IMAGES.length);
+                return DEFAULT_IMAGES[randomIndex];
+            });
+        }
 
-       // 서버에서 이미지 URL 가져오기
-       async function fetchImageUrls() {
-         try {
-           const response = await fetch(`/api/home/images`);
-           if (!response.ok) {
-             throw new Error(`HTTP error! status: ${response.status}`);
-           }
-           const data = await response.json();
-           console.log('백엔드 응답:', data);
-           console.log('이미지 URLs:', data.data.imageUrls);
+        // 서버에서 이미지 URL 가져오기
+        async function fetchImageUrls() {
+            try {
+                const response = await fetch(`/api/home/images`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                console.log('백엔드 응답:', data);
+                console.log('이미지 URLs:', data.data.imageUrls);
 
-           const urls = data.data.imageUrls && data.data.imageUrls.length > 0
-             ? data.data.imageUrls
-             : createDefaultImageUrls();
-           console.log('사용할 이미지 URLs:', urls);
+                const urls = data.data.imageUrls && data.data.imageUrls.length > 0
+                    ? data.data.imageUrls
+                    : createDefaultImageUrls();
+                console.log('사용할 이미지 URLs:', urls);
 
-           return urls;
-         } catch (error) {
-           console.error('이미지 URL을 가져오는데 실패했습니다:', error);
-           return createDefaultImageUrls();
-         }
-       }
+                return urls;
+            } catch (error) {
+                console.error('이미지 URL을 가져오는데 실패했습니다:', error);
+                return createDefaultImageUrls();
+            }
+        }
 
-       // 이미지 엘리먼트 생성
-       function createImageElement() {
-         const img = document.createElement('img');
-         const randomIndex = Math.floor(Math.random() * DEFAULT_IMAGES.length);
-         img.src = DEFAULT_IMAGES[randomIndex];
-         img.onerror = function() {
-           // 이미지 로드 실패시 다른 기본 이미지로 교체
-         const defaultRandomIndex = Math.floor(Math.random() * DEFAULT_IMAGES.length);
-         this.src = DEFAULT_IMAGES[defaultRandomIndex];
-         };
-         return img;
-       }
+        // 이미지 엘리먼트 생성
+        function createImageElement() {
+            const img = document.createElement('img');
+            const randomIndex = Math.floor(Math.random() * DEFAULT_IMAGES.length);
+            img.src = DEFAULT_IMAGES[randomIndex];
+            img.onerror = function () {
+                // 이미지 로드 실패시 다른 기본 이미지로 교체
+                const defaultRandomIndex = Math.floor(Math.random() * DEFAULT_IMAGES.length);
+                this.src = DEFAULT_IMAGES[defaultRandomIndex];
+            };
+            return img;
+        }
 
-       // 컬럼 생성 및 애니메이션
-       async function initializeImageColumns() {
-         try {
-           const urls = await fetchImageUrls();
+        // 컬럼 생성 및 애니메이션
+        async function initializeImageColumns() {
+            try {
+                const urls = await fetchImageUrls();
 
-           // 열 생성
-           for (let col = 0; col < columnCount; col++) {
-             const column = document.createElement('div');
-             column.style.position = 'absolute';
-             column.style.left = `${col * columnWidth}px`;
-             column.style.width = `${columnWidth}px`;
-             column.style.height = '100%';
-             column.style.overflow = 'hidden';
+                // 열 생성
+                for (let col = 0; col < columnCount; col++) {
+                    const column = document.createElement('div');
+                    column.style.position = 'absolute';
+                    column.style.left = `${col * columnWidth}px`;
+                    column.style.width = `${columnWidth}px`;
+                    column.style.height = '100%';
+                    column.style.overflow = 'hidden';
 
-             // 각 열마다 이미지 생성 및 애니메이션 적용
-             for (let i = 0; i < imagesPerColumn; i++) {
-               const imgWrapper = document.createElement('div');
-               imgWrapper.className = 'falling-image';
-               imgWrapper.style.left = '0';
-               imgWrapper.style.transform = `translateY(${i * 600}px)`;
+                    // 각 열마다 이미지 생성 및 애니메이션 적용
+                    for (let i = 0; i < imagesPerColumn; i++) {
+                        const imgWrapper = document.createElement('div');
+                        imgWrapper.className = 'falling-image';
+                        imgWrapper.style.left = '0';
+                        imgWrapper.style.transform = `translateY(${i * 600}px)`;
 
-               const img = createImageElement(urls);
+                        const img = createImageElement(urls);
 
-               imgWrapper.appendChild(img);
-               column.appendChild(imgWrapper);
+                        imgWrapper.appendChild(img);
+                        column.appendChild(imgWrapper);
 
-               // 애니메이션 함수
-               let position = i * 600;
-               function animate() {
-                 position += columnSpeeds[col];
-                 // 이미지가 완전히 내려가기 전에 위치 재설정
-                 if (position >= (imagesPerColumn * 600)) {
-                   position = position - (imagesPerColumn * 600);
+                        // 애니메이션 함수
+                        let position = i * 600;
 
-                   // 새로운 랜덤 이미지로 변경
-                   img.src = DEFAULT_IMAGES[Math.floor(Math.random() * DEFAULT_IMAGES.length)];
-                 }
-                 imgWrapper.style.transform = `translateY(${position}px)`;
-                 requestAnimationFrame(animate);
-               }
-               animate();
-             }
+                        function animate() {
+                            position += columnSpeeds[col];
+                            // 이미지가 완전히 내려가기 전에 위치 재설정
+                            if (position >= (imagesPerColumn * 600)) {
+                                position = position - (imagesPerColumn * 600);
 
-             imageContainer.appendChild(column);
-           }
-         } catch (error) {
-           console.error('이미지 초기화 중 오류 발생:', error);
-         }
-       }
+                                // 새로운 랜덤 이미지로 변경
+                                img.src = DEFAULT_IMAGES[Math.floor(Math.random() * DEFAULT_IMAGES.length)];
+                            }
+                            imgWrapper.style.transform = `translateY(${position}px)`;
+                            requestAnimationFrame(animate);
+                        }
 
-       // 애니메이션 시작
-       initializeImageColumns();
-     });
-   </script>
-  <script src="/js/landing.js"></script>
+                        animate();
+                    }
+
+                    imageContainer.appendChild(column);
+                }
+            } catch (error) {
+                console.error('이미지 초기화 중 오류 발생:', error);
+            }
+        }
+
+        // 애니메이션 시작
+        initializeImageColumns();
+    });
+</script>
+<script src="/js/tabler.js"></script>
+<script src="/js/landing.js"></script>
 </body>
 </html>

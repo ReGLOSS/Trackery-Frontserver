@@ -14,15 +14,16 @@
     <p class="title">회원 정보 찾기</p>
 
     <!--    유저명, 비밀번호 선택-->
-    <div class="finder-selector">
-        <nav class="nav nav-segmented nav-2 w-100" role="tablist">
-            <button class="nav-link active" role="tab" data-bs-toggle="tab" aria-selected="true" aria-current="page">
-                Account
-            </button>
-            <button class="nav-link" role="tab" data-bs-toggle="tab" aria-selected="false" tabindex="-1">Password
-            </button>
-        </nav>
-    </div>
+    <nav class="nav nav-segmented nav-2 w-100" role="tablist">
+        <button id="tab-user" class="nav-link active" role="tab" data-bs-toggle="tab" aria-selected="true"
+                aria-controls="content-user" tabindex="0">
+            유저명
+        </button>
+        <button id="tab-password" class="nav-link" role="tab" data-bs-toggle="tab" aria-selected="false"
+                aria-controls="content-password" tabindex="0">
+            비밀번호
+        </button>
+    </nav>
 
     <!--비밀번호 찾기 섹션-->
     <div class="reset-password">
@@ -35,7 +36,9 @@
                            placeholder="이메일을 입력해주세요."/>
                     <div class="password-code-send-btn">
                         <button class="btn btn-dark" id="find-password-email-verification-code-send-btn"
-                           style="margin-left:40px; height: 50px; width: 120px; flex-shrink: 0; padding: 8px 12px;">인증 번호 전송</button>
+                                style="margin-left:40px; height: 50px; width: 120px; flex-shrink: 0; padding: 8px 12px;">
+                            인증 번호 전송
+                        </button>
                     </div>
                 </div>
             </div>
@@ -46,8 +49,11 @@
                            style="height: 50px"
                            placeholder="인증번호를 입력해주세요."/>
                     <div class="password-email-verify-btn">
-                        <button class="btn btn-dark" id="find-password-auth-number-verify-btn" style="margin-left:40px; height: 50px; width: 120px; flex-shrink: 0; padding: 8px 12px;" disabled>인증
-                            번호 확인</button>
+                        <button class="btn btn-dark" id="find-password-auth-number-verify-btn"
+                                style="margin-left:40px; height: 50px; width: 120px; flex-shrink: 0; padding: 8px 12px;"
+                                disabled>인증
+                            번호 확인
+                        </button>
                     </div>
                 </div>
             </div>
@@ -59,7 +65,8 @@
             <div class="new-password-input" style="margin-bottom:15px;">
                 <div class="new-password-label">
                     <label class="form-label">새 비밀번호</label>
-                    <small class="form-text text-muted" style="margin-left:10px;">최소 16자리에 영문 대소문자 + 숫자 + 특수문자로 작성해주세요.</small>
+                    <small class="form-text text-muted" style="margin-left:10px;">최소 16자리에 영문 대소문자 + 숫자 + 특수문자로
+                        작성해주세요.</small>
                 </div>
                 <div class="input-group input-group-flat">
                     <input type="password" id="newPassword" class="form-control" autocomplete="off"
@@ -86,7 +93,8 @@
             </div>
 
             <div class="submit-reset-password">
-                <button type="button" id="submit-new-password-btn" class="btn btn-dark w-100 mb-2" disabled>비밀번호 변경</button>
+                <button type="button" id="submit-new-password-btn" class="btn btn-dark w-100 mb-2" disabled>비밀번호 변경
+                </button>
             </div>
         </div>
 
