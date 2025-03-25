@@ -53,7 +53,7 @@
     padding: 20px;
 }
 
-.reset-password .input-password {
+.input-password {
     display:none;
     border-radius: 10px;
     background-color:#d8e0e6;
