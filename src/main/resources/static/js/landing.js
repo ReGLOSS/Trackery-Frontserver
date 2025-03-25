@@ -1,55 +1,156 @@
-document.addEventListener("DOMContentLoaded", function () {
-    // 회원가입 모달 가져오기
-    fetch("/register/modal-html")
-        .then(response => response.text())
-        .then(html => {
-            document.getElementById("register-modal-container").innerHTML = html;
-            loadRegisterModalScript();
-        })
-        .catch(error => console.error("회원가입 모달을 불러오는 중 오류 발생:", error));
+document.addEventListener("DOMContentLoaded", async function () {
+    try {
+        await loadModal("/register/modal-html", "register-modal-container", "/register/js/register.js");
+        await loadModal("/login/login-modal-html", "login-modal-container", "/login/js/login.js");
+        await loadModal("/login/find-account-modal-html", "find-account-modal-container", "/login/js/find-account.js");
+        await loadScript("/module/landing/utils.js");
+        await loadScript("/module/landing/email-verification.js");
+    } catch (error) {
+        console.error("모달 로딩 중 오류 발생:", error);
+    }
+});
 
-    // 로그인 모달 가져오기
-    fetch("/login/login-modal-html")
-        .then(response => response.text())
-        .then(html => {
-            document.getElementById("login-modal-container").innerHTML = html;
-            loadLoginModalScript();
-        })
-        .catch(error => console.error("로그인 모달을 불러오는 중 오류 발생:", error));
-
-    fetch("/login/find-account-modal-html")
-        .then(response => response.text())
-        .then(html => {
-            document.getElementById("find-account-modal-container").innerHTML = html;
-            loadFindAccountModalScript();
-        })
-        .catch(error => console.error("회원 정보 찾기 모달을 불러오는 중 오류 발생:", error));
-
-    function loadRegisterModalScript() {
-        const script = document.createElement("script");
-        script.src = "/register/js/input-form.js";
-        script.onload = () => {
-            initModalFunctions();
+async function loadModal(htmlUrl, containerId, scriptUrl) {
+    try {
+        const response = await fetch(htmlUrl);
+        if (!response.ok) {
+            throw new Error(`Html 로드하는 중 오류 발생 ${htmlUrl}`);
         }
+        document.getElementById(containerId).innerHTML = await response.text();
+
+        await loadScript(scriptUrl);
+    } catch (error) {
+        console.error(`모달을 로드하는 중 오류 발생: ${htmlUrl}`, error);
+    }
+}
+
+async function loadScript(scriptUrl) {
+    try {
+        const script = document.createElement("script");
+        script.src = scriptUrl;
+        script.type = "module";
+        script.async = true;
+        script.onload = () => console.log(`${scriptUrl} 로딩 완료`);
         document.body.appendChild(script);
+    } catch (error) {
+        console.error(`JS를 로드하는 중 오류 발생: ${scriptUrl}`, error);
+    }
+}
+
+const DEFAULT_IMAGES = [
+    '/images/default-image1.webp',
+    '/images/default-image2.webp',
+    '/images/default-image3.webp',
+    '/images/default-image4.webp',
+    '/images/default-image5.webp',
+    '/images/default-image6.webp'
+]
+
+document.addEventListener('DOMContentLoaded', function () {
+    const imageContainer = document.getElementById('imageContainer');
+    const columnCount = 5; // 열의 갯수
+    const imagesPerColumn = 6; // 각 열당 이미지 갯수
+    const columnWidth = 1500 / columnCount; // 각 열의 너비
+    const columnSpeeds = [0.15, 0.2, 0.1, 0.25, 0.2]; // 각 열의 떨어지는 속도
+
+    // 기본 이미지 URL 배열 생성
+    function createDefaultImageUrls() {
+        // 필요한 개수만큼 이미지를 랜덤하게 반복
+        return Array(columnCount * imagesPerColumn).fill().map(() => {
+            const randomIndex = Math.floor(Math.random() * DEFAULT_IMAGES.length);
+            return DEFAULT_IMAGES[randomIndex];
+        });
     }
 
-    function loadLoginModalScript() {
-        console.log("스크립트 로딩중");
-        const script = document.createElement("script");
-        script.src = "/login/js/login.js";
-        script.onload = () => {
-            initModalScript();
+    // 서버에서 이미지 URL 가져오기
+    async function fetchImageUrls() {
+        try {
+            const response = await fetch(`/api/home/images`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            console.log('백엔드 응답:', data);
+            console.log('이미지 URLs:', data.data.imageUrls);
+
+            const urls = data.data.imageUrls && data.data.imageUrls.length > 0
+                ? data.data.imageUrls
+                : createDefaultImageUrls();
+            console.log('사용할 이미지 URLs:', urls);
+
+            return urls;
+        } catch (error) {
+            console.error('이미지 URL을 가져오는데 실패했습니다:', error);
+            return createDefaultImageUrls();
         }
-        document.body.appendChild(script);
     }
 
-    function loadFindAccountModalScript() {
-        const script = document.createElement("script");
-        script.src = "/login/js/find-account.js";
-        script.onload = () => {
-            initModalScript();
-        }
-        document.body.appendChild(script);
+    // 이미지 엘리먼트 생성
+    function createImageElement() {
+        const img = document.createElement('img');
+        const randomIndex = Math.floor(Math.random() * DEFAULT_IMAGES.length);
+        img.src = DEFAULT_IMAGES[randomIndex];
+        img.onerror = function () {
+            // 이미지 로드 실패시 다른 기본 이미지로 교체
+            const defaultRandomIndex = Math.floor(Math.random() * DEFAULT_IMAGES.length);
+            this.src = DEFAULT_IMAGES[defaultRandomIndex];
+        };
+        return img;
     }
+
+    // 컬럼 생성 및 애니메이션
+    async function initializeImageColumns() {
+        try {
+            const urls = await fetchImageUrls();
+
+            // 열 생성
+            for (let col = 0; col < columnCount; col++) {
+                const column = document.createElement('div');
+                column.style.position = 'absolute';
+                column.style.left = `${col * columnWidth}px`;
+                column.style.width = `${columnWidth}px`;
+                column.style.height = '100%';
+                column.style.overflow = 'hidden';
+
+                // 각 열마다 이미지 생성 및 애니메이션 적용
+                for (let i = 0; i < imagesPerColumn; i++) {
+                    const imgWrapper = document.createElement('div');
+                    imgWrapper.className = 'falling-image';
+                    imgWrapper.style.left = '0';
+                    imgWrapper.style.transform = `translateY(${i * 600}px)`;
+
+                    const img = createImageElement(urls);
+
+                    imgWrapper.appendChild(img);
+                    column.appendChild(imgWrapper);
+
+                    // 애니메이션 함수
+                    let position = i * 600;
+
+                    function animate() {
+                        position += columnSpeeds[col];
+                        // 이미지가 완전히 내려가기 전에 위치 재설정
+                        if (position >= (imagesPerColumn * 600)) {
+                            position = position - (imagesPerColumn * 600);
+
+                            // 새로운 랜덤 이미지로 변경
+                            img.src = DEFAULT_IMAGES[Math.floor(Math.random() * DEFAULT_IMAGES.length)];
+                        }
+                        imgWrapper.style.transform = `translateY(${position}px)`;
+                        requestAnimationFrame(animate);
+                    }
+
+                    animate();
+                }
+
+                imageContainer.appendChild(column);
+            }
+        } catch (error) {
+            console.error('이미지 초기화 중 오류 발생:', error);
+        }
+    }
+
+    // 애니메이션 시작
+    initializeImageColumns()
+        .then(() => console.log('애니메이션 시작'));
 });
