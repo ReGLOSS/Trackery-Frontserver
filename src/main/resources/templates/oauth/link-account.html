@@ -78,8 +78,9 @@
         <p>기존 계정과 소셜 계정을 연동하시겠습니까?</p>
 
 <div id="buttons">
-    <form method="post" action="/oauth-account/link">
+    <form method="post" action="/oauth/link">
         <input type="hidden" name="provider" th:value="${provider}">
+        <input type="hidden" name="linkToken" th:value="${linkToken}">
         <button type="submit" class="btn">계정 연동하기</button>
         <a href="/" class="btn btn-secondary">취소</a>
     </form>
