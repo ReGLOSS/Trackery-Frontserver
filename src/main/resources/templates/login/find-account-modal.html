@@ -27,8 +27,26 @@
 
     <div class="tab-content">
         <div id="contentFindUserName" class="tab-pane fade show active" role="tabpanel" aria-labelledby="tabUserName">
-            <div>
-                <p>김기동</p>
+            <div class="find-user-name-email-input">
+                <h3 style="text-align: center; margin-bottom:15px;"> 이메일 발송 </h3>
+                <div class="input-email">
+                    <div class="email-input-form">
+                        <input type="text" class="form-control" id="findUserNameEmail" name="email" style="height: 50px"
+                               placeholder="이메일을 입력해주세요."/>
+                        <div class="password-code-send-btn">
+                            <button class="btn btn-dark" id="findUserNameEmailSendBtn"
+                                    style="margin-left:40px; height: 50px; width: 120px; flex-shrink: 0; padding: 8px 12px;">
+                                이메일 발송
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="find-user-name-result">
+                <h3>이메일 발송 완료</h3>
+                <p>이메일을 확인하신 뒤 로그인해 주세요.</p>
+                <button type="button" id="findUserNameReturnToLoginBtn" class="btn btn-dark w-100 mb-2">확인</button>
             </div>
         </div>
         <!--비밀번호 찾기 섹션-->

@@ -84,6 +84,23 @@
     padding: 20px;
 }
 
+.find-user-name-email-input {
+    display:block;
+    border-radius: 10px;
+    background-color:#d8e0e6;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+.find-user-name-result {
+    text-align: center;
+    display:none;
+    border-radius: 10px;
+    background-color:#d8e0e6;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
 
 
 

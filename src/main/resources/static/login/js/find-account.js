@@ -23,7 +23,7 @@ authNumberVerifyButton.addEventListener("click", function () {
     const authNumberInput = document.getElementById("find-password-auth-number");
     const emailInput = document.getElementById("find-password-email");
 
-    authNumberVerification(pwdEmailCodeSendButton, authNumberVerifyButton, authNumberInput, emailInput, function() {
+    authNumberVerification(pwdEmailCodeSendButton, authNumberVerifyButton, authNumberInput, emailInput, function () {
         closeAndOpenElements(
             document.getElementsByClassName("verify-email")[0],
             document.getElementsByClassName("input-password")[0],
@@ -37,7 +37,7 @@ document.getElementById("toggleNewPassword").addEventListener("click", function 
 })
 
 document.getElementById("toggleNewPasswordConfirm").addEventListener("click", function () {
-    togglePasswordVisibility(this.querySelector("img"), document.getElementById("newPasswordConfirm"), );
+    togglePasswordVisibility(this.querySelector("img"), document.getElementById("newPasswordConfirm"),);
 })
 
 //비밀번호 확인
@@ -92,12 +92,74 @@ submitNewPasswordButton.addEventListener("click", function () {
 })
 
 //로그인 화면으로 돌아가기
+const findAccountModal = document.getElementsByClassName("find-account-modal-container")[0];
+const loginModal = document.getElementsByClassName("login-modal-container")[0];
+
 document.getElementById("return-to-login-btn").addEventListener("click", function () {
     const resultPage = document.getElementsByClassName("result-page")[0];
     const verifyEmail = document.getElementsByClassName("verify-email")[0];
-    const findAccountModal = document.getElementsByClassName("find-account-modal-container")[0];
-    const loginModal = document.getElementsByClassName("login-modal-container")[0];
 
     closeAndOpenElements(resultPage, verifyEmail, "block");
     closeAndOpenElements(findAccountModal, loginModal, "flex");
 })
+
+//유저명 찾기 이메일 발송
+const findUserNameEmailPage = document.getElementsByClassName("find-user-name-email-input")[0];
+const findUserNameResultPage = document.getElementsByClassName("find-user-name-result")[0];
+
+const findUsernameEmailSendButton = document.getElementById("findUserNameEmailSendBtn");
+
+function restoreFindUserNameEmailSendBtn(emailInput, button) {
+    emailInput.readOnly = false;
+    button.disabled = false;
+    button.textContent = "이메일 발송";
+}
+
+findUsernameEmailSendButton.addEventListener("click", function () {
+    const emailInput = document.getElementById("findUserNameEmail");
+    const emailValue = emailInput.value;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (emailRegex.test(emailValue)) {
+        emailInput.readOnly = true;
+        findUsernameEmailSendButton.disabled = true;
+        findUsernameEmailSendButton.textContent = "..";
+
+        fetch("/api/mail/find-username", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({
+                email: emailValue
+            })
+        }).then(response => {
+            if (response.status === 404) {
+                alert("이메일이 존재하지 않습니다.");
+                restoreFindUserNameEmailSendBtn(emailInput, this);
+                return;
+            }
+            if (!response.ok) {
+                return response.json().then(data => {
+                    alert(data.message);
+                    restoreFindUserNameEmailSendBtn(emailInput, this);
+                    throw new Error(data.message);
+                });
+            }
+            restoreFindUserNameEmailSendBtn(emailInput, this);
+            closeAndOpenElements(findUserNameEmailPage, findUserNameResultPage, "block");
+        }).catch(error => console.error(error));
+    } else {
+        alert("이메일이 올바르지 않습니다.");
+    }
+})
+
+const findUserNameReturnToLoginBtn = document.getElementById("findUserNameReturnToLoginBtn");
+
+findUserNameReturnToLoginBtn.addEventListener("click", function () {
+    closeAndOpenElements(findUserNameResultPage, findUserNameEmailPage, "block");
+    closeAndOpenElements(findAccountModal, loginModal, "flex");
+})
+

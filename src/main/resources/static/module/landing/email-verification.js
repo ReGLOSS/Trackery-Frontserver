@@ -101,7 +101,6 @@ export function authNumberVerification(sendEmailButton, authNumberButton, authNu
 }
 
 function restoreAuthNumberVerificationButton(button) {
-    console.log("gd");
     button.disabled = false;
     button.textContent = "인증 번호 확인";
 }
