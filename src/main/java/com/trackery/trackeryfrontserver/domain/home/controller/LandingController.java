@@ -1,6 +1,7 @@
 package com.trackery.trackeryfrontserver.domain.home.controller;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 
 /**
@@ -24,7 +25,15 @@ public class LandingController {
 	 * @return
 	 */
 	@GetMapping("/")
-	public String landing() {
+	public String landing(@CookieValue(value = "accessToken", required = false) String accessToken) {
+		if(accessToken != null) {
+			return "redirect:/register/temporal-main";
+		}
 		return "landing";
+	}
+
+	@GetMapping("/home")
+	public String mainPage() {
+		return "home";
 	}
 }

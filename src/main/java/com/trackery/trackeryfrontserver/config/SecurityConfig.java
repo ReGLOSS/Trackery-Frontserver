@@ -24,7 +24,6 @@ public class SecurityConfig {
 
 	private final String[] publicUris = {"/register/**", "/login/**"};
 
-	//TODO "/api/**/" permitAll() 삭제 후 퍼블릭 API를 제외하고 권한 인증 필요하게 수정
 	/**
 	 * Spring Security 필터 체인을 구성합니다.
 	 *
