@@ -36,7 +36,6 @@ public class ProxyService {
 	 * HTTP 요청을 보내기 위한 RestTemplate 객체
 	 */
 	private final RestTemplate restTemplate;
-	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	/**
 	 * 백엔드 API 서버의 주소

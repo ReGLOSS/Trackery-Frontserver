@@ -15,18 +15,19 @@ import org.springframework.web.bind.annotation.GetMapping;
  * -----------------------------------------------------------
  * 25. 02. 11.        narilee       최초 생성
  * 25. 02. 26.        narilee       경로 수정
+ * 25. 03. 27.		  durururuk     인증 정보에 따른 리다이렉션 추가
  */
 @Controller
 public class LandingController {
 
 	/**
-	 * 유저가 접속시 최초로 보게 되는 웹페이지 입니다.
+	 * 유저가 접속시 최초로 보게 되는 기본 페이지 입니다.
 	 *
-	 * @return
+	 * @return 액세스 토큰이 없다면 랜딩페이지로, 있다면 /home으로 리다이렉트합니다.
 	 */
 	@GetMapping("/")
 	public String landing(@CookieValue(value = "accessToken", required = false) String accessToken) {
-		if(accessToken != null) {
+		if (accessToken != null) {
 			return "redirect:/home";
 		}
 		return "landing";
