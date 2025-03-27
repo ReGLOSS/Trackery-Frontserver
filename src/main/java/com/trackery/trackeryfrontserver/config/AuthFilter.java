@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trackery.trackeryfrontserver.domain.proxy.service.ProxyService;
@@ -44,33 +45,56 @@ public class AuthFilter extends OncePerRequestFilter {
 	private final ProxyService proxyService;
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
+	private static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
+	private static final String AUTH_ENDPOINT = "/api/auth/me";
+
 	@Override
-	protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response,
+	protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
 		@NonNull FilterChain filterChain) throws ServletException, IOException {
 
-		Optional<Cookie> accessTokenCookie = Optional.ofNullable(request.getCookies())
-			.flatMap(cookies -> Arrays.stream(cookies)
-				.filter(cookie -> "accessToken".equals(cookie.getName()))
-				.findFirst());
+		Optional<Cookie> accessTokenCookie = extractAccessTokenCookie(request);
 
 		if (accessTokenCookie.isEmpty()) {
 			response.sendError(HttpServletResponse.SC_FORBIDDEN);
 			return;
 		}
 
-		HttpHeaders headers = new HttpHeaders();
-		headers.add(HttpHeaders.COOKIE, String.format("accessToken=%s", accessTokenCookie.get().getValue()));
-
-		ResponseEntity<String> responseEntity = proxyService.forwardRequest("/api/auth/me", HttpMethod.GET, headers,
-			null);
+		ResponseEntity<String> responseEntity = fetchAuthentication(accessTokenCookie.get());
 
 		if (!responseEntity.getStatusCode().is2xxSuccessful()) {
 			response.sendError(HttpServletResponse.SC_FORBIDDEN);
 			return;
 		}
 
-		String body = responseEntity.getBody();
+		try {
+			createAuthentication(responseEntity.getBody());
+		} catch (JsonProcessingException ex) {
+			log.error("인증 응답 파싱 실패 ", ex);
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			return;
+		}
 
+		filterChain.doFilter(request, response);
+	}
+
+	private Optional<Cookie> extractAccessTokenCookie(HttpServletRequest request) {
+
+		return Optional.ofNullable(request.getCookies())
+			.flatMap(cookies -> Arrays.stream(cookies)
+				.filter(cookie -> ACCESS_TOKEN_COOKIE_NAME.equals(cookie.getName()))
+				.findFirst());
+	}
+
+	private ResponseEntity<String> fetchAuthentication(Cookie accessTokenCookie) {
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.COOKIE,
+			String.format("%s=%s", ACCESS_TOKEN_COOKIE_NAME, accessTokenCookie.getValue()));
+
+		return proxyService.forwardRequest(AUTH_ENDPOINT, HttpMethod.GET, headers,
+			null);
+	}
+
+	private void createAuthentication(String body) throws JsonProcessingException {
 		JsonNode rootNode = objectMapper.readTree(body);
 		JsonNode dataNode = rootNode.get("data");
 
@@ -87,7 +111,5 @@ public class AuthFilter extends OncePerRequestFilter {
 			userDetails.getAuthorities());
 
 		SecurityContextHolder.getContext().setAuthentication(authentication);
-
-		filterChain.doFilter(request, response);
 	}
 }
