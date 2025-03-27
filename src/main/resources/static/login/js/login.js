@@ -30,7 +30,7 @@ document.getElementById("submit")
                 return response.json();
             }
         }).then(data => {
-            window.location.replace("/register/temporal-main");
+            window.location.replace("/home");
         });
     });
 
