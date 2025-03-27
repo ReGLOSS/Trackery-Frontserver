@@ -5,16 +5,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
- *packageName    : com.trackery.trackeryfrontserver.domain.register.controller
-
- fileName       : ModalTestController
- author         : durururuk
- date           : 25. 2. 17.
- description    :
- ===========================================================
- DATE              AUTHOR             NOTE
- -----------------------------------------------------------
- 25. 2. 17.        durururuk       최초 생성*/
+ * packageName    : com.trackery.trackeryfrontserver.domain.register.controller
+ * fileName       : ModalTestController
+ * author         : durururuk
+ * date           : 25. 2. 17.
+ * description    : 프론트서버의 회원가입 페이지 컨트롤러입니다.
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 25. 2. 17.        durururuk       최초 생성
+ * 25. 3. 17.        inari           주석 추가
+ */
 @Controller
 @RequestMapping("/register")
 public class RegisterController {
