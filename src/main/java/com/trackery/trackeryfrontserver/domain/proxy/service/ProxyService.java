@@ -1,12 +1,5 @@
 package com.trackery.trackeryfrontserver.domain.proxy.service;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import org.apache.hc.client5.http.HttpHostConnectException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -16,9 +9,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trackery.trackeryfrontserver.domain.proxy.ServerException;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * packageName    : com.trackery.trackeryfrontserver.domain.proxy.controller
@@ -72,7 +67,8 @@ public class ProxyService {
 			return restTemplate.exchange(fullUrl, method, httpEntity, String.class);
 		} catch (ServerException | RestClientException e) {
 			log.error("프록시 작업 중 서버 에러 발생 : {}", e.getMessage());
-			return ResponseEntity.status(500).body("{\"code\":\"500\",\"message\":\"현재 요청을 처리할 수 없습니다. 잠시 후에 다시 시도해주십시오.\"}");
+			return ResponseEntity.status(500)
+				.body("{\"code\":\"500\",\"message\":\"현재 요청을 처리할 수 없습니다. 잠시 후에 다시 시도해주십시오.\"}");
 		}
 	}
 }

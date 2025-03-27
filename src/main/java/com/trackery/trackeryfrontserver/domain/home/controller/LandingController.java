@@ -27,7 +27,7 @@ public class LandingController {
 	@GetMapping("/")
 	public String landing(@CookieValue(value = "accessToken", required = false) String accessToken) {
 		if(accessToken != null) {
-			return "redirect:/register/temporal-main";
+			return "redirect:/home";
 		}
 		return "landing";
 	}
