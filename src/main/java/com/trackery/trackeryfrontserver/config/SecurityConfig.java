@@ -31,7 +31,8 @@ public class SecurityConfig {
 	private final ProxyService proxyService;
 
 	private static final String[] PUBLIC_URIS = {"/register/**", "/login/**", "/", "/resources/**", "/css/**", "/js/**",
-		"/images/**", "/error", "/api/**", "/icons/**", "/module/**", "/error"};
+		"/images/**", "/error", "/api/**", "/icons/**", "/module/**", "/error", "/users/oauth/**", "/oauth/**",
+		"/oauth-account", "/oauth-redirect/**"};
 
 	/**
 	 * Spring Security 필터 체인을 구성합니다.
