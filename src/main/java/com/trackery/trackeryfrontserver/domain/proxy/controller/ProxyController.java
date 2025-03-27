@@ -1,6 +1,5 @@
 package com.trackery.trackeryfrontserver.domain.proxy.controller;
 
-import jakarta.servlet.ServletOutputStream;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -20,7 +19,7 @@ import lombok.RequiredArgsConstructor;
  * fileName       : ProxyController
  * author         : inari
  * date           : 25. 2. 19.
- * description    : 프록시 역활을 하는 컨트롤러
+ * description    : 프록시 역활을 하는 컨트롤러입니다.
  *  				프론트엔드에서 들어오는 API 요청을 백엔드 서버로 전달합니다.
  * ===========================================================
  * DATE              AUTHOR             NOTE

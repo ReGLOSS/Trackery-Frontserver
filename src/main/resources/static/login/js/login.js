@@ -41,6 +41,9 @@ document.getElementById("togglePassword")
         togglePasswordVisibility(icon, passwordInput)
     });
 
+ // OAuth 로그인 버튼 이벤트 리스너 추가
+ setupOAuthButtons();
+
 //회원가입 모달 오픈
 document.getElementById("register-guide")
     .addEventListener("click", function () {
@@ -81,3 +84,47 @@ document.getElementById("startButton")
             "flex"
         );
     });
+
+// OAuth 로그인 설정 함수
+function setupOAuthButtons() {
+    // OAuth 제공자 정의
+    const oauthProviders = [
+        { id: "google-login", provider: "google" },
+        { id: "kakao-login", provider: "kakao" },
+        { id: "naver-login", provider: "naver" },
+        { id: "github-login", provider: "github" }
+    ];
+
+   // 각 OAuth 버튼에 이벤트 리스너 추가
+   oauthProviders.forEach(({id, provider}) => {
+       const element = document.getElementById(id);
+       if (element) {
+           element.addEventListener("click", function(e) {
+               e.preventDefault();
+
+               // 새 창에서 OAuth 로그인 처리
+               const oauthWindow = window.open(
+                   `/oauth/${provider}`,
+                   `${provider}Login`,
+                   'width=600,height=700,top=100,left=100'
+               );
+
+               // 창 참조 저장
+               window.oauthPopupRef = oauthWindow;
+
+               // 메시지 이벤트 리스너 등록
+               window.addEventListener('message', function(event) {
+                   if (event.data && event.data.oauthComplete) {
+                       // 인증 완료 시 temporal-main 페이지로 이동
+                       window.location.href = '/register/temporal-main';
+                   }
+               });
+           });
+       }
+   });
+}
+
+// 페이지 로드 시 OAuth 버튼 설정
+document.addEventListener('DOMContentLoaded', function() {
+    setupOAuthButtons();
+});
