@@ -1,8 +1,6 @@
 package com.trackery.trackeryfrontserver.config;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Optional;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -22,7 +20,6 @@ import com.trackery.trackeryfrontserver.domain.proxy.service.ProxyService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +45,6 @@ public class AuthFilter extends OncePerRequestFilter {
 	private final ProxyService proxyService;
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
-	private static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
 	private static final String AUTH_ENDPOINT = "/api/auth/me";
 
 	/**
@@ -64,19 +60,16 @@ public class AuthFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
 		@NonNull FilterChain filterChain) throws ServletException, IOException {
 
-		Optional<Cookie> accessTokenCookie = extractAccessTokenCookie(request);
-
-		if (accessTokenCookie.isEmpty()) {
-			response.sendError(HttpServletResponse.SC_FORBIDDEN);
-			return;
-		}
-
-		ResponseEntity<String> responseEntity = fetchAuthentication(accessTokenCookie.get());
+		ResponseEntity<String> responseEntity = fetchAuthentication(request);
 
 		if (!responseEntity.getStatusCode().is2xxSuccessful()) {
-			response.sendError(HttpServletResponse.SC_FORBIDDEN);
+			response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
 			return;
 		}
+
+		responseEntity.getHeaders().forEach((headerName, headerValues) ->
+			headerValues.forEach(headerValue -> response.addHeader(headerName, headerValue))
+		);
 
 		try {
 			createAuthentication(responseEntity.getBody());
@@ -90,32 +83,20 @@ public class AuthFilter extends OncePerRequestFilter {
 	}
 
 	/**
-	 * 요청 객체에서 쿠키를 파싱해서 액세스 토큰 쿠키를 Optional로 반환하는 메서드
+	 * 백엔드 서버에 인증 여부를 확인하는 API를 호출하는 메서드
 	 *
-	 * @param request : 클라이언트 요청 객체 (HttpServletRequest)
-	 * @return : 액세스 토큰 쿠키
+	 * @param request : 클라이언트 요청 객체
+	 * @return 인증 성공 시 200 코드와 유저 데이터(id, 유저명, 권한 id)를 담고 있는 ResponseEntity 객체 반환
 	 */
-	private Optional<Cookie> extractAccessTokenCookie(HttpServletRequest request) {
-
-		return Optional.ofNullable(request.getCookies())
-			.flatMap(cookies -> Arrays.stream(cookies)
-				.filter(cookie -> ACCESS_TOKEN_COOKIE_NAME.equals(cookie.getName()))
-				.findFirst());
-	}
-
-	/**
-	 * 백엔드서버에 인증 여부를 확인하는 api를 호출하는 메서드
-	 *
-	 * @param accessTokenCookie : 액세스 토큰 쿠키
-	 * @return 인증 성공 시 200 코드와 유저 데이터(id, 유저명, 권한 id)를 담고있는 ResponseEntity 객체 반환
-	 */
-	private ResponseEntity<String> fetchAuthentication(Cookie accessTokenCookie) {
+	private ResponseEntity<String> fetchAuthentication(HttpServletRequest request) {
 		HttpHeaders headers = new HttpHeaders();
-		headers.add(HttpHeaders.COOKIE,
-			String.format("%s=%s", ACCESS_TOKEN_COOKIE_NAME, accessTokenCookie.getValue()));
 
-		return proxyService.forwardRequest(AUTH_ENDPOINT, HttpMethod.GET, headers,
-			null);
+		String cookieHeader = request.getHeader(HttpHeaders.COOKIE);
+		if (cookieHeader != null) {
+			headers.add(HttpHeaders.COOKIE, cookieHeader);
+		}
+
+		return proxyService.forwardRequest(AUTH_ENDPOINT, HttpMethod.GET, headers, null);
 	}
 
 	/**
@@ -123,7 +104,7 @@ public class AuthFilter extends OncePerRequestFilter {
 	 * 단순 인증 필터지만 userName, userRoleId를 받는 이유는 시큐리티 컨텍스트 홀더에 담아서
 	 * 다음 필터에도 인증 정보를 넘기기 위해서는 인증 정보가 필요합니다.
 	 * userRoleId는 사용자 권한(Role)에 따른 페이지 접근을 관리하기 위해 저장합니다.
- 	 *
+	 *
 	 * @param body : 백엔드서버에서 반환된 응답의 body를 String으로 저장한 객체입니다.
 	 *               JSON 형식, userId, userName, userRoleId 포함
 	 * @throws JsonProcessingException : Json 프로세싱 시 던져질 수 있는 예외
