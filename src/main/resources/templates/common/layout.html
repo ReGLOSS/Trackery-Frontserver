@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <title>Trackery</title>
+    <style>
+        body {
+            display: flex;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+<section th:replace="common/sidetab :: sidetab"></section>
+<section layout:fragment="content"></section>
+</body>
+</html>
