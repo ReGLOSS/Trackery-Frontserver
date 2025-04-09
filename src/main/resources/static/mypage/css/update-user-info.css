@@ -1,6 +1,64 @@
 .update-user-info-modal-container{
-    background-color: #0a66c2;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5); /* 배경 반투명 */
     display: flex;
-    justify-content: right;
-    width: 30%;
+    justify-content: flex-end;
+    align-items: center;
+    z-index: 1000;
+}
+
+.update-user-info-modal-container .modal-content{
+    width: 30vw;
+    height: 100vh;
+    background-color: #d3d9e8;
+    align-items: center;
+}
+
+.backplate {
+    margin: 5%;
+    border-radius: 10px;
+    background-color:#d8e0e6;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 10%;
+}
+
+.update-user-info-modal-close {
+    font-weight: bold;
+    font-size: 30px;
+    position: absolute;
+    top: 2%;
+    right: 5%;
+    cursor: pointer;
+}
+
+.section-title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 48px;
+}
+
+/*간편 로그인 관련*/
+.oauth-providers {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+}
+
+.oauth-icon {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    cursor: pointer;
+    filter: grayscale(100%) brightness(60%);
+    opacity: 0.5;
+}
+
+.oauth-icon.active {
+    filter: none;
+    cursor: default;
+    opacity: 1;
 }

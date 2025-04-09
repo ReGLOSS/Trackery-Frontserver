@@ -15,8 +15,20 @@ document.addEventListener("DOMContentLoaded", function () {
     })
         .then(response => response.json())
         .then(data => {
+            const userData = data.data;
             console.log("유저 정보 : {}",data);
-            document.getElementById("username").textContent = "@" + data.data.userName;
-            document.getElementById("nickname").textContent = data.data.nickname;
-        })
+            document.getElementById("username").textContent = "@" + userData.userName;
+            document.getElementById("nickname").textContent = userData.nickname;
+
+            const activatedOAuthProviders = userData.OAuthList.map(oauth => oauth.provider.toLowerCase());
+
+            activatedOAuthProviders.forEach(provider => {
+                const iconElement = document.getElementById(`${provider}-login`);
+                if(iconElement) {
+                    iconElement.classList.add("active");
+                }
+            })
+        }).catch(error => {
+            console.error("유저 정보 가져오기 실패: ", error)
+    })
 })

@@ -12,7 +12,7 @@ export async function loadModal(htmlUrl, element, scriptUrl) {
     }
 }
 
-async function loadScript(scriptUrl) {
+export async function loadScript(scriptUrl) {
     try {
         const script = document.createElement("script");
         script.src = scriptUrl;
