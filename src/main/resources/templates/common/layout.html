@@ -3,6 +3,7 @@
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 <head>
+    <link rel="stylesheet" href="/css/tabler.min.css">
     <meta charset="UTF-8">
     <title>Trackery</title>
     <style>
@@ -15,7 +16,9 @@
     </style>
 </head>
 <body>
-<section th:replace="common/sidetab :: sidetab"></section>
+<section th:replace="~{common/sidetab :: sidetab}"></section>
 <section layout:fragment="content"></section>
+<script src="/js/tabler.min.js"></script>
+<div layout:fragment="scripts"></div>
 </body>
 </html>

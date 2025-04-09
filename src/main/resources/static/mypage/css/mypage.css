@@ -1,0 +1,60 @@
+body {
+    background-color: #d8e0e6;
+}
+
+.base-container {
+    padding-left: 4vw;
+    padding-top: 2.5vw;
+    display: flex;
+    flex-direction: column;
+    gap: 3.5vw;
+}
+
+.profile-info-container {
+    display: flex;
+    align-items: center;
+    gap: 1.5vw;
+}
+
+.profile-image {
+    width: 10vw;
+    height: 10vw;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.nickname-username-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#nickname {
+    font-weight: bold;
+    font-size: 48px;
+    margin: 0;
+}
+
+#username {
+    color: #555;
+    font-size: 40px;
+    margin: 0.1vw 0 0 0;
+}
+
+.account--action-btn-group {
+    display: flex;
+    gap: 1.5vw;
+}
+
+#update-user-info-btn {
+    height: 3vw;
+}
+
+#logout-btn {
+    height: 3vw;
+}
+
+#published-album-title {
+    font-weight: bold;
+    font-size: 48px;
+}

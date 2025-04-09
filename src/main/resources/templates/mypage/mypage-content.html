@@ -5,10 +5,33 @@
         layout:decorate="~{common/layout}">
 <head>
     <title>Trackery - 마이페이지</title>
+    <link rel="stylesheet" href="/mypage/css/mypage.css">
 </head>
 <body>
     <section layout:fragment="content">
-        테스트
+        <div class="base-container">
+            <!--기본 유저 정보 -->
+            <div class="profile-info-container">
+                <!-- 이미지 업로드 기능 작성 후 프로필 수정 -->
+                <img src="/images/profile.jpg" alt="profile-image" class="profile-image">
+                <div class="nickname-username-group">
+                    <p id="nickname"></p>
+                    <p id="username"></p>
+                </div>
+                <div class="account--action-btn-group">
+                    <button id="update-user-info-btn" class="btn btn-dark" >회원 정보 수정</button>
+                    <button id="logout-btn" class="btn btn-dark" >로그아웃</button>
+                </div>
+            </div>
+
+            <!--공개 앨범-->
+            <div class="published-album-container">
+                <p id="published-album-title">공개 앨범</p>
+            </div>
+        </div>
     </section>
+    <div layout:fragment="scripts">
+        <script src="/mypage/js/mypage.js"></script>
+    </div>
 </body>
 </html>
