@@ -11,8 +11,113 @@
     <div class="backplate">
         <div class="user-info-update-section">
             <p class="section-title">유저 정보 수정</p>
-            <p>어쩌구저쩌구</p>
+
+            <div class="profile-image-block" style="margin-top: 20px;">
+                <img id="updateProfileImage" src="/images/profile.jpg" alt="profile-image" class="profile-image">
+            </div>
+
+            <div class="username-block" style="margin-top: 20px;">
+                <label class="block-title">유저명</label>
+
+                <div class="present present-username-block">
+                    <label for="presentUserNameInputForm"></label>
+                    <input type="text" class="form-control" id="presentUserNameInputForm"
+                           value="" readonly style="height: 50px;" />
+                    <a href="#" class="edit-icon" id="editUsernameBtn">
+                        <img src="/icons/common/edit.svg" alt="edit">
+                    </a>
+                </div>
+
+                <div class="update-username-block">
+                    <label for="updateUsernameInputForm"></label>
+                    <input type="text" class="form-control" id="updateUsernameInputForm" style="height: 50px;"/>
+                </div>
+            </div>
+
+            <div class="nickname-block" style="margin-top: 20px;">
+                <label class="block-title">닉네임</label>
+
+                <div class="present present-nickname-block">
+                    <label for="presentNicknameInputForm"></label>
+                    <input type="text" class="form-control" id="presentNicknameInputForm"
+                           value="" readonly style="height: 50px;" />
+                    <a href="#" class="edit-icon" id="editNicknameBtn">
+                        <img src="/icons/common/edit.svg" alt="edit">
+                    </a>
+                </div>
+
+                <div class="update-nickname-block">
+                    <label for="updateNicknameInputForm" class="form-label"></label>
+                    <input type="text" class="form-control" id="updateNicknameInputForm" style="height: 50px;"
+                           placeholder="닉네임을 입력해주세요."/>
+                </div>
+            </div>
+
+            <div class="email-block" style="margin-top: 20px;"></div>
+
+            <div class="password-block" style="margin-top: 20px;">
+                <label class="block-title">비밀번호</label>
+
+                <div class="present present-password-block">
+                    <label class="w-100">
+                        <input type="password" class="form-control" style="height: 50px;" value="forFillPassword" readonly/>
+                    </label>
+                    <a href="#" class="edit-icon" id="editPasswordBtn">
+                        <img src="/icons/common/edit.svg" alt="edit">
+                    </a>
+                </div>
+
+                <div class="update-password-block">
+                    <div class="present-password-input-block">
+                        <label for="presentPasswordInputForm"></label>
+                        <div class="input-group input-group-flat">
+                            <input type="password" class="form-control" id="presentPasswordInputForm"
+                                   style="height: 50px;"
+                                   placeholder="현재 비밀번호를 입력해주세요."/>
+                            <span class="input-group-text">
+                        <a href="#" class="toggle-password-btn" id="updateTogglePresentPasswordConfirm">
+                            <img src="/icons/password/eye-closed.svg" alt="비밀번호 표시 전환">
+                        </a>
+                        </span>
+                        </div>
+                    </div>
+
+                    <div class="update-password-input-block">
+                        <div style="display:flex; flex-direction: column;">
+                            <label for="updateNewPasswordInputForm"></label>
+                            <small class="form-text text-muted">최소 16자리 영문 대소문자 + 숫자 + 특수문자</small>
+                        </div>
+                        <div class="input-group input-group-flat">
+                            <input type="password" class="form-control" id="updateNewPasswordInputForm" style="height: 50px;"
+                                   placeholder="새 비밀번호를 입력해주세요."/>
+                            <span class="input-group-text">
+                        <a href="#" class="toggle-password-btn" id="updateTogglePassword">
+                            <img src="/icons/password/eye-closed.svg" alt="비밀번호 표시 전환">
+                        </a>
+                        </span>
+                        </div>
+                    </div>
+
+                    <div class="update-password-confirm-input-block">
+                        <label for="updateNewPasswordConfirmInputForm"></label>
+                        <div class="input-group input-group-flat">
+                            <input type="password" class="form-control" id="updateNewPasswordConfirmInputForm"
+                                   style="height: 50px;"
+                                   placeholder="새 비밀번호를 다시 입력해주세요."/>
+                            <span class="input-group-text">
+                        <a href="#" class="toggle-password-btn" id="updateTogglePasswordConfirm">
+                            <img src="/icons/password/eye-closed.svg" alt="비밀번호 표시 전환">
+                        </a>
+                        </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="prefer-area-block"></div>
+
         </div>
+
         <div class="manage-oauth-section">
             <p class="section-title">간편로그인 연동</p>
             <div class="oauth-providers">
@@ -21,6 +126,11 @@
                 <img src="/images/naver-logo.png" class="oauth-icon" id="naver-login" alt="네이버 로그인">
                 <img src="/images/github-logo.png" class="oauth-icon" id="github-login" alt="깃허브 로그인">
             </div>
+        </div>
+
+        <div class="update-interaction-btn-group">
+            <button id="updateSubmitBtn" class="btn btn-dark w-75">변경 사항 저장</button>
+            <button id="deleteAccountBtn" class="btn btn-danger w-25">회원 탈퇴</button>
         </div>
     </div>
 </div>

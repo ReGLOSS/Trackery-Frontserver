@@ -17,8 +17,10 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(data => {
             const userData = data.data;
             console.log("유저 정보 : {}",data);
-            document.getElementById("username").textContent = "@" + userData.userName;
+            document.getElementById("userName").textContent = "@" + userData.userName;
             document.getElementById("nickname").textContent = userData.nickname;
+            document.getElementById("presentUserNameInputForm").value = userData.userName;
+            document.getElementById("presentNicknameInputForm").value = userData.nickname;
 
             const activatedOAuthProviders = userData.OAuthList.map(oauth => oauth.provider.toLowerCase());
 
@@ -31,4 +33,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }).catch(error => {
             console.error("유저 정보 가져오기 실패: ", error)
     })
+
+    document.getElementById("update-user-info-btn")
+        .addEventListener("click", function() {
+            document.getElementsByClassName("update-user-info-modal-container")[0]
+                .style.display = "flex";
+        })
 })

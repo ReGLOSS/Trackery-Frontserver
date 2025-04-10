@@ -12,7 +12,10 @@
 }
 
 .update-user-info-modal-container .modal-content{
-    width: 30vw;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    width: 35vw;
     height: 100vh;
     background-color: #d3d9e8;
     align-items: center;
@@ -24,21 +27,84 @@
     background-color:#d8e0e6;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     padding: 10%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    width: 85%;
+}
+
+.backplate > div {
+    width: 100%;
 }
 
 .update-user-info-modal-close {
     font-weight: bold;
     font-size: 30px;
     position: absolute;
-    top: 2%;
-    right: 5%;
+    top: 0;
+    right: 2%;
     cursor: pointer;
 }
 
 .section-title {
     text-align: center;
     font-weight: bold;
-    font-size: 48px;
+    font-size: 35px;
+}
+
+.profile-image-block {
+    display: flex;
+    justify-content: center;
+}
+
+.edit-icon {
+    margin-left: 30px;
+    width: 40px;
+}
+
+.edit-icon > img {
+    width: 100%;
+    height: 100%;
+}
+
+.present {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.block-title {
+    margin-bottom: 10px;
+}
+
+.update-username-block {
+    display: flex;
+}
+
+.update-nickname-block {
+    display: flex;
+}
+
+.password-block {
+    display: flex;
+    flex-direction: column;
+}
+
+.update-password-block {
+    display: flex;
+    flex-direction: column;
+}
+
+.update-password-input-block {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+#updateProfileImage {
+    cursor: pointer;
 }
 
 /*간편 로그인 관련*/
@@ -61,4 +127,13 @@
     filter: none;
     cursor: default;
     opacity: 1;
+}
+
+.update-interaction-btn-group {
+    height: 2.5vw;
+    margin-top: 20px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
 }

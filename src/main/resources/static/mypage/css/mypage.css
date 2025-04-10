@@ -35,13 +35,13 @@ body {
     margin: 0;
 }
 
-#username {
+#userName {
     color: #555;
     font-size: 40px;
     margin: 0.1vw 0 0 0;
 }
 
-.account--action-btn-group {
+.account-action-btn-group {
     display: flex;
     gap: 1.5vw;
 }
