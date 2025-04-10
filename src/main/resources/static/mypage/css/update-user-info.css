@@ -80,10 +80,20 @@
 
 .update-username-block {
     display: flex;
+    flex-direction: column;
+}
+
+#updateUsernameInputForm {
+    margin-top: 20px;
 }
 
 .update-nickname-block {
     display: flex;
+    flex-direction: column;
+}
+
+#updateNicknameInputForm {
+    margin-top: 20px;
 }
 
 .password-block {
@@ -108,9 +118,10 @@
     height: 50px;
 }
 
-#updatePasswordSubmitBtn {
+.submit-btn {
     margin-top: 20px;
     height: 50px;
+    width: 100%;
 }
 
 #updateProfileImage {
