@@ -45,6 +45,66 @@ document.getElementById("updatePasswordSubmitBtn").addEventListener("click", fun
     })
 })
 //유저명 변경 인풋 디바운스 관련
+const updateUserNameInputForm = document.getElementById("updateUserNameInputForm");
+const updateUserNameVerifyBtn = document.getElementById("updateUserNameVerifyBtn");
+
+const updateUserNameRequiredInputs = [updateUserNameInputForm];
+
+const updateUserNameSubmitBtn = document.getElementById("updateUserNameSubmitBtn");
+
+//유저명 디바운스, 조건에 일치하고 사용중인 유저명과 다르면 중복 확인 버튼 열리게
+updateUserNameInputForm.addEventListener("input", debounce(
+    () => applyValidationClass(updateUserNameInputForm,
+        /^\w{4,15}$/.test(updateUserNameInputForm.value) && updateUserNameInputForm.value !== document.getElementById("presentUserNameInputForm").value,
+        updateUserNameRequiredInputs,
+        updateUserNameVerifyBtn
+    )
+))
+
+//사용 가능하면 수정 불가능하게 막고 유저명 수정 버튼 활성화
+updateUserNameVerifyBtn.addEventListener("click", function () {
+    fetch("/api/users/exists/username?value=" + encodeURIComponent(updateUserNameInputForm.value), {
+        method: "GET",
+        credentials: "include"
+    }).then(response => {
+        if (!response.ok) {
+            response.json().then(data => {
+                alert(data.message);
+            })
+        }
+        return response.json();
+    }).then(data => {
+        if (data.data === true) {
+            updateUserNameInputForm.disabled = true;
+            updateUserNameVerifyBtn.textContent = "사용 가능";
+            updateUserNameVerifyBtn.disabled = true;
+            updateUserNameSubmitBtn.disabled = false;
+        }
+    })
+})
+
+updateUserNameSubmitBtn.addEventListener("click", function () {
+    fetch("/api/users/me/username", {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            "userName": updateUserNameInputForm.value
+        })
+    }).then(response => {
+        if (!response.ok) {
+            response.json().then(data => {
+                alert(data.message);
+            })
+        } else {
+            alert("유저명이 변경되었습니다.");
+            document.getElementsByClassName("update-username-block")[0].style.display = "none";
+            document.getElementById("presentUserNameInputForm").value = updateUserNameInputForm.value;
+        }
+    })
+})
 
 
 //닉네임 변경 인풋 디바운스 관련

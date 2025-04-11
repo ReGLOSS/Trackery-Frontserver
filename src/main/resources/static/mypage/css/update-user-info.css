@@ -83,8 +83,13 @@
     flex-direction: column;
 }
 
-#updateUsernameInputForm {
-    margin-top: 20px;
+.update-username-input-block {
+    display: flex;
+    justify-content: center;
+}
+
+#updateUserNameVerifyBtn {
+    margin-left: 10px;
 }
 
 .update-nickname-block {

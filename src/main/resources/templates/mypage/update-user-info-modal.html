@@ -31,9 +31,14 @@
                 </div>
                 <!--유저명 변경 블럭-->
                 <div class="update-username-block">
-                    <label for="updateUsernameInputForm"></label>
-                    <input type="text" class="form-control" id="updateUsernameInputForm" style="height: 50px;"
-                    placeholder="새 유저명을 입력해주세요."/>
+                    <label for="updateUserNameInputForm"></label>
+                    <small class="form-text text-muted" style="margin-top: 20px; margin-bottom: 5px;">4~15자 길이의 영문 대소문자, 숫자, 밑줄(_) 조합</small>
+                    <div class="update-username-input-block">
+                        <input type="text" class="form-control" id="updateUserNameInputForm" style="height: 50px;"
+                               placeholder="새 유저명을 입력해주세요."/>
+                        <button class="btn btn-dark" id="updateUserNameVerifyBtn" disabled="">중복 확인</button>
+                    </div>
+
 
                     <button id="updateUserNameSubmitBtn" class="btn btn-dark submit-btn" disabled="">유저명 수정</button>
                 </div>
@@ -100,7 +105,7 @@
                     <div class="update-password-input-block">
                         <div style="display:flex; flex-direction: column;">
                             <label for="updateNewPasswordInputForm"></label>
-                            <small class="form-text text-muted">최소 16자리 영문 대소문자 + 숫자 + 특수문자</small>
+                            <small class="form-text text-muted">최소 16자리 영문 대소문자 + 숫자 + 특수문자 조합</small>
                         </div>
                         <div class="input-group input-group-flat">
                             <input type="password" class="form-control" id="updateNewPasswordInputForm"
