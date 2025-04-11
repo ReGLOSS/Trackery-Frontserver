@@ -62,7 +62,8 @@ updateNicknameInputForm.addEventListener("input", debounce(
 
 const updateNicknameRequiredInputs = [updateNicknameInputForm];
 
-updateNicknameSubmitBtn.addEventListener("click", function() {
+updateNicknameSubmitBtn.addEventListener("click", function () {
+    console.log(updateNicknameInputForm.value);
     fetch("/api/users/me/nickname",
         {
             method: "PATCH",
@@ -73,16 +74,18 @@ updateNicknameSubmitBtn.addEventListener("click", function() {
             body: JSON.stringify({
                 "nickname": updateNicknameInputForm.value
             })
-        }).then(response => {
-        if (response.status === 200) {
-            alert("비밀번호가 변경되었습니다.");
-            document.getElementsByClassName("update-password-block")[0].style.display = "none";
-        } else {
+        })
+        .then(response => {
             response.json().then(data => {
-                alert(data.message);
+                if (response.status === 200) {
+                    alert("닉네임이 변경되었습니다.");
+                    document.getElementsByClassName("update-nickname-block")[0].style.display = "none";
+                    document.getElementById("presentNicknameInputForm").value = updateNicknameInputForm.value;
+                } else {
+                    alert(data?.message);
+                }
             })
-        }
-    })
+        })
 })
 
 
