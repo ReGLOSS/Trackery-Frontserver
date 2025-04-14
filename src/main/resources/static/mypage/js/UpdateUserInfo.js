@@ -1,4 +1,5 @@
 import {debounce, togglePasswordVisibility, validatePassword} from "/module/landing/utils.js"
+import {sendRequestVerificationEmail, authNumberVerification} from "/module/landing/email-verification.js"
 
 //모달 닫기 버튼
 document.getElementsByClassName("update-user-info-modal-close")[0]
@@ -215,6 +216,10 @@ document.getElementById("editNicknameBtn").addEventListener("click", function ()
     toggleBlock(document.getElementsByClassName("update-nickname-block")[0]);
 })
 
+document.getElementById("editEmailBtn").addEventListener("click", function () {
+    toggleBlock(document.getElementsByClassName("update-email-block")[0]);
+})
+
 function toggleBlock(blockElement) {
     if (blockElement.style.display === "none") {
         blockElement.style.display = "flex";
@@ -222,6 +227,39 @@ function toggleBlock(blockElement) {
         blockElement.style.display = "none";
     }
 }
+
+const updateEmailInputForm = document.getElementById("updateEmailInputForm");
+const emailAuthNumberInputForm = document.getElementById("emailAuthNumberInputForm");
+
+const requestEmailVerificationBtn = document.getElementById("requestEmailVerificationBtn");
+const verifyAuthNumberBtn = document.getElementById("verifyEmailAuthNumberBtn");
+
+const updateEmailSubmitBtn = document.getElementById("updateEmailSubmitBtn");
+
+updateEmailInputForm.addEventListener("input", debounce(
+    () => {
+        requestEmailVerificationBtn.disabled = !(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updateEmailInputForm.value) && updateEmailInputForm.value !== document.getElementById("presentEmailInputForm").value);
+    }
+))
+
+requestEmailVerificationBtn.addEventListener("click", function () {
+    sendRequestVerificationEmail(requestEmailVerificationBtn, verifyAuthNumberBtn, updateEmailInputForm);
+})
+
+verifyAuthNumberBtn.addEventListener("click", function () {
+    authNumberVerification(
+        requestEmailVerificationBtn,
+        verifyAuthNumberBtn, emailAuthNumberInputForm,
+        updateEmailInputForm,
+        function () {
+            updateEmailInputForm.readOnly = true;
+            requestEmailVerificationBtn.disabled = true;
+            verifyAuthNumberBtn.disabled = true;
+            updateEmailSubmitBtn.disabled = false;
+        });
+})
+
+
 
 
 

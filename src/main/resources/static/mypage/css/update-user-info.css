@@ -79,7 +79,7 @@
 }
 
 .update-username-block {
-    display: flex;
+    display: none;
     flex-direction: column;
 }
 
@@ -93,7 +93,7 @@
 }
 
 .update-nickname-block {
-    display: flex;
+    display: none;
     flex-direction: column;
 }
 
@@ -107,7 +107,7 @@
 }
 
 .update-password-block {
-    display: flex;
+    display: none;
     flex-direction: column;
 }
 
@@ -131,6 +131,24 @@
 
 #updateProfileImage {
     cursor: pointer;
+}
+
+.update-email-block {
+    display: flex;
+    flex-direction: column;
+}
+
+.update-email-input-button-group {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 20px;
+    width: 100%;
+}
+
+.update-email-input-button-group > button {
+    margin-left: 10px;
+    width: 170px;
 }
 
 /*간편 로그인 관련*/

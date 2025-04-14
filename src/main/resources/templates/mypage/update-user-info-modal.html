@@ -71,7 +71,34 @@
             </div>
 
             <!--이메일 변경 섹션-->
-            <div class="email-block" style="margin-top: 20px;"></div>
+            <div class="email-block" style="margin-top: 20px;">
+                <label class="block-title">이메일</label>
+                <div class="present present-email-block">
+                    <label for="presentEmailInputForm"></label>
+                    <input type="text" class="form-control" id="presentEmailInputForm"
+                           value="" readonly style="height: 50px;"/>
+                    <a href="#" class="edit-icon" id="editEmailBtn">
+                        <img src="/icons/common/edit.svg" alt="edit">
+                    </a>
+                </div>
+                <div class="update-email-block">
+                    <div class="update-email-input-button-group">
+                        <label for="updateEmailInputForm"></label>
+                        <input type="text" class="form-control" id="updateEmailInputForm" style="height: 50px;"
+                               placeholder="새 이메일을 입력해주세요."/>
+                        <button class="btn btn-dark" id="requestEmailVerificationBtn" disabled="">인증 번호 발송</button>
+                    </div>
+
+                    <div class="update-email-input-button-group">
+                        <label for="emailAuthNumberInputForm"></label>
+                        <input type="text" class="form-control" id="emailAuthNumberInputForm" style="height: 50px;"
+                               placeholder="인증 번호를 입력해주세요."/>
+                        <button class="btn btn-dark" id="verifyEmailAuthNumberBtn" disabled="">인증</button>
+                    </div>
+
+                    <button id="updateEmailSubmitBtn" class="btn btn-dark submit-btn" disabled="">이메일 변경</button>
+                </div>
+            </div>
 
             <!--비밀번호 섹션-->
             <div class="password-block" style="margin-top: 20px;">

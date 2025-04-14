@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("nickname").textContent = userData.nickname;
             document.getElementById("presentUserNameInputForm").value = userData.userName;
             document.getElementById("presentNicknameInputForm").value = userData.nickname;
+            document.getElementById("presentEmailInputForm").value = userData.email;
 
             const activatedOAuthProviders = userData.OAuthList.map(oauth => oauth.provider.toLowerCase());
 
