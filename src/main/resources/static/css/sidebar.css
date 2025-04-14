@@ -1,0 +1,102 @@
+/* 사이드바 추가 스타일 */
+.sidebar {
+  width: 250px;
+  height: 100vh;
+}
+
+.navbar-vertical {
+  height: 100vh;
+  background-color: #2a2a36;
+  display: flex;
+  flex-direction: column;
+  box-shadow: inset calc(-1 * var(--tblr-navbar-border-width)) 0 0 0 #2a2a36 !important;
+}
+
+.navbar-vertical .container-fluid {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.navbar-brand {
+  margin-bottom: 2.5rem;
+  justify-content: left !important;
+  padding-left: 1rem !important;
+}
+
+.navbar-brand-image {
+    filter: brightness(0) invert(1);
+    width: 50px;
+    height: auto;
+}
+
+.navbar-nav {
+  margin-bottom: auto;
+  font-weight: bold;
+}
+
+.nav-link {
+  color: white;
+  font-size: 1.7rem;
+  padding: 1.2rem 1.2rem 1.2rem 1.5rem !important;
+  transition: all 0.3s;
+  margin: 0.5rem !important;
+}
+
+.nav-link:hover {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+}
+
+.nav-link.active {
+  color: #FF5B3E !important;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+}
+
+.user-info {
+ font-size: medium;
+}
+
+.user-info .text-muted {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.user-profile {
+  margin-bottom: 3rem;
+}
+
+/* 통계 정보 스타일 */
+.stats {
+  z-index: 1000;
+}
+
+.stat-value {
+  line-height: 1;
+}
+
+.stat-label {
+  color: #333;
+}
+
+.px-4 {
+  margin-bottom: 4rem;
+
+}
+/* 업로드 버튼 커스텀 스타일 */
+#photoUploadBtn {
+  background-color: #d3d9e8 !important;
+  color: black;
+  font-weight: bold;
+  border: none;
+  transition: background-color 0.3s;
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
+}
+
+#photoUploadBtn:hover {
+  background-color: #d8d9dd !important;
+}
