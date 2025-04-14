@@ -62,7 +62,19 @@ public class ProxyService {
 
 		// 실제 HTTP 요청을 보내고 응답을 받아옴
 		try {
-			return restTemplate.exchange(fullUrl, method, httpEntity, String.class);
+			ResponseEntity<String> response = restTemplate.exchange(fullUrl, method, httpEntity, String.class);
+
+			HttpHeaders proxyHeaders = new HttpHeaders();
+			proxyHeaders.putAll(response.getHeaders());
+			proxyHeaders.remove("Content-Length");
+			proxyHeaders.remove("Transfer-Encoding");
+			proxyHeaders.remove("Connection");
+
+			return ResponseEntity
+					.status(response.getStatusCode())
+					.headers(proxyHeaders)
+					.body(response.getBody());
+
 		} catch (ServerException | RestClientException e) {
 			log.error("프록시 작업 중 서버 에러 발생 : {}", e.getMessage());
 			return ResponseEntity.status(500)

@@ -6,7 +6,6 @@ const passwordInput = document.getElementById("loginPassword");
 //로그인 폼 제출
 document.getElementById("submit")
     .addEventListener("click", function () {
-        console.log("username : %s password : %s", userNameInput.value, passwordInput.value)
         fetch("/api/users/login", {
             method: "POST",
             headers: {
@@ -18,7 +17,7 @@ document.getElementById("submit")
                 password: passwordInput.value
             })
         }).then(response => {
-            if (response.status === 401) {
+            if (response.status === 400) {
                 return response.json().then(data => {
                     alert(data.message);
                     throw new Error(data.message);
