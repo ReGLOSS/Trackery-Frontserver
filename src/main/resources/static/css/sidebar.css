@@ -24,6 +24,7 @@
 .navbar-expand-lg .navbar-collapse {
   display: flex !important;
 }
+
 .navbar-brand {
   margin-bottom: 2.5rem;
   justify-content: left !important;
@@ -44,7 +45,6 @@
 }
 
 .navbar-nav {
-  margin-bottom: 4rem;
   font-weight: bold;
   flex-grow: 0 !important;
 }
@@ -88,9 +88,7 @@
 }
 
 .photo-upload-btn {
-  margin-bottom: 5rem;
-  margin-left: 3rem;
-  margin-right: 3rem;
+  margin: 4rem 3rem 5rem;
 
 }
 /* 업로드 버튼 커스텀 스타일 */
