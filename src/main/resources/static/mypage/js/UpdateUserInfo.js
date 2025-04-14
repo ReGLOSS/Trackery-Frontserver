@@ -259,6 +259,28 @@ verifyAuthNumberBtn.addEventListener("click", function () {
         });
 })
 
+updateEmailSubmitBtn.addEventListener("click", function () {
+    fetch("/api/users/me/email", {
+        method: "PATCH",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({})
+    }).then(response => {
+        response.json().then(data => {
+            if (response.status === 200) {
+                console.log("이메일 변경 확인.");
+                alert("이메일이 변경되었습니다.");
+                document.getElementsByClassName("update-email-block")[0].style.display = "none";
+                document.getElementById("presentEmailInputForm").value = updateEmailInputForm.value;
+            } else {
+                alert(data?.message);
+            }
+        })
+    })
+})
+
 
 
 
