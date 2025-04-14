@@ -1,0 +1,18 @@
+section {
+    display: flex;
+    flex-direction: row;
+    width: 100vw;
+    height: 100vh;
+}
+
+.base-container {
+    background-color: #d8e0e6;
+    width: 70%;
+    height: 100%;
+}
+
+.detail-container {
+    background-color: #d3d9e8;
+    width: 30%;
+    height: 100%;
+}
