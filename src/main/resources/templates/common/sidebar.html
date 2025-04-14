@@ -12,7 +12,7 @@
             alt="Trackery"/>
         </a>
       </div>
-      <div class="collapse navbar-collapse" id="sidebar-menu">
+      <div class="navbar-custom" id="sidebar-menu">
         <ul class="navbar-nav pt-lg-3">
           <li class="nav-item">
             <a class="nav-link" href="./">
@@ -38,7 +38,7 @@
       </div>
 
      <!-- 업로드 버튼 -->
-     <div class="px-4">
+     <div class="photo-upload-btn">
         <button id="photoUploadBtn" class="btn btn-primary btn-pill w-100">
           사진 업로드
         </button>
@@ -49,9 +49,7 @@
        <div class="mx-auto mb-2">
          <img
            th:src="${userProfile != null && userProfile.userProfile != null ? userProfile.userProfile : '/images/profile.jpg'}"
-           class="rounded-circle"
-           width="80"
-           height="80"
+           class="rounded-circle user-avatar"
            alt="사용자 아바타">
        </div>
        <div class="user-info">
