@@ -24,7 +24,6 @@
 .navbar-expand-lg .navbar-collapse {
   display: flex !important;
 }
-
 .navbar-brand {
   margin-bottom: 2.5rem;
   justify-content: left !important;
@@ -42,9 +41,13 @@
   align-items: stretch;
   display: flex;
   width: auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 300px); /* 프로필과 업로드 버튼 공간을 제외한 높이 */
+  padding-right: 0.5rem;
 }
 
 .navbar-nav {
+  margin-bottom: 4rem;
   font-weight: bold;
   flex-grow: 0 !important;
 }
@@ -88,7 +91,9 @@
 }
 
 .photo-upload-btn {
-  margin: 4rem 3rem 5rem;
+  margin-bottom: 5rem;
+  margin-left: 3rem;
+  margin-right: 3rem;
 
 }
 /* 업로드 버튼 커스텀 스타일 */
