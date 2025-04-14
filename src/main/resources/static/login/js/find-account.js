@@ -67,14 +67,14 @@ function checkRequiredFields() {
 const submitNewPasswordButton = document.getElementById("submit-new-password-btn");
 
 submitNewPasswordButton.addEventListener("click", function () {
-    fetch("/api/users/password-reset", {
+    fetch("/api/users/me/password/email-token", {
         method: "PATCH",
         headers: {
             "Content-Type": "application/json",
         },
         credentials: "include",
         body: JSON.stringify({
-            password: newPasswordInput.value
+            newPassword: newPasswordInput.value
         })
     })
         .then(response => {

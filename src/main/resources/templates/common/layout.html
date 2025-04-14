@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <link rel="stylesheet" href="/css/tabler.min.css">
+    <link rel="stylesheet" href="/css/sidebar.css" type="text/css">
+    <meta charset="UTF-8">
+    <title>Trackery</title>
+    <style>
+        body {
+            display: flex;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+<section th:replace="~{common/sidebar :: sidebar}"></section>
+<section layout:fragment="content"></section>
+<script src="/js/tabler.min.js"></script>
+<div layout:fragment="scripts"></div>
+</body>
+</html>

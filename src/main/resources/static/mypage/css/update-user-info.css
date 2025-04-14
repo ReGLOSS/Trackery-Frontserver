@@ -1,0 +1,217 @@
+.update-user-info-modal-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5); /* 배경 반투명 */
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    z-index: 1000;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.15s ease-in-out;
+}
+
+/* 모달이 열릴 때 */
+.update-user-info-modal-container.active {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* 슬라이드 되는 실제 모달 내용 */
+.update-user-info-modal-container .modal-content {
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    width: 35vw;
+    height: 100vh;
+    background-color: #d3d9e8;
+    transform: translateX(100%);
+    transition: transform 0.15s ease-in-out;
+}
+
+/* 모달 내용 열릴 때 */
+.update-user-info-modal-container.active .modal-content {
+    transform: translateX(0);
+}
+
+
+.backplate {
+    margin-top: 5%;
+    margin-bottom: 5%;
+    margin-left: 8%;
+    border-radius: 10px;
+    background-color:#d8e0e6;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 10%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    width: 85%;
+}
+
+.backplate > div {
+    width: 100%;
+}
+
+.update-user-info-modal-close {
+    font-weight: bold;
+    font-size: 30px;
+    position: absolute;
+    top: 0;
+    right: 2%;
+    cursor: pointer;
+}
+
+.section-title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 35px;
+}
+
+.profile-image-block {
+    display: flex;
+    justify-content: center;
+}
+
+.edit-icon {
+    margin-left: 30px;
+    width: 40px;
+}
+
+.edit-icon > img {
+    width: 100%;
+    height: 100%;
+}
+
+.present {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.block-title {
+    margin-bottom: 10px;
+}
+
+.update-username-block {
+    display: none;
+    flex-direction: column;
+}
+
+.update-username-input-block {
+    display: flex;
+    justify-content: center;
+}
+
+#updateUserNameVerifyBtn {
+    margin-left: 10px;
+}
+
+.update-nickname-block {
+    display: none;
+    flex-direction: column;
+}
+
+#updateNicknameInputForm {
+    margin-top: 20px;
+}
+
+.password-block {
+    display: flex;
+    flex-direction: column;
+}
+
+.update-password-block {
+    display: none;
+    flex-direction: column;
+}
+
+.update-password-input-block {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+#updatePassword {
+    margin-top: 20px;
+    height: 50px;
+}
+
+.submit-btn {
+    margin-top: 20px;
+    height: 50px;
+    width: 100%;
+}
+
+#updateProfileImage {
+    cursor: pointer;
+}
+
+.update-email-block {
+    display: none;
+    flex-direction: column;
+}
+
+.update-email-input-button-group {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 20px;
+    width: 100%;
+}
+
+.update-email-input-button-group > button {
+    margin-left: 10px;
+    width: 170px;
+}
+
+/*간편 로그인 관련*/
+.oauth-providers {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+}
+
+.oauth-icon {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    cursor: pointer;
+    filter: grayscale(100%) brightness(60%);
+    opacity: 0.5;
+}
+
+.oauth-icon.active {
+    filter: none;
+    cursor: default;
+    opacity: 1;
+}
+
+.update-interaction-btn-group {
+    height: 2.5vw;
+    margin-top: 20px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+}
+
+.input-group.is-valid {
+    border: 1px double #2fb344;
+    border-radius: 5px;
+}
+
+.input-group.is-invalid {
+    border: 1px double #D63939FF;
+    border-radius: 5px;
+}
+
+#deleteAccountBtn {
+    width: 100%;
+    height: 50px;
+}

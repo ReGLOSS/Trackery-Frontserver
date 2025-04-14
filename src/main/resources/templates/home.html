@@ -3,10 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <title>Home</title>
+  <link rel="stylesheet" href="/css/tabler.min.css" type="text/css">
+  <link rel="stylesheet" href="/css/landing.css" type="text/css">
+  <link rel="stylesheet" href="/css/sidebar.css" type="text/css">
 </head>
 <body>
+    <div th:replace="~{common/sidebar :: sidebar}"></div>
     <h1>콘페코</h1>
     <div th:if="${message}" th:text="${message}"></div>
     <div th:if="${error}" th:text="${error}" style="color: red;"></div>
+    <script src="/js/tabler.min.js"></script>
+    <script src="/js/landing.js"></script>
 </body>
 </html>

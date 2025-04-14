@@ -18,7 +18,7 @@ const registerPasswordConfirmInputGroup = document.querySelector("#password-conf
 
 const saveButton = document.getElementById("save-btn");
 const usernameVerifyButton = document.getElementById("username-verify-btn");
-const verifiedText = "인증 완료";
+const verifiedText = "사용 가능";
 
 document.getElementById("register-modal-close").addEventListener("click", function () {
     closeAndOpenElements(
