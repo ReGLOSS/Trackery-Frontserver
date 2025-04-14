@@ -4,8 +4,17 @@ import {sendRequestVerificationEmail, authNumberVerification} from "/module/land
 //모달 닫기 버튼
 document.getElementsByClassName("update-user-info-modal-close")[0]
     .addEventListener("click", function () {
-        document.getElementsByClassName("update-user-info-modal-container")[0]
-            .style.display = "none";
+        const modal =  document.getElementsByClassName("update-user-info-modal-container")[0];
+        const modalContent = modal.getElementsByClassName("modal-content")[0];
+
+        modalContent.style.transform = "translateX(100%)";
+
+        modalContent.addEventListener("transitionend", function handler() {
+            modal.classList.remove("active");
+            localStorage.removeItem("updateUserInfoModal");
+            modalContent.style.transform = "";
+            modalContent.removeEventListener("transitionend", handler);
+        })
     });
 
 //비밀번호 보기 토글
@@ -37,7 +46,7 @@ document.getElementById("updatePasswordSubmitBtn").addEventListener("click", fun
     }).then(response => {
         if (response.status === 200) {
             alert("비밀번호가 변경되었습니다.");
-            document.getElementsByClassName("update-password-block")[0].style.display = "none";
+            location.reload();
         } else {
             response.json().then(data => {
                 alert(data.message);
@@ -101,8 +110,7 @@ updateUserNameSubmitBtn.addEventListener("click", function () {
             })
         } else {
             alert("유저명이 변경되었습니다.");
-            document.getElementsByClassName("update-username-block")[0].style.display = "none";
-            document.getElementById("presentUserNameInputForm").value = updateUserNameInputForm.value;
+            location.reload();
         }
     })
 })
@@ -140,8 +148,7 @@ updateNicknameSubmitBtn.addEventListener("click", function () {
             response.json().then(data => {
                 if (response.status === 200) {
                     alert("닉네임이 변경되었습니다.");
-                    document.getElementsByClassName("update-nickname-block")[0].style.display = "none";
-                    document.getElementById("presentNicknameInputForm").value = updateNicknameInputForm.value;
+                    location.reload();
                 } else {
                     alert(data?.message);
                 }
@@ -272,8 +279,7 @@ updateEmailSubmitBtn.addEventListener("click", function () {
             if (response.status === 200) {
                 console.log("이메일 변경 확인.");
                 alert("이메일이 변경되었습니다.");
-                document.getElementsByClassName("update-email-block")[0].style.display = "none";
-                document.getElementById("presentEmailInputForm").value = updateEmailInputForm.value;
+                location.reload();
             } else {
                 alert(data?.message);
             }

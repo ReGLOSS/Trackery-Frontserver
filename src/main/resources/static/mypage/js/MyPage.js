@@ -6,9 +6,11 @@ document.addEventListener("DOMContentLoaded", async function() {
     } catch (error) {
         console.error("모달 로딩 중 오류 발생:", error)
     }
+
+    await fetchUserDetail();
 })
 
-document.addEventListener("DOMContentLoaded", function () {
+async function fetchUserDetail() {
     fetch("/api/users/details", {
         method: "GET",
         credentials: "include"
@@ -32,12 +34,20 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             })
         }).catch(error => {
-            console.error("유저 정보 가져오기 실패: ", error)
+        console.error("유저 정보 가져오기 실패: ", error)
     })
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    if (localStorage.getItem("updateUserInfoModal") === "true") {
+        document.getElementsByClassName("update-user-info-modal-container")[0]
+            .classList.add("active");
+    }
 
     document.getElementById("update-user-info-btn")
         .addEventListener("click", function() {
             document.getElementsByClassName("update-user-info-modal-container")[0]
-                .style.display = "flex";
+                .classList.add("active");
+            localStorage.setItem("updateUserInfoModal", "true");
         })
 })

@@ -1,4 +1,27 @@
-.update-user-info-modal-container{
+/*.update-user-info-modal-container{*/
+/*    position: fixed;*/
+/*    top: 0;*/
+/*    left: 0;*/
+/*    width: 100vw;*/
+/*    height: 100vh;*/
+/*    background-color: rgba(0, 0, 0, 0.5); !* 배경 반투명 *!*/
+/*    display: flex;*/
+/*    justify-content: flex-end;*/
+/*    align-items: center;*/
+/*    z-index: 1000;*/
+/*}*/
+
+/*.update-user-info-modal-container .modal-content{*/
+/*    overflow-y: auto;*/
+/*    scrollbar-width: none;*/
+/*    -ms-overflow-style: none;*/
+/*    width: 35vw;*/
+/*    height: 100vh;*/
+/*    background-color: #d3d9e8;*/
+/*    align-items: center;*/
+/*}*/
+
+.update-user-info-modal-container {
     position: fixed;
     top: 0;
     left: 0;
@@ -9,20 +32,39 @@
     justify-content: flex-end;
     align-items: center;
     z-index: 1000;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.15s ease-in-out;
 }
 
-.update-user-info-modal-container .modal-content{
+/* 모달이 열릴 때 */
+.update-user-info-modal-container.active {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* 슬라이드 되는 실제 모달 내용 */
+.update-user-info-modal-container .modal-content {
     overflow-y: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
     width: 35vw;
     height: 100vh;
     background-color: #d3d9e8;
-    align-items: center;
+    transform: translateX(100%);
+    transition: transform 0.15s ease-in-out;
 }
 
+/* 모달 내용 열릴 때 */
+.update-user-info-modal-container.active .modal-content {
+    transform: translateX(0);
+}
+
+
 .backplate {
-    margin: 5%;
+    margin-top: 5%;
+    margin-bottom: 5%;
+    margin-left: 8%;
     border-radius: 10px;
     background-color:#d8e0e6;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -134,7 +176,7 @@
 }
 
 .update-email-block {
-    display: flex;
+    display: none;
     flex-direction: column;
 }
 
