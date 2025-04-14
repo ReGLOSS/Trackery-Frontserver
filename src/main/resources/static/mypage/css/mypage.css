@@ -3,6 +3,7 @@ body {
 }
 
 .base-container {
+    visibility: hidden;
     padding-left: 4vw;
     padding-top: 2.5vw;
     display: flex;

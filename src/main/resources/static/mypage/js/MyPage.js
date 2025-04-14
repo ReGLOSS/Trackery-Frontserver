@@ -33,6 +33,8 @@ async function fetchUserDetail() {
                     iconElement.classList.add("active");
                 }
             })
+
+            document.querySelector(".base-container").style.visibility = "visible";
         }).catch(error => {
         console.error("유저 정보 가져오기 실패: ", error)
     })

@@ -228,7 +228,9 @@ document.getElementById("editEmailBtn").addEventListener("click", function () {
 })
 
 function toggleBlock(blockElement) {
-    if (blockElement.style.display === "none") {
+    const currentDisplay = window.getComputedStyle(blockElement).display;
+
+    if (currentDisplay === "none") {
         blockElement.style.display = "flex";
     } else {
         blockElement.style.display = "none";
