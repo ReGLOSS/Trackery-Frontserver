@@ -85,13 +85,29 @@ fileInput.addEventListener("change", async (event) => {
         img.classList.add("gallery-image");
         img.alt = "추가된 이미지";
 
+        img.dataset.preview = result;
         img.dataset.location = location;
         img.dataset.dateTime = dateTime;
+        img.dataset.description = "";
+        img.dataset.public = "false";
 
         gallery.appendChild(img);
     };
     reader.readAsDataURL(file);
 });
+
+document.addEventListener("click", function (event) {
+    const target = event.target;
+    if(!target.classList.contains("gallery-image")) return;
+
+    const {preview, location, dateTime, description, tags, public:isPublic} = target.dataset;
+
+    document.querySelector(".image-detail").src = preview;
+    document.getElementById("description").value = description;
+    document.getElementById("locationBox").value = location;
+    document.getElementById("dateBox").value = dateTime;
+    document.getElementById("public").checked = isPublic;
+})
 
 
 
