@@ -2,17 +2,129 @@
     display: flex;
     flex-direction: row;
     width: 100%;
-    height: 100vh;
+    height: 100%;
     margin: 0;
     padding: 0;
+    overflow: hidden;
 }
 
 .base-container {
-    width: 70%;
+    height: 100vh;
+    width: 62.5%;
     background-color: #d8e0e6;
+    padding: 5%;
+    overflow-y: auto;
 }
 
 .detail-container {
+    height: 100vh;
+    overflow-y: auto;
     width: 37.5%;
+    padding: 5%;
     background-color: #d3d9e8;
+    display: flex;
+    flex-direction: column;
+    gap: 3%;
+}
+
+.gallery {
+    border: 1px solid black;
+    flex: 2;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    padding: 20px;
+}
+
+.gallery-image {
+    border: 1px solid black;
+    width: 180px;
+    height: 180px;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.gallery-image:hover {
+    transform: scale(1.1);
+}
+
+.add-image {
+    border: 1px solid black;
+    width: 180px;
+    height: 180px;
+    background-color: #e0e0e0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.add-image span {
+    font-size: 40px;
+    color: #999;
+}
+
+.image-detail {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.tag-box {
+    background-color:darkgray;
+    padding: 1%;
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.tag {
+    background-color: #dbe7ff;
+    padding: 6px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+}
+
+.tag-add {
+    background-color: #ddd;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.location-box, .date-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.location-box .text-muted,
+.date-box .text-muted {
+    position: absolute;
+    top: -20px;
+    right: 0;
+    font-size: 0.85rem;
+}
+
+.location-box input,
+.date-box input {
+    width: 100%;
+    margin: 0;
+}
+
+.checkbox-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+label {
+    margin-bottom: 0.5rem;
 }
