@@ -90,10 +90,6 @@ submitNewPasswordButton.addEventListener("click", function () {
         .catch(error => console.error(error));
 })
 
-//로그인 화면으로 돌아가기
-const findAccountModal = document.getElementsByClassName("find-account-modal-container")[0];
-const loginModal = document.getElementsByClassName("login-modal-container")[0];
-
 document.getElementById("return-to-login-btn").addEventListener("click", function () {
     window.location.reload();
 })

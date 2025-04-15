@@ -1,6 +1,5 @@
 import {
     togglePasswordVisibility,
-    closeAndOpenElements,
     validatePassword,
     debounce
 } from "/module/landing/utils.js";
