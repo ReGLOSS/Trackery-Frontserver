@@ -16,6 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.trackery.trackeryfrontserver.domain.home.controller.dto.UserProfileViewModel;
 import com.trackery.trackeryfrontserver.domain.proxy.service.ProxyService;
 
 import jakarta.servlet.FilterChain;
@@ -42,10 +43,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class AuthFilter extends OncePerRequestFilter {
+	private static final String AUTH_ENDPOINT = "/api/auth/me";
 	private final ProxyService proxyService;
 	private final ObjectMapper objectMapper = new ObjectMapper();
-
-	private static final String AUTH_ENDPOINT = "/api/auth/me";
 
 	/**
 	 * 클라이언트가 인증이 필요한 URI에 접근할 때,
@@ -73,6 +73,11 @@ public class AuthFilter extends OncePerRequestFilter {
 
 		try {
 			createAuthentication(responseEntity.getBody());
+
+			// 인증 성공 후 프로필 정보도 같이 로드
+			if (request.getSession().getAttribute("userProfile") == null) {
+				fetchUserProfile(request);
+			}
 		} catch (JsonProcessingException ex) {
 			log.error("인증 응답 파싱 실패 ", ex);
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -126,5 +131,38 @@ public class AuthFilter extends OncePerRequestFilter {
 			userDetails.getAuthorities());
 
 		SecurityContextHolder.getContext().setAuthentication(authentication);
+	}
+
+	private void fetchUserProfile(HttpServletRequest request) {
+		try {
+			HttpHeaders headers = new HttpHeaders();
+			String cookieHeader = request.getHeader(HttpHeaders.COOKIE);
+			if (cookieHeader != null) {
+				headers.add(HttpHeaders.COOKIE, cookieHeader);
+			}
+
+			ResponseEntity<String> profileResponse = proxyService.forwardRequest(
+				"/api/users/profile/me",
+				HttpMethod.GET,
+				headers,
+				null
+			);
+
+			if (profileResponse.getStatusCode().is2xxSuccessful()) {
+				JsonNode rootNode = objectMapper.readTree(profileResponse.getBody());
+				JsonNode dataNode = rootNode.get("data");
+
+				UserProfileViewModel profile = new UserProfileViewModel(
+					dataNode.get("userId").asLong(),
+					dataNode.get("userName").asText(),
+					dataNode.get("nickname").asText(),
+					dataNode.get("userProfile").asText()
+				);
+
+				request.getSession().setAttribute("userProfile", profile);
+			}
+		} catch (Exception e) {
+			log.error("프로필 정보 가져오기 실패", e);
+		}
 	}
 }
