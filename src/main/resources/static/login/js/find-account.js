@@ -154,7 +154,6 @@ findUsernameEmailSendButton.addEventListener("click", function () {
 const findUserNameReturnToLoginBtn = document.getElementById("findUserNameReturnToLoginBtn");
 
 findUserNameReturnToLoginBtn.addEventListener("click", function () {
-    closeAndOpenElements(findUserNameResultPage, findUserNameEmailPage, "block");
-    closeAndOpenElements(findAccountModal, loginModal, "flex");
+    window.location.reload();
 })
 
