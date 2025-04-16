@@ -1,6 +1,5 @@
 import {
     togglePasswordVisibility,
-    closeAndOpenElements,
     validatePassword,
     debounce
 } from "/module/landing/utils.js";
@@ -21,11 +20,7 @@ const usernameVerifyButton = document.getElementById("username-verify-btn");
 const verifiedText = "사용 가능";
 
 document.getElementById("register-modal-close").addEventListener("click", function () {
-    closeAndOpenElements(
-        document.getElementById("register-modal-container"),
-        document.getElementById("content-overlay"),
-        "flex"
-    );
+    window.location.reload();
 })
 
 // 변경 사항 저장 버튼

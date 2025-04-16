@@ -38,7 +38,7 @@ public class RestTemplateConfig {
 	@Bean
 	public RestTemplate restTemplate(HttpClientErrorExceptionHandler errorHandler) {
 		RequestConfig requestConfig = RequestConfig.custom()
-			.setResponseTimeout(Timeout.of(Duration.ofSeconds(5)))
+			.setResponseTimeout(Timeout.of(Duration.ofMinutes(1)))
 			.build();
 
 		CloseableHttpClient httpClient = HttpClients.custom()
@@ -46,7 +46,7 @@ public class RestTemplateConfig {
 			.setConnectionManager(
 				PoolingHttpClientConnectionManagerBuilder.create()
 					.setDefaultConnectionConfig(ConnectionConfig.custom()
-						.setSocketTimeout(Timeout.of(Duration.ofSeconds(5)))
+						.setSocketTimeout(Timeout.of(Duration.ofMinutes(1)))
 						.build())
 					.build()
 			)
