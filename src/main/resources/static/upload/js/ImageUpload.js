@@ -100,13 +100,35 @@ document.addEventListener("click", function (event) {
     const target = event.target;
     if(!target.classList.contains("gallery-image")) return;
 
+    document.querySelectorAll(".gallery-image").forEach(img => {
+        img.classList.remove("selected");
+    })
+
+    target.classList.add("selected");
+
     const {preview, location, dateTime, description, tags, public:isPublic} = target.dataset;
 
     document.querySelector(".image-detail").src = preview;
     document.getElementById("description").value = description;
     document.getElementById("locationBox").value = location;
     document.getElementById("dateBox").value = dateTime;
-    document.getElementById("public").checked = isPublic;
+    document.getElementById("public").checked = isPublic === "true";
+})
+
+document.getElementById("description").addEventListener("input", function (event) {
+    const selectedImage = document.querySelector(".gallery-image.selected");
+
+    if (selectedImage) {
+        selectedImage.dataset.description = event.target.value;
+    }
+})
+
+document.getElementById("public").addEventListener("change", function (event) {
+    const selectedImage = document.querySelector(".gallery-image.selected");
+
+    if (selectedImage) {
+        selectedImage.dataset.public = event.target.checked;
+    }
 })
 
 
