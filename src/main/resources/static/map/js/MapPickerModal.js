@@ -5,21 +5,29 @@ const cancelMapPickBtn = document.querySelector('#cancelMapPickBtn');
 const resultForm = document.querySelector('#mapPickResultForm');
 
 modalToggleButton.addEventListener('click', () => {
-    mapPickerModal.classList.toggle('show');
-    window.dispatchEvent(new Event('resize'));
+    if (mapPickerModal.classList.contains('show') !== true) {
+        mapPickerModal.classList.toggle('show');
+
+        window.scrollTo({
+            top: document.querySelector('.detail-container').scrollHeight,
+            behavior: 'smooth'
+        });
+
+        window.dispatchEvent(new Event('resize'));
+    }
 });
 
 let currentMarker = null;
 let utmkcoor = null;
 
-map.on("click",function(e) {
-    setTimeout(function() {
+map.on("click", function (e) {
+    setTimeout(function () {
         let x_coor = e.utmk.x;
         let y_coor = e.utmk.y;
-        utmkcoor = {x:x_coor,y:y_coor};
-        console.log(" 지도클릭 좌표 x :"+utmkcoor.x+" , y :"+utmkcoor.y);
+        utmkcoor = {x: x_coor, y: y_coor};
+        console.log(" 지도클릭 좌표 x :" + utmkcoor.x + " , y :" + utmkcoor.y);
 
-        if(currentMarker) {
+        if (currentMarker) {
             map.removeLayer(currentMarker);
         }
 
@@ -33,9 +41,9 @@ map.on("click",function(e) {
     }, 200);
 });
 
-function convertUTMKtoWGS84(x,y) {
+function convertUTMKtoWGS84(x, y) {
     const proj4 = window.proj4;
-    if(!proj4) {
+    if (!proj4) {
         console.error("좌표 변환 라이브러리 로드 안 됨.")
         return;
     }
@@ -77,7 +85,7 @@ function fetchLocationName(utmkcoor) {
     }).then(response => {
         response.json().then(data => {
             if (response.status === 404) {
-                resultForm.value="위치를 찾을 수 없습니다. 다른 곳으로 시도해주세요.";
+                resultForm.value = "위치를 찾을 수 없습니다. 다른 곳으로 시도해주세요.";
                 toggleValidationClass(resultForm, false);
                 return;
             }
@@ -120,10 +128,10 @@ cancelMapPickBtn.addEventListener('click', function () {
 });
 
 function resetVariations() {
-    if(currentMarker) {
+    if (currentMarker) {
         map.removeLayer(currentMarker);
     }
-    map.setView(sop.utmk(953820, 1953437), 9);
+    map.setView(sop.utmk(953820, 1953437), 7);
     currentMarker = null;
     utmkcoor = null;
     foundLocationData = {longitude: 0, latitude: 0, locationName: ""}

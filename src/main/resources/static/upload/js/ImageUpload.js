@@ -106,6 +106,9 @@ document.addEventListener("click", function (event) {
 
     target.classList.add("selected");
 
+    document.querySelector('#mapPickerModal').classList.remove('show');
+    resetVariations();
+
     const {preview, location, dateTime, description, tags, public:isPublic} = target.dataset;
 
     document.querySelector(".image-detail").src = preview;
