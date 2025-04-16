@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <title></title>
+    <link th:fragment="mapPickerModalCss" rel="stylesheet" href="/map/css/map-picker-modal.css">
+    <script th:fragment="proj4jsLib" src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.8.0/proj4.js"></script>
+    <script th:fragment="kostatMapScript" type="text/javascript" src="//sgisapi.kostat.go.kr/OpenAPI3/auth/javascriptAuth?consumer_key=673fbc270fb44221bb05"></script>
+</head>
+<body>
+<div th:fragment="mapPickerModal(title, id)" class="map-picker-modal" th:id="${id}">
+
+    <div class="map-area">
+        <div id="map" style="width:100%;height:100%"></div>
+        <script type="text/javascript">
+            var map = sop.map("map", {
+                zoomSliderControl: false,
+                measureControl: false,
+                attributionControl: false
+            });
+            map.setView(sop.utmk(953820, 1953437), 9);
+        </script>
+    </div>
+
+    <div class="map-picker-result">
+        <label for="mapPickResultForm"></label>
+        <input type="text" id="mapPickResultForm" class="form-control" readonly style="text-align: center;" value="">
+    </div>
+
+    <div class="map-picker-btn-area">
+        <button class="btn btn-dark" id="mapPickSubmitBtn">확인</button>
+        <button class="btn btn-red" id="cancelMapPickBtn">취소</button>
+    </div>
+
+</div>
+
+<script th:fragment="mapPickerModalJs" src="/map/js/MapPickerModal.js"></script>
+</body>
+</html>

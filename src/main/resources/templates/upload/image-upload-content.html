@@ -6,6 +6,8 @@
 <head>
     <title>Trackery - 이미지 업로드</title>
     <link rel="stylesheet" href="/upload/css/image-upload.css">
+    <link th:replace="~{map/map-picker-modal :: mapPickerModalCss}">
+    <script th:replace="~{map/map-picker-modal :: kostatMapScript}"></script>
 </head>
 <body>
 <section layout:fragment="content" class="image-upload-container">
@@ -44,10 +46,12 @@
         <div class="location-area">
             <label for="locationBox">위치</label>
             <div class="location-box">
-                <a href="#" class="text-muted">여기가 아닌가요?</a>
+                <a href="#" class="text-muted" id="editLocationBtn">여기가 아닌가요?</a>
                 <input id="locationBox" class="form-control" type="text" value="" readonly/>
             </div>
         </div>
+
+        <div th:replace="~{map/map-picker-modal :: mapPickerModal(title, 'mapPickerModal')}"></div>
 
         <div class="date-area">
             <label for="dateBox">날짜</label>
@@ -68,6 +72,7 @@
 <div layout:fragment="scripts">
     <script src="/js/lib/exif-js/exif.js"></script>
     <script type="module" src="/upload/js/ImageUpload.js"></script>
+    <script th:replace="~{map/map-picker-modal :: mapPickerModalJs}"></script>
 </div>
 </body>
 </html>

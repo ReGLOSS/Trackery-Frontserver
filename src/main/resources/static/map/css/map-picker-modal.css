@@ -1,0 +1,49 @@
+.map-picker-modal {
+    display: none;
+    flex-direction: column;
+    gap: 0.5vh;
+    justify-content: center;
+    align-items: center;
+    width: 30vw;
+    height: 45vh;
+    z-index: 1000;
+    position: relative;
+    left: -18%;
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.map-area {
+    width: 25vw;
+    height: 25vh;
+    margin: 5% 5% 0 5%;
+}
+
+.map-picker-result {
+    width: 25vw;
+    margin-bottom: 1vh;
+}
+
+.map-picker-btn-area {
+    display: flex;
+    justify-content: flex-end;
+    width: 25vw;
+    gap: 5%;
+    padding-bottom: 3%;
+}
+
+.map-picker-modal.show {
+    display: flex;
+}
+
+.form-control.valid {
+    border: 1px double #2fb344;
+    border-radius: 5px;
+}
+
+.form-control.invalid {
+    border: 1px double #D63939FF;
+    border-radius: 5px;
+}
