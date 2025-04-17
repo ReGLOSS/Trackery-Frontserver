@@ -1,5 +1,27 @@
 import {parseExif} from "/upload/js/ExifParser.js";
 
+document.addEventListener('DOMContentLoaded', function() {
+    const showDatepicker = document.getElementById('show-datepicker');
+    const dateBox = document.getElementById('dateBox');
+
+    const fp = flatpickr(dateBox, {
+        dateFormat: "Y / m / d",
+        maxDate: "today",
+        locale: "ko",
+        onClose: function() {
+            const selectedImage = document.querySelector(".gallery-image.selected");
+            if (selectedImage) {
+                selectedImage.dataset.dateTime = document.querySelector('#dateBox').value;
+            }
+        }
+    });
+
+    showDatepicker.addEventListener('click', function(e) {
+        e.preventDefault();
+        fp.open();
+    });
+});
+
 async function fetchLocation(file) {
     const exif = await parseExif(file);
 

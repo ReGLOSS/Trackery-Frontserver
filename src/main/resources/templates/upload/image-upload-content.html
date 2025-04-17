@@ -5,6 +5,9 @@
         layout:decorate="~{common/layout}">
 <head>
     <title>Trackery - 이미지 업로드</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/l10n/ko.min.js"></script>
     <link rel="stylesheet" href="/upload/css/image-upload.css">
     <link th:replace="~{map/map-picker-modal :: mapPickerModalCss}">
     <script th:replace="~{map/map-picker-modal :: kostatMapScript}"></script>
@@ -30,7 +33,8 @@
 
         <div class="description-area">
             <label for="description">설명</label>
-            <textarea id="description" class="form-control" rows="5" placeholder="여기에 설명을 입력하세요..." style="resize:none;"></textarea>
+            <textarea id="description" class="form-control" rows="5" placeholder="여기에 설명을 입력하세요..."
+                      style="resize:none;"></textarea>
         </div>
 
         <div class="tag-area">
@@ -56,7 +60,7 @@
         <div class="date-area">
             <label for="dateBox">날짜</label>
             <div class="date-box">
-                <a href="#" class="text-muted">다른 날 다녀오셨나요?</a>
+                <a href="#" class="text-muted" id='show-datepicker'>다른 날 다녀오셨나요?</a>
                 <input id="dateBox" class="form-control" type="text" value="" readonly/>
             </div>
         </div>
