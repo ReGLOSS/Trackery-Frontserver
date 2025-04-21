@@ -1,6 +1,6 @@
 import {parseExif} from "/upload/js/ExifParser.js";
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const showDatepicker = document.getElementById('show-datepicker');
     const dateBox = document.getElementById('dateBox');
 
@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
         dateFormat: "Y / m / d",
         maxDate: "today",
         locale: "ko",
-        onClose: function() {
+        onClose: function () {
             const selectedImage = document.querySelector(".gallery-image.selected");
             if (selectedImage) {
                 selectedImage.dataset.dateTime = document.querySelector('#dateBox').value;
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    showDatepicker.addEventListener('click', function(e) {
+    showDatepicker.addEventListener('click', function (e) {
         e.preventDefault();
         fp.open();
     });
@@ -30,15 +30,18 @@ async function fetchLocation(file) {
         return;
     }
 
-    const { latitude, longitude, dateTime } = exif;
+    const {latitude, longitude, dateTime} = exif;
 
     const formattedDateTime = formatDateFromExif(dateTime);
 
-    if(latitude == null || longitude == null) {
-        const dateTime = formatDateFromExif(dateTime);
+    if (latitude == null || longitude == null) {
         console.warn("위치 정보 없음, 날짜 정보 있음");
-        console.warn("날짜 정보 : ", dateTime);
-        return {dateTime : formattedDateTime};
+        console.warn("날짜 정보 : ", formattedDateTime);
+        return {
+            dateTime: formattedDateTime,
+            latitude: null,
+            longitude: null
+        };
     }
 
     try {
@@ -47,7 +50,7 @@ async function fetchLocation(file) {
             headers: {
                 "Content-Type": "application/json"
             },
-            credentials: "include", // ← 중요!
+            credentials: "include",
             body: JSON.stringify({
                 latitude,
                 longitude
@@ -57,11 +60,23 @@ async function fetchLocation(file) {
         const data = await response.json();
         const location = data.data;
 
-        return {location, dateTime : formattedDateTime};
+        return {
+            location,
+            dateTime: formattedDateTime,
+            latitude,
+            longitude
+        };
     } catch (err) {
         console.error("위치 정보 요청 실패:", err);
+        return {
+            dateTime: formattedDateTime,
+            latitude,
+            longitude,
+            location: ""
+        };
     }
 }
+
 
 function formatDateFromExif(dateTime) {
     if (!dateTime) return "";
@@ -90,7 +105,7 @@ fileInput.addEventListener("change", async (event) => {
     // EXIF 파싱 + 위치 요청
     const parsedData = await fetchLocation(file);
 
-    const {location, dateTime} = parsedData;
+    const {location = '', dateTime = '', latitude, longitude} = parsedData;
 
     // 이미지 UI 추가
     const reader = new FileReader();
@@ -102,6 +117,8 @@ fileInput.addEventListener("change", async (event) => {
             return;
         }
 
+        const fileExtension = file.name.split(".").pop().toLowerCase();
+
         const img = document.createElement("img");
         img.src = result;
         img.classList.add("gallery-image");
@@ -112,6 +129,10 @@ fileInput.addEventListener("change", async (event) => {
         img.dataset.dateTime = dateTime;
         img.dataset.description = "";
         img.dataset.public = "false";
+        img.dataset.uuid = crypto.randomUUID();
+        img.dataset.fileExtension = fileExtension;
+        img.dataset.latitude = parsedData.latitude;
+        img.dataset.longitude = parsedData.longitude;
 
         gallery.appendChild(img);
     };
@@ -120,7 +141,7 @@ fileInput.addEventListener("change", async (event) => {
 
 document.addEventListener("click", function (event) {
     const target = event.target;
-    if(!target.classList.contains("gallery-image")) return;
+    if (!target.classList.contains("gallery-image")) return;
 
     document.querySelectorAll(".gallery-image").forEach(img => {
         img.classList.remove("selected");
@@ -131,7 +152,7 @@ document.addEventListener("click", function (event) {
     document.querySelector('#mapPickerModal').classList.remove('show');
     resetVariations();
 
-    const {preview, location, dateTime, description, tags, public:isPublic} = target.dataset;
+    const {preview, location, dateTime, description, tags, public: isPublic} = target.dataset;
 
     document.querySelector(".image-detail").src = preview;
     document.getElementById("description").value = description;
@@ -156,5 +177,116 @@ document.getElementById("public").addEventListener("change", function (event) {
     }
 })
 
+const imageUploadBtn = document.querySelector("#imageUploadBtn");
+
+imageUploadBtn.addEventListener("click", function () {
+    document.querySelectorAll(".gallery-image").forEach(img => {
+        requestPresignedPutUrl(img).then(url => {
+            console.log(url);
+            uploadImageToS3(img, url);
+            fetchImgMetaData(img);
+        });
+    });
+});
+
+
+function requestPresignedPutUrl(imageElement) {
+    const fileName = imageElement.dataset.uuid + "." + imageElement.dataset.fileExtension;
+
+    return fetch("/api/images/presigned-url/put?imageFileName=" + fileName, {
+        method: "GET",
+        credentials: "include"
+    }).then(response => {
+        if (response.status === 400) {
+            return response.json().then(data => {
+                console.log("PUT URL 가져오기 실패");
+                return "";
+            })
+        }
+        return response.json().then(data => {
+            return data.data;
+        });
+    })
+}
+
+function uploadImageToS3(imageElement, url) {
+    const binaryData = imageBase64ToBinaryData(imageElement.src);
+
+    const contentType = extensionToMimeType(imageElement.dataset.fileExtension);
+
+    fetch(url, {
+        method: "PUT",
+        headers: {
+            "Content-Type": contentType
+        },
+        body: binaryData
+    }).then(response => {
+        if (response.status !== 200) {
+            console.log("%s S3 업로드 실패", imageElement.dataset.uuid);
+        }
+
+        console.log("%s S3 업로드 성공  ", imageElement.dataset.uuid);
+    })
+}
+
+function imageBase64ToBinaryData(imgUrl) {
+    const base64Data = imgUrl.split(',')[1];
+    const binaryData = atob(base64Data);
+
+    const arrayBuffer = new Uint8Array(binaryData.length);
+    for (let i = 0; i < binaryData.length; i++) {
+        arrayBuffer[i] = binaryData.charCodeAt(i);
+    }
+    return arrayBuffer;
+}
+
+function extensionToMimeType(extension) {
+    let contentType = "";
+
+    switch (extension) {
+        case 'png':
+            contentType = 'image/png';
+            break;
+        case 'gif':
+            contentType = 'image/gif';
+            break;
+        case 'webp':
+            contentType = 'image/webp';
+            break;
+        case 'jpg':
+        case 'jpeg':
+            contentType = 'image/jpeg';
+            break;
+        default:
+            contentType = 'image/jpeg';
+    }
+
+    return contentType;
+}
+
+function fetchImgMetaData(imageElement) {
+    const fileName = imageElement.dataset.uuid + "." + imageElement.dataset.fileExtension;
+
+    fetch("/api/images", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            imageName: fileName,
+            imageType: imageElement.dataset.fileExtension,
+            description: imageElement.dataset.description,
+            longitude: imageElement.dataset.longitude,
+            latitude: imageElement.dataset.latitude,
+            dateString: imageElement.dataset.dateTime,
+            isPublic: imageElement.dataset.public
+        })
+    }).then(response => {
+        if (response.status !== 200) {
+            console.log("%s 이미지 메타데이터 저장 실패", fileName)
+        } else { console.log("%s 이미지 메타데이터 저장 성공", fileName) }
+    })
+}
 
 
