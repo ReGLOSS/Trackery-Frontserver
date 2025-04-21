@@ -241,7 +241,7 @@ function imageBase64ToBinaryData(imgUrl) {
 }
 
 function extensionToMimeType(extension) {
-    let contentType = "";
+    let contentType;
 
     switch (extension) {
         case 'png':
