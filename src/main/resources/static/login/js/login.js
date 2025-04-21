@@ -67,11 +67,7 @@ document.getElementById("find-account-guide")
 //로그인 모달 닫기
 document.getElementById("login-modal-close")
     .addEventListener("click", function () {
-        closeAndOpenElements(
-            document.getElementById("login-modal-container"),
-            document.getElementById("content-overlay"),
-            "flex"
-        );
+        window.location.reload();
     });
 
 //로그인 모달 오픈
