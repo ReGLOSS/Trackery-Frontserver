@@ -4,8 +4,7 @@ import {sendRequestVerificationEmail, authNumberVerification} from "/module/land
 //로그인 모달 닫기
 document.getElementById("find-account-modal-close")
     .addEventListener("click", function () {
-        document.getElementById("content-overlay").style.display = "flex";
-        document.getElementById("find-account-modal-container").style.display = "none";
+        window.location.reload();
     });
 
 //인증번호 전송
@@ -91,16 +90,8 @@ submitNewPasswordButton.addEventListener("click", function () {
         .catch(error => console.error(error));
 })
 
-//로그인 화면으로 돌아가기
-const findAccountModal = document.getElementsByClassName("find-account-modal-container")[0];
-const loginModal = document.getElementsByClassName("login-modal-container")[0];
-
 document.getElementById("return-to-login-btn").addEventListener("click", function () {
-    const resultPage = document.getElementsByClassName("result-page")[0];
-    const verifyEmail = document.getElementsByClassName("verify-email")[0];
-
-    closeAndOpenElements(resultPage, verifyEmail, "block");
-    closeAndOpenElements(findAccountModal, loginModal, "flex");
+    window.location.reload();
 })
 
 //유저명 찾기 이메일 발송
@@ -159,7 +150,6 @@ findUsernameEmailSendButton.addEventListener("click", function () {
 const findUserNameReturnToLoginBtn = document.getElementById("findUserNameReturnToLoginBtn");
 
 findUserNameReturnToLoginBtn.addEventListener("click", function () {
-    closeAndOpenElements(findUserNameResultPage, findUserNameEmailPage, "block");
-    closeAndOpenElements(findAccountModal, loginModal, "flex");
+    window.location.reload();
 })
 
