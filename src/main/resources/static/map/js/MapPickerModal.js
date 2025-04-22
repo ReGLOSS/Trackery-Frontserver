@@ -114,10 +114,15 @@ function toggleValidationClass(element, isValid) {
 
 mapPickSubmitBtn.addEventListener('click', function () {
     const selectedImage = document.querySelector('.selected');
+    const locationBox = document.querySelector('#locationBox');
     selectedImage.dataset.longitude = foundLocationData.longitude;
     selectedImage.dataset.latitude = foundLocationData.latitude;
     selectedImage.dataset.location = foundLocationData.locationName;
-    document.querySelector('#locationBox').value = foundLocationData.locationName;
+    locationBox.value = foundLocationData.locationName;
+    if (locationBox.classList.contains('invalid')) {
+        locationBox.classList.remove('invalid');
+        locationBox.classList.add('valid');
+    }
     mapPickerModal.classList.remove('show');
     resetVariations();
 });

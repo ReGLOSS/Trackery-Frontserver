@@ -37,12 +37,15 @@
 }
 
 .gallery-image {
-    border: 1px solid black;
     width: 12em;
     aspect-ratio: 1/1;
     object-fit: cover;
     cursor: pointer;
     transition: transform 0.2s;
+}
+
+.gallery-image.invalid {
+    border: 1px double #D63939FF;
 }
 
 .gallery-image:hover {
@@ -129,3 +132,13 @@
 label {
     margin-bottom: 0.5rem;
 }
+
+#locationBox.invalid {
+    border: 1px double #D63939FF;
+}
+
+#dateBox.invalid {
+    border: 1px double #D63939FF;
+}
+
+

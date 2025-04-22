@@ -12,6 +12,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const selectedImage = document.querySelector(".gallery-image.selected");
             if (selectedImage) {
                 selectedImage.dataset.dateTime = document.querySelector('#dateBox').value;
+
+                if( dateBox.classList.contains("invalid") ) {
+                    dateBox.classList.remove("invalid");
+                    dateBox.classList.add("valid");
+                }
             }
         }
     });
@@ -27,7 +32,12 @@ async function fetchLocation(file) {
 
     if (!exif) {
         console.warn("EXIF 위치, 날짜 정보 없음");
-        return;
+        return {
+            location : '',
+            dateTime : '',
+            latitude : null,
+            longitude : null,
+        };
     }
 
     const {latitude, longitude, dateTime} = exif;
@@ -38,6 +48,7 @@ async function fetchLocation(file) {
         console.warn("위치 정보 없음, 날짜 정보 있음");
         console.warn("날짜 정보 : ", formattedDateTime);
         return {
+            location : '',
             dateTime: formattedDateTime,
             latitude: null,
             longitude: null
@@ -134,6 +145,14 @@ fileInput.addEventListener("change", async (event) => {
         img.dataset.latitude = parsedData.latitude;
         img.dataset.longitude = parsedData.longitude;
 
+        if (dateTime && location) {
+            img.classList.add("valid")
+        }
+
+        if (!dateTime || !location) {
+            img.classList.add("invalid")
+        }
+
         gallery.appendChild(img);
     };
     reader.readAsDataURL(file);
@@ -159,6 +178,17 @@ document.addEventListener("click", function (event) {
     document.getElementById("locationBox").value = location;
     document.getElementById("dateBox").value = dateTime;
     document.getElementById("public").checked = isPublic === "true";
+
+    const dateBox = document.getElementById("dateBox");
+    const locationBox = document.getElementById("locationBox");
+
+    if (dateBox.value === "") {
+        dateBox.classList.add("invalid");
+    }
+
+    if (locationBox.value === "") {
+        locationBox.classList.add("invalid");
+    }
 })
 
 document.getElementById("description").addEventListener("input", function (event) {
@@ -288,5 +318,31 @@ function fetchImgMetaData(imageElement) {
         } else { console.log("%s 이미지 메타데이터 저장 성공", fileName) }
     })
 }
+
+const locationBox = document.getElementById("locationBox");
+const dateBox  = document.getElementById("dateBox");
+
+function validationLocationAndDate() {
+    const selectedImage = document.querySelector(".gallery-image.selected");
+
+    if (locationBox.value.trim() !== "" && dateBox.value.trim() !== "") {
+        selectedImage.classList.remove("invalid");
+        selectedImage.classList.add("valid");
+    } else {
+        selectedImage.classList.remove("valid");
+        selectedImage.classList.add("invalid");
+    }
+}
+
+locationBox.addEventListener("change", function () {
+    validationLocationAndDate();
+})
+
+dateBox.addEventListener("change", function () {
+    validationLocationAndDate();
+})
+
+
+
 
 
