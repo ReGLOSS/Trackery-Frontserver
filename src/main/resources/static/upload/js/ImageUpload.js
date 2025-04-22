@@ -1,6 +1,8 @@
 import {parseExif} from "/upload/js/ExifParser.js";
 
 document.addEventListener('DOMContentLoaded', function () {
+    setupValidationListeners();
+
     const showDatepicker = document.getElementById('show-datepicker');
     const dateBox = document.getElementById('dateBox');
 
@@ -116,7 +118,7 @@ fileInput.addEventListener("change", async (event) => {
     // EXIF 파싱 + 위치 요청
     const parsedData = await fetchLocation(file);
 
-    const {location = '', dateTime = '', latitude, longitude} = parsedData;
+    const {location = '', dateTime = ''} = parsedData;
 
     // 이미지 UI 추가
     const reader = new FileReader();
@@ -342,6 +344,55 @@ dateBox.addEventListener("change", function () {
     validationLocationAndDate();
 })
 
+
+// 업로드 버튼 상태 변경 부분
+function updateUploadButtonState() {
+    const images = document.querySelectorAll(".gallery-image");
+    const uploadButton = document.getElementById("imageUploadBtn");
+
+    // 이미지가 없는 경우 버튼 비활성화
+    if (images.length === 0) {
+        uploadButton.disabled = true;
+        return;
+    }
+
+    // 모든 이미지가 valid인지 확인
+    let allValid = true;
+
+    for (const image of images) {
+        // valid 클래스가 없거나, invalid 클래스가 있으면 유효하지 않음
+        if (!image.classList.contains('valid')) {
+            allValid = false;
+            break;
+        }
+    }
+
+    // 모든 이미지가 valid일 때만 버튼 활성화
+    uploadButton.disabled = !allValid;
+}
+
+function setupValidationListeners() {
+    const gallery = document.querySelector(".gallery");
+
+    const observer = new MutationObserver(function(mutations) {
+        for (const mutation of mutations) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class' ||
+                mutation.type === 'childList') {
+                updateUploadButtonState();
+            }
+        }
+    });
+
+    // gallery의 변화 감지
+    observer.observe(gallery, {
+        childList: true,
+        attributes: true,
+        attributeFilter: ['class'],
+        subtree: true
+    });
+
+    updateUploadButtonState();
+}
 
 
 
