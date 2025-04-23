@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * fileName       : ProxyService
  * author         : inari
  * date           : 25. 2. 19.
- * description    : 프록시 요청을 실제로 처리하는  서비스 클래스입니다.
+ * description    : 프록시 요청을 실제로 처리하는 서비스 클래스입니다.
  * 					프론트엔드에서 받는 요청을 백엔드 서버로 전달하고 응답을 받아옵니다.
  * ===========================================================
  * DATE              AUTHOR             NOTE
@@ -55,14 +55,21 @@ public class ProxyService {
 		// 백엔드 서버의 전체 URL 생성
 		String fullUrl = apiServerUrl + url;
 
+		log.info("전체 요청 URL: {}", fullUrl);
+
 		// body가 있는 경우와 없는 경우를 구분하여 HttpEntity 생성
 		HttpEntity<String> httpEntity = body != null && !body.isEmpty()
 			? new HttpEntity<>(body, headers)
 			: new HttpEntity<>(null, headers);
 
+		log.debug("Created HttpEntity: {}", httpEntity);
+
 		// 실제 HTTP 요청을 보내고 응답을 받아옴
 		try {
 			ResponseEntity<String> response = restTemplate.exchange(fullUrl, method, httpEntity, String.class);
+
+			log.info("응답 상태 코드: {}", response.getStatusCode());
+			log.debug("응답 헤더: {}", response.getHeaders());
 
 			HttpHeaders proxyHeaders = new HttpHeaders();
 			proxyHeaders.putAll(response.getHeaders());
