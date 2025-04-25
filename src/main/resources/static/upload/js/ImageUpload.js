@@ -160,9 +160,20 @@ fileInput.addEventListener("change", async (event) => {
     reader.readAsDataURL(file);
 });
 
+const imageNotSelectedBlock = document.querySelector(".image-not-selected");
+const imageSelectedBlock = document.querySelector(".image-selected");
+
 document.addEventListener("click", function (event) {
     const target = event.target;
     if (!target.classList.contains("gallery-image")) return;
+
+    const notSelectedImageDisplay = window.getComputedStyle(imageNotSelectedBlock).display;
+    console.log(notSelectedImageDisplay);
+
+    if (notSelectedImageDisplay === "flex") {
+        imageNotSelectedBlock.style.display = "none";
+        imageSelectedBlock.style.display = "flex";
+    }
 
     document.querySelectorAll(".gallery-image").forEach(img => {
         img.classList.remove("selected");
