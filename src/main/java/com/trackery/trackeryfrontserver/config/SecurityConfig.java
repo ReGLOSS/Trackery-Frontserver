@@ -32,7 +32,7 @@ public class SecurityConfig {
 
 	private static final String[] PUBLIC_URIS = {"/register/**", "/login/**", "/", "/resources/**", "/css/**", "/js/**",
 		"/images/**", "/error", "/api/**", "/icons/**", "/module/**", "/error", "/users/oauth/**", "/oauth/**",
-		"/oauth-account", "/oauth-redirect/**"};
+		"/oauth-account", "/oauth-redirect/**", "/maps/**"};
 
 	/**
 	 * Spring Security 필터 체인을 구성합니다.

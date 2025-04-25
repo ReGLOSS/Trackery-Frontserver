@@ -4,7 +4,7 @@
     <title></title>
     <link th:fragment="mapPickerModalCss" rel="stylesheet" href="/map/css/map-picker-modal.css">
     <script th:fragment="proj4jsLib" src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.8.0/proj4.js"></script>
-    <script th:fragment="kostatMapScript" type="text/javascript" src="//sgisapi.kostat.go.kr/OpenAPI3/auth/javascriptAuth?consumer_key=673fbc270fb44221bb05"></script>
+    <script th:fragment="kostatMapScript" type="text/javascript" th:src="@{/maps/sop}"></script>
 </head>
 <body>
 <div th:fragment="mapPickerModal(title, id)" class="map-picker-modal" th:id="${id}">
