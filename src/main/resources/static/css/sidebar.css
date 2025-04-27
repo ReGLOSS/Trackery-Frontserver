@@ -1,11 +1,4 @@
 /* 사이드바 추가 스타일 */
-.sidebar {
-  width: 250px;
-  height: 100vh;
-  overflow-y: scroll;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
 
 .navbar-vertical {
   height: 100vh;
@@ -15,14 +8,22 @@
   box-shadow: inset calc(-1 * var(--tblr-navbar-border-width)) 0 0 0 #2a2a36 !important;
 }
 
-.navbar-vertical .container-fluid {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
+.navbar-expand-lg {
+  width: 20rem !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  z-index: 1030 !important;
+  align-items: flex-start !important;
+  transition: transform .3s !important;
+  overflow-y: auto !important;
+  padding: 0 !important;
 }
 
+.navbar-expand-lg .navbar-collapse {
+  display: flex !important;
+}
 .navbar-brand {
   margin-bottom: 2.5rem;
   justify-content: left !important;
@@ -31,21 +32,33 @@
 
 .navbar-brand-image {
     filter: brightness(0) invert(1);
-    width: 50px;
+    width: 3.5rem;
     height: auto;
 }
 
+.navbar-custom {
+  flex-direction: column;
+  align-items: stretch;
+  display: flex;
+  width: auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 20rem); /* 프로필과 업로드 버튼 공간을 제외한 높이 */
+  padding-right: 0.5rem;
+}
+
 .navbar-nav {
-  margin-bottom: auto;
+  margin-bottom: 2rem;
   font-weight: bold;
+  flex-grow: 0 !important;
 }
 
 .nav-link {
   color: white;
-  font-size: 1.7rem;
-  padding: 1.2rem 1.2rem 1.2rem 1.5rem !important;
+  font-size: 2.4rem;
+  padding: 1.2rem 1.2rem 1.2rem 2rem !important;
   transition: all 0.3s;
   margin: 0.5rem !important;
+  justify-content: left !important;
 }
 
 .nav-link:hover {
@@ -61,7 +74,7 @@
 }
 
 .user-info {
- font-size: medium;
+ font-size: 1.4rem;
 }
 
 .user-info .text-muted {
@@ -69,24 +82,16 @@
 }
 
 .user-profile {
-  margin-bottom: 3rem;
+  margin-bottom: 5rem;
 }
 
-/* 통계 정보 스타일 */
-.stats {
-  z-index: 1000;
+.user-avatar {
+  width: 6.3rem;
+  height: auto;
 }
 
-.stat-value {
-  line-height: 1;
-}
-
-.stat-label {
-  color: #333;
-}
-
-.px-4 {
-  margin-bottom: 4rem;
+.photo-upload-btn {
+  margin: 2rem 3rem 5rem;
 
 }
 /* 업로드 버튼 커스텀 스타일 */
@@ -96,8 +101,8 @@
   font-weight: bold;
   border: none;
   transition: background-color 0.3s;
-  padding-top: 0.8rem;
-  padding-bottom: 0.8rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 #photoUploadBtn:hover {
