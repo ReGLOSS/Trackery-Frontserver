@@ -19,6 +19,7 @@
   transition: transform .3s !important;
   overflow-y: auto !important;
   padding: 0 !important;
+  scrollbar-width: none;
 }
 
 .navbar-expand-lg .navbar-collapse {

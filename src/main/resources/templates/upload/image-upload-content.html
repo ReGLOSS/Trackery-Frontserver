@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html
+        lang="ko"
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        layout:decorate="~{common/layout}">
+<head>
+    <title>Trackery - 이미지 업로드</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/l10n/ko.min.js"></script>
+    <link rel="stylesheet" href="/upload/css/image-upload.css">
+    <link th:replace="~{map/map-picker-modal :: mapPickerModalCss}">
+    <script th:replace="~{map/map-picker-modal :: kostatMapScript}"></script>
+</head>
+<body>
+<section layout:fragment="content" class="image-upload-container">
+    <!--  메인탭-->
+    <div class="base-container">
+        <div class="gallery">
+            <div class="add-image">
+                <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                <img src="/upload/icon/image-upload.svg" alt="image-add" class="image-add">
+            </div>
+        </div>
+
+        <button class="btn btn-dark" id="imageUploadBtn">이미지 업로드</button>
+    </div>
+    <!--  우측 사이드탭-->
+    <div class="detail-container">
+        <div class="image-not-selected">
+            <p>사진을 선택하면 <br> 추가 정보를 기입할 수 있습니다.</p>
+        </div>
+        <div class="image-selected">
+            <img src="/images/default-image4.webp" class="image-detail" alt="선택된 이미지">
+
+            <div class="description-area">
+                <label for="description">설명</label>
+                <textarea id="description" class="form-control" rows="5" placeholder="여기에 설명을 입력하세요..."
+                          style="resize:none;"></textarea>
+            </div>
+
+            <div class="tag-area">
+                <label>태그</label>
+                <div class="tag-box">
+                    <button class="tag-add">+</button>
+                    <span class="tag">나들이</span>
+                    <span class="tag">부산</span>
+                    <span class="tag">광안대교</span>
+                </div>
+            </div>
+
+            <div class="location-area">
+                <label for="locationBox">위치</label>
+                <div class="location-box">
+                    <a href="#" class="text-muted" id="editLocationBtn">여기가 아닌가요?</a>
+                    <input id="locationBox" class="form-control" type="text" value="" readonly/>
+                </div>
+            </div>
+
+            <div th:replace="~{map/map-picker-modal :: mapPickerModal(title, 'mapPickerModal')}"></div>
+
+            <div class="date-area">
+                <label for="dateBox">날짜</label>
+                <div class="date-box">
+                    <a href="#" class="text-muted" id='show-datepicker'>다른 날 다녀오셨나요?</a>
+                    <input id="dateBox" class="form-control" type="text" value="" readonly/>
+                </div>
+            </div>
+
+            <div class="checkbox-area">
+                <label for="public">
+                    이 사진을 공개 할까요?
+                    <input type="checkbox" id="public"/>
+                </label>
+            </div>
+        </div>
+
+    </div>
+</section>
+<div layout:fragment="scripts">
+    <script src="/js/lib/exif-js/exif.js"></script>
+    <script type="module" src="/upload/js/ImageUpload.js"></script>
+    <script th:replace="~{map/map-picker-modal :: mapPickerModalJs}"></script>
+</div>
+</body>
+</html>
