@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (selectedImage) {
                 selectedImage.dataset.dateTime = document.querySelector('#dateBox').value;
 
-                if( dateBox.classList.contains("invalid") ) {
+                if (dateBox.classList.contains("invalid")) {
                     dateBox.classList.remove("invalid");
                     dateBox.classList.add("valid");
                 }
@@ -35,10 +35,10 @@ async function fetchLocation(file) {
     if (!exif) {
         console.warn("EXIF 위치, 날짜 정보 없음");
         return {
-            location : '',
-            dateTime : '',
-            latitude : null,
-            longitude : null,
+            location: '',
+            dateTime: '',
+            latitude: null,
+            longitude: null,
         };
     }
 
@@ -50,7 +50,7 @@ async function fetchLocation(file) {
         console.warn("위치 정보 없음, 날짜 정보 있음");
         console.warn("날짜 정보 : ", formattedDateTime);
         return {
-            location : '',
+            location: '',
             dateTime: formattedDateTime,
             latitude: null,
             longitude: null
@@ -226,8 +226,10 @@ imageUploadBtn.addEventListener("click", function () {
     document.querySelectorAll(".gallery-image").forEach(img => {
         requestPresignedPutUrl(img).then(url => {
             console.log(url);
-            uploadImageToS3(img, url);
-            fetchImgMetaData(img);
+            uploadImageToS3(img, url)
+                .then(() => {
+                    fetchImgMetaData(img);
+                });
         });
     });
 });
@@ -254,10 +256,9 @@ function requestPresignedPutUrl(imageElement) {
 
 function uploadImageToS3(imageElement, url) {
     const binaryData = imageBase64ToBinaryData(imageElement.src);
-
     const contentType = extensionToMimeType(imageElement.dataset.fileExtension);
 
-    fetch(url, {
+    return fetch(url, {
         method: "PUT",
         headers: {
             "Content-Type": contentType
@@ -266,10 +267,12 @@ function uploadImageToS3(imageElement, url) {
     }).then(response => {
         if (response.status !== 200) {
             console.log("%s S3 업로드 실패", imageElement.dataset.uuid);
+            return Promise.reject("업로드 실패");
         }
 
-        console.log("%s S3 업로드 성공  ", imageElement.dataset.uuid);
-    })
+        console.log("%s S3 업로드 성공", imageElement.dataset.uuid);
+        return response;
+    });
 }
 
 function imageBase64ToBinaryData(imgUrl) {
@@ -328,12 +331,14 @@ function fetchImgMetaData(imageElement) {
     }).then(response => {
         if (response.status !== 200) {
             console.log("%s 이미지 메타데이터 저장 실패", fileName)
-        } else { console.log("%s 이미지 메타데이터 저장 성공", fileName) }
+        } else {
+            console.log("%s 이미지 메타데이터 저장 성공", fileName)
+        }
     })
 }
 
 const locationBox = document.getElementById("locationBox");
-const dateBox  = document.getElementById("dateBox");
+const dateBox = document.getElementById("dateBox");
 
 function validationLocationAndDate() {
     const selectedImage = document.querySelector(".gallery-image.selected");
@@ -385,7 +390,7 @@ function updateUploadButtonState() {
 function setupValidationListeners() {
     const gallery = document.querySelector(".gallery");
 
-    const observer = new MutationObserver(function(mutations) {
+    const observer = new MutationObserver(function (mutations) {
         for (const mutation of mutations) {
             if (mutation.type === 'attributes' && mutation.attributeName === 'class' ||
                 mutation.type === 'childList') {
@@ -404,7 +409,3 @@ function setupValidationListeners() {
 
     updateUploadButtonState();
 }
-
-
-
-
