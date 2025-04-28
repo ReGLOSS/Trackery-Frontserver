@@ -92,9 +92,9 @@ const ApiService = {
         try {
             const response = await fetch("/api/location/name", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {"Content-Type": "application/json"},
                 credentials: "include",
-                body: JSON.stringify({ latitude, longitude })
+                body: JSON.stringify({latitude, longitude})
             });
 
             const data = await response.json();
@@ -149,19 +149,17 @@ const ApiService = {
         try {
             const response = await fetch(url, {
                 method: "PUT",
-                headers: { "Content-Type": contentType },
+                headers: {"Content-Type": contentType},
                 body: binaryData
             });
 
             if (response.status !== 200) {
-                console.log("%s S3 업로드 실패", imageElement.dataset.uuid);
-                throw new Error("업로드 실패");
+                throw new Error(imageElement.dataset.uuid);
             }
 
             console.log("%s S3 업로드 성공", imageElement.dataset.uuid);
             return response;
         } catch (error) {
-            console.error("S3 업로드 중 오류:", error);
             throw error;
         }
     },
@@ -174,7 +172,7 @@ const ApiService = {
             const response = await fetch("/api/images", {
                 method: "POST",
                 credentials: "include",
-                headers: { "Content-Type": "application/json" },
+                headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({
                     imageName: fileName,
                     imageType: imageElement.dataset.fileExtension,
@@ -187,9 +185,9 @@ const ApiService = {
             });
 
             if (response.status !== 200) {
-                console.log("%s 이미지 메타데이터 저장 실패", fileName);
+                throw new Error(fileName);
             } else {
-                console.log("%s 이미지 메타데이터 저장 성공", fileName);
+                console.log("이미지 메타데이터 저장 성공 :", fileName);
             }
 
             return response;
@@ -271,7 +269,9 @@ const EventHandlers = {
 
         const fileExtension = file.name.split(".").pop().toLowerCase();
 
-        try {ImageProcessor.extensionToMimeType(fileExtension)} catch (error) {
+        try {
+            ImageProcessor.extensionToMimeType(fileExtension)
+        } catch (error) {
             alert(error.message);
             return;
         }
@@ -282,7 +282,7 @@ const EventHandlers = {
 
         // 이미지 UI 추가
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function (e) {
             const result = e.target.result;
 
             if (typeof result !== "string") {
@@ -388,19 +388,30 @@ const EventHandlers = {
     async onImageUploadClick() {
         const images = document.querySelectorAll(".gallery-image");
 
-        for (const img of images) {
-            try {
-                const url = await ApiService.requestPresignedPutUrl(img);
-                if (!url) continue;
+        const successImageUUIDs = [];
+        const failedImageUUIDs = [];
 
+        for (const img of images) {
+            const url = await ApiService.requestPresignedPutUrl(img);
+            if (!url) continue;
+
+            try {
                 await ApiService.uploadImageToS3(img, url);
                 await ApiService.fetchImgMetaData(img);
+
+                successImageUUIDs.push(img.dataset.uuid);
             } catch (error) {
-                console.error("이미지 처리 중 오류:", error);
+                failedImageUUIDs.push(error.message);
             }
         }
+        await console.log("성공한 이미지 : {}", successImageUUIDs);
+        await console.log("실패한 이미지 : {}", failedImageUUIDs);
     }
 };
+
+async function moveToSuccessPage() {
+    window.location.href = "/upload/success";
+}
 
 // 초기화 함수
 function initialize() {
@@ -412,7 +423,7 @@ function initialize() {
         dateFormat: "Y / m / d",
         maxDate: "today",
         locale: "ko",
-        onClose: function() {
+        onClose: function () {
             const selectedImage = document.querySelector(".gallery-image.selected");
             if (selectedImage) {
                 selectedImage.dataset.dateTime = DOM.dateBox.value;
