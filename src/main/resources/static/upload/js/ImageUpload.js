@@ -1,3 +1,8 @@
+/**
+ * @deprecated 리팩토링하면서 ImageUploadV2.js로 같은 기능을 옮겼습니다. 혹시 몰라서 일단 파일은 지우지 않고 뒀습니다.
+ * @see ImageUploadV2
+ */
+
 import {parseExif} from "/upload/js/ExifParser.js";
 
 document.addEventListener('DOMContentLoaded', function () {
