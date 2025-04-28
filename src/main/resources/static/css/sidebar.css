@@ -42,10 +42,13 @@
   align-items: stretch;
   display: flex;
   width: auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 20rem); /* 프로필과 업로드 버튼 공간을 제외한 높이 */
+  padding-right: 0.5rem;
 }
 
 .navbar-nav {
-  margin-bottom: 4rem;
+  margin-bottom: 2rem;
   font-weight: bold;
   flex-grow: 0 !important;
 }
@@ -89,9 +92,7 @@
 }
 
 .photo-upload-btn {
-  margin-bottom: 5rem;
-  margin-left: 3rem;
-  margin-right: 3rem;
+  margin: 2rem 3rem 5rem;
 
 }
 /* 업로드 버튼 커스텀 스타일 */
