@@ -418,10 +418,6 @@ async function hideUploadingBlockAndShowResultBlock() {
     DOM.resultInfoBlock.style.display = "flex";
 }
 
-async function moveToSuccessPage() {
-    window.location.href = "/upload/success";
-}
-
 async function addFailedImage(failedImageUUIDs = []) {
 
     if (failedImageUUIDs.length === 0) {
