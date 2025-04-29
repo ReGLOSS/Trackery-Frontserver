@@ -204,7 +204,9 @@ const ValidationService = {
         const selectedImage = document.querySelector(".gallery-image.selected");
         if (!selectedImage) return;
 
-        if (DOM.locationBox.value.trim() !== "" && DOM.dateBox.value.trim() !== "") {
+        const hasLocationAndDate = DOM.locationBox.value.trim() !== "" && DOM.dateBox.value.trim() !== "";
+        
+        if (hasLocationAndDate) {
             selectedImage.classList.remove("invalid");
             selectedImage.classList.add("valid");
         } else {
@@ -234,8 +236,10 @@ const ValidationService = {
     setupValidationListeners() {
         const observer = new MutationObserver(mutations => {
             for (const mutation of mutations) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'class' ||
-                    mutation.type === 'childList') {
+                const isClassChange = mutation.type === 'attributes' && mutation.attributeName === 'class';
+                const isChildrenChange = mutation.type === 'childList';
+                
+                if (isClassChange || isChildrenChange) {
                     this.updateUploadButtonState();
                 }
             }
@@ -250,6 +254,38 @@ const ValidationService = {
         });
 
         this.updateUploadButtonState();
+    }
+};
+
+// UI 관련 헬퍼 함수들
+const UiHelpers = {
+    async hideUploadingBlockAndShowResultBlock() {
+        DOM.uploadingBlock.style.display = "none";
+        DOM.resultInfoBlock.style.display = "flex";
+    },
+
+    async addFailedImage(failedImageUUIDs = []) {
+        if (failedImageUUIDs.length === 0) {
+            DOM.failedUploadInfoGroup.style.display = "none";
+            return;
+        }
+
+        failedImageUUIDs.forEach(uuid => {
+            const failedImage = document.querySelector(`.gallery-image[data-uuid="${uuid}"]`);
+            if (failedImage) {
+                const img = document.createElement("img");
+                img.src = failedImage.src;
+                img.classList.add("uploading-modal-gallery-image");
+                img.alt = "업로드 실패한 이미지";
+
+                DOM.modalGallery.appendChild(img);
+            }
+        });
+    },
+
+    async indicateResult(successImageUUIDs = [], failedImageUUIDs = []) {
+        DOM.uploadedImageCount.textContent = successImageUUIDs.length + "장의 이미지를 성공적으로 업로드했습니다.";
+        DOM.uploadFailedImageCount.textContent = failedImageUUIDs.length + "장의 이미지는 업로드에 실패했습니다.";
     }
 };
 
@@ -269,7 +305,7 @@ const EventHandlers = {
         const fileExtension = file.name.split(".").pop().toLowerCase();
 
         try {
-            ImageProcessor.extensionToMimeType(fileExtension)
+            ImageProcessor.extensionToMimeType(fileExtension);
         } catch (error) {
             alert(error.message);
             return;
@@ -395,16 +431,16 @@ const EventHandlers = {
             }
         }
 
-        await indicateResult(successImageUUIDs, failedImageUUIDs);
+        await UiHelpers.indicateResult(successImageUUIDs, failedImageUUIDs);
 
         await console.log("성공한 이미지 : {}", successImageUUIDs);
         await console.log("실패한 이미지 : {}", failedImageUUIDs);
 
-        await addFailedImage(failedImageUUIDs);
+        await UiHelpers.addFailedImage(failedImageUUIDs);
 
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        await hideUploadingBlockAndShowResultBlock();
+        await UiHelpers.hideUploadingBlockAndShowResultBlock();
     },
 
     async onReloadPageBtnClick() {
@@ -415,36 +451,6 @@ const EventHandlers = {
         window.location.href = "/upload/success";
     },
 };
-
-async function hideUploadingBlockAndShowResultBlock() {
-    DOM.uploadingBlock.style.display = "none";
-    DOM.resultInfoBlock.style.display = "flex";
-}
-
-async function addFailedImage(failedImageUUIDs = []) {
-
-    if (failedImageUUIDs.length === 0) {
-        DOM.failedUploadInfoGroup.style.display = "none";
-        return;
-    }
-
-    failedImageUUIDs.forEach(uuid => {
-        const failedImage = document.querySelector(`.gallery-image[data-uuid="${uuid}"]`);
-        if (failedImage) {
-            const img = document.createElement("img")
-            img.src = failedImage.src;
-            img.classList.add("uploading-modal-gallery-image");
-            img.alt = "업로드 실패한 이미지";
-
-            DOM.modalGallery.appendChild(img);
-        }
-    })
-}
-
-async function indicateResult(successImageUUIDs = [], failedImageUUIDs = []) {
-    DOM.uploadedImageCount.textContent = successImageUUIDs.length + "장의 이미지를 성공적으로 업로드했습니다.";
-    DOM.uploadFailedImageCount.textContent = failedImageUUIDs.length + "장의 이미지는 업로드에 실패했습니다.";
-}
 
 // 초기화 함수
 function initialize() {
