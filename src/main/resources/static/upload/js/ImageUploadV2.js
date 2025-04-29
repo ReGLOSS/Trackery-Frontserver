@@ -11,7 +11,12 @@ const DOM = {
     locationBox: document.getElementById("locationBox"),
     dateBox: document.getElementById("dateBox"),
     description: document.getElementById("description"),
-    publicCheckbox: document.getElementById("public")
+    publicCheckbox: document.getElementById("public"),
+    uploadedImageCount: document.querySelector('#uploadedImageCount'),
+    uploadFailedImageCount: document.querySelector('#uploadFailedImageCount'),
+    modalGallery: document.querySelector(".uploading-modal-gallery"),
+    reloadUploadPageBtn: document.querySelector("#reloadUploadPageBtn"),
+    confirmBtn: document.querySelector("#confirmBtn")
 };
 
 // 이미지 처리 관련 함수들
@@ -391,6 +396,14 @@ const EventHandlers = {
         await console.log("실패한 이미지 : {}", failedImageUUIDs);
 
         await addFailedImage(failedImageUUIDs);
+    },
+
+    async onReloadPageBtnClick() {
+        window.location.reload();
+    },
+
+    async onConfirmBtnClick() {
+        window.location.href = "/upload/success";
     }
 };
 
@@ -399,10 +412,9 @@ async function moveToSuccessPage() {
 }
 
 async function addFailedImage(failedImageUUIDs = []) {
-    const modalGallery = document.querySelector(".uploading-modal-gallery");
 
     if (failedImageUUIDs.length === 0) {
-        modalGallery.style.display = "none";
+        DOM.modalGallery.style.display = "none";
         return;
     }
 
@@ -414,19 +426,17 @@ async function addFailedImage(failedImageUUIDs = []) {
             img.classList.add("uploading-modal-gallery-image");
             img.alt = "업로드 실패한 이미지";
 
-            modalGallery.appendChild(img);
+            DOM.modalGallery.appendChild(img);
         }
     })
 }
 
 async function indicateResult(successImageUUIDs = [], failedImageUUIDs = []) {
-    const uploadedImageCount = document.querySelector('#uploadedImageCount');
-    const uploadFailedImageCount = document.querySelector('#uploadFailedImageCount');
     console.log(successImageUUIDs.length + "장의 이미지가 정상적으로 업로드 되었습니다.")
     console.log(failedImageUUIDs.length + "장의 이미지가 업로드 실패했습니다.")
 
-    uploadedImageCount.textContent = successImageUUIDs.length + "장의 이미지가 정상적으로 업로드 되었습니다.";
-    uploadFailedImageCount.textContent = failedImageUUIDs.length + "장의 이미지가 업로드 실패했습니다.";
+    DOM.uploadedImageCount.textContent = successImageUUIDs.length + "장의 이미지가 정상적으로 업로드 되었습니다.";
+    DOM.uploadFailedImageCount.textContent = failedImageUUIDs.length + "장의 이미지가 업로드 실패했습니다.";
 }
 
 // 초기화 함수
@@ -469,6 +479,8 @@ function initialize() {
     DOM.locationBox.addEventListener("change", EventHandlers.onLocationChange);
     DOM.dateBox.addEventListener("change", EventHandlers.onDateChange);
     DOM.imageUploadBtn.addEventListener("click", EventHandlers.onImageUploadClick);
+    DOM.reloadUploadPageBtn.addEventListener("click", EventHandlers.onReloadPageBtnClick);
+    DOM.confirmBtn.addEventListener("click", EventHandlers.onConfirmBtnClick);
 }
 
 // DOM이 로드된 후 초기화
