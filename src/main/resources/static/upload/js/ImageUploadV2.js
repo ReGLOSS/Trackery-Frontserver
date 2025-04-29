@@ -384,6 +384,9 @@ const EventHandlers = {
                 failedImageUUIDs.push(error.message);
             }
         }
+
+        await indicateResult(successImageUUIDs, failedImageUUIDs);
+
         await console.log("성공한 이미지 : {}", successImageUUIDs);
         await console.log("실패한 이미지 : {}", failedImageUUIDs);
 
@@ -398,6 +401,11 @@ async function moveToSuccessPage() {
 async function addFailedImage(failedImageUUIDs = []) {
     const modalGallery = document.querySelector(".uploading-modal-gallery");
 
+    if (failedImageUUIDs.length === 0) {
+        modalGallery.style.display = "none";
+        return;
+    }
+
     failedImageUUIDs.forEach(uuid => {
         const failedImage = document.querySelector(`.gallery-image[data-uuid="${uuid}"]`);
         if (failedImage) {
@@ -409,6 +417,16 @@ async function addFailedImage(failedImageUUIDs = []) {
             modalGallery.appendChild(img);
         }
     })
+}
+
+async function indicateResult(successImageUUIDs = [], failedImageUUIDs = []) {
+    const uploadedImageCount = document.querySelector('#uploadedImageCount');
+    const uploadFailedImageCount = document.querySelector('#uploadFailedImageCount');
+    console.log(successImageUUIDs.length + "장의 이미지가 정상적으로 업로드 되었습니다.")
+    console.log(failedImageUUIDs.length + "장의 이미지가 업로드 실패했습니다.")
+
+    uploadedImageCount.textContent = successImageUUIDs.length + "장의 이미지가 정상적으로 업로드 되었습니다.";
+    uploadFailedImageCount.textContent = failedImageUUIDs.length + "장의 이미지가 업로드 실패했습니다.";
 }
 
 // 초기화 함수
