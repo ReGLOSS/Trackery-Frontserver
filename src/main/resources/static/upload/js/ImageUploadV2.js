@@ -401,6 +401,8 @@ const EventHandlers = {
 
         await addFailedImage(failedImageUUIDs);
 
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
         await hideUploadingBlockAndShowResultBlock();
     },
 
@@ -439,11 +441,8 @@ async function addFailedImage(failedImageUUIDs = []) {
 }
 
 async function indicateResult(successImageUUIDs = [], failedImageUUIDs = []) {
-    console.log(successImageUUIDs.length + "장의 이미지가 정상적으로 업로드 되었습니다.")
-    console.log(failedImageUUIDs.length + "장의 이미지가 업로드 실패했습니다.")
-
-    DOM.uploadedImageCount.textContent = successImageUUIDs.length + "장의 이미지가 정상적으로 업로드 되었습니다.";
-    DOM.uploadFailedImageCount.textContent = failedImageUUIDs.length + "장의 이미지가 업로드 실패했습니다.";
+    DOM.uploadedImageCount.textContent = successImageUUIDs.length + "장의 이미지를 성공적으로 업로드했습니다.";
+    DOM.uploadFailedImageCount.textContent = failedImageUUIDs.length + "장의 이미지는 업로드에 실패했습니다.";
 }
 
 // 초기화 함수
