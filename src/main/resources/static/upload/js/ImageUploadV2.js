@@ -15,6 +15,7 @@ const DOM = {
     uploadedImageCount: document.querySelector('#uploadedImageCount'),
     uploadFailedImageCount: document.querySelector('#uploadFailedImageCount'),
     modalGallery: document.querySelector(".uploading-modal-gallery"),
+    failedUploadInfoGroup: document.querySelector("#failedUploadInfoGroup"),
     reloadUploadPageBtn: document.querySelector("#reloadUploadPageBtn"),
     confirmBtn: document.querySelector("#confirmBtn"),
     whileUploadingModal: document.querySelector('.while-uploading-modal'),
@@ -423,7 +424,7 @@ async function hideUploadingBlockAndShowResultBlock() {
 async function addFailedImage(failedImageUUIDs = []) {
 
     if (failedImageUUIDs.length === 0) {
-        DOM.modalGallery.style.display = "none";
+        DOM.failedUploadInfoGroup.style.display = "none";
         return;
     }
 
