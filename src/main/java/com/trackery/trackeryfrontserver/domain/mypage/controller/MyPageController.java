@@ -1,6 +1,7 @@
 package com.trackery.trackeryfrontserver.domain.mypage.controller;
 
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,14 +22,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 @RequestMapping("/mypage")
 public class MyPageController {
-    @GetMapping("")
-    public String myPage() {
-        return "mypage/mypage-content";
-    }
+	@GetMapping("")
+	public String myPage() {
+		return "mypage/mypage-content";
+	}
 
-    @GetMapping("/update-user-info-modal")
-    public String  updateUserInfoModal() {
-        return "mypage/update-user-info-modal";
-    }
+	@GetMapping("/update-user-info-modal")
+	public String updateUserInfoModal() {
+		return "mypage/update-user-info-modal";
+	}
 
 }

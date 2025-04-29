@@ -1,4 +1,4 @@
-import { loadModal, loadScript } from "/module/modal/ModalUtil.js";
+import {loadModal, loadScript} from "/module/modal/ModalUtil.js";
 
 document.addEventListener("DOMContentLoaded", async function () {
     try {

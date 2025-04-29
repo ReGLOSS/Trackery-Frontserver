@@ -14,6 +14,7 @@
             margin: 0;
             background-color: #2a2a36;
         }
+
         .message {
             text-align: center;
             padding: 20px;
@@ -24,24 +25,24 @@
     </style>
 </head>
 <body>
-    <div class="message">
-        <h2>로그인 성공!</h2>
-        <p>창을 닫고 메인 페이지로 이동합니다...</p>
-    </div>
+<div class="message">
+    <h2>로그인 성공!</h2>
+    <p>창을 닫고 메인 페이지로 이동합니다...</p>
+</div>
 
-    <script type="text/javascript">
-        // 부모 창에 메시지 전송
-        if (window.opener) {
-            window.opener.postMessage({ oauthComplete: true }, window.location.origin);
+<script type="text/javascript">
+    // 부모 창에 메시지 전송
+    if (window.opener) {
+        window.opener.postMessage({oauthComplete: true}, window.location.origin);
 
-            // 잠시 후 창 닫기
-            setTimeout(function() {
-                window.close();
-            }, 1500);
-        } else {
-            // 팝업이 아닌 경우 직접 리다이렉트
-            window.location.href = '/register/temporal-main';
-        }
-    </script>
+        // 잠시 후 창 닫기
+        setTimeout(function () {
+            window.close();
+        }, 1500);
+    } else {
+        // 팝업이 아닌 경우 직접 리다이렉트
+        window.location.href = '/register/temporal-main';
+    }
+</script>
 </body>
 </html>

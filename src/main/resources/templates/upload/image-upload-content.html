@@ -14,6 +14,31 @@
 </head>
 <body>
 <section layout:fragment="content" class="image-upload-container">
+    <!--업로드 중 모달-->
+    <div class="while-uploading-modal">
+        <div class="uploading-modal-container">
+            <div id="uploadingBlock" class="uploading-modal-block">
+                <div class="spinner-border"></div>
+                이미지를 업로드하는 중입니다. 잠시만 기다려주세요...
+            </div>
+
+            <div id="resultInfoBlock" class="uploading-modal-block">
+                <div>
+                    13장의 이미지가 정상적으로 업로드되었습니다.
+                </div>
+
+                <div>
+                    N장의 이미지 업로드 실패했습니다.
+                </div>
+
+                <div id="uploadingModalGallery" class="uploading-modal-gallery">
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
     <!--  메인탭-->
     <div class="base-container">
         <div class="gallery">

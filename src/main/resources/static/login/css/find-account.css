@@ -34,29 +34,29 @@
 }
 
 .verify-email .input-email {
-    margin-bottom:15px;
+    margin-bottom: 15px;
 }
 
 .verify-email .input-verify {
-    margin-bottom:15px;
+    margin-bottom: 15px;
 }
 
 .input-verify .auth-number-input-form {
-    display:flex;
+    display: flex;
 }
 
 .verify-email {
-    display:block;
+    display: block;
     border-radius: 10px;
-    background-color:#d8e0e6;
+    background-color: #d8e0e6;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     padding: 20px;
 }
 
 .input-password {
-    display:none;
+    display: none;
     border-radius: 10px;
-    background-color:#d8e0e6;
+    background-color: #d8e0e6;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     padding: 20px;
 }
@@ -77,26 +77,26 @@
 
 .result-page {
     text-align: center;
-    display:none;
+    display: none;
     border-radius: 10px;
-    background-color:#d8e0e6;
+    background-color: #d8e0e6;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     padding: 20px;
 }
 
 .find-user-name-email-input {
-    display:block;
+    display: block;
     border-radius: 10px;
-    background-color:#d8e0e6;
+    background-color: #d8e0e6;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     padding: 20px;
 }
 
 .find-user-name-result {
     text-align: center;
-    display:none;
+    display: none;
     border-radius: 10px;
-    background-color:#d8e0e6;
+    background-color: #d8e0e6;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     padding: 20px;
 }

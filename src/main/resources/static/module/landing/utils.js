@@ -1,6 +1,6 @@
 export function closeAndOpenElements(toClose, toOpen, openStatus) {
-        toClose.style.display = "none";
-        toOpen.style.display = openStatus;
+    toClose.style.display = "none";
+    toOpen.style.display = openStatus;
 }
 
 export function togglePasswordVisibility(icon, passwordInput) {
@@ -49,7 +49,7 @@ export function debounce(callback, delay = 500) {
 
 function checkRequiredFields(requiredInputsGroups, contains, callback) {
     const allValid = requiredInputsGroups.every(requiredInputsGroups => requiredInputsGroups.classList.contains(contains));
-    if(allValid) {
+    if (allValid) {
         callback();
     }
 }

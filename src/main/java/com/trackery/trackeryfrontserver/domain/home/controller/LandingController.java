@@ -37,7 +37,6 @@ public class LandingController {
 	private final ProxyService proxyService;
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
-
 	/**
 	 * 유저가 접속시 최초로 보게 되는 기본 페이지 입니다.
 	 *

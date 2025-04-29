@@ -89,7 +89,7 @@ requestEmailVerifyButton.addEventListener("click", function () {
 
 //인증 버튼
 verifyAuthNumberButton.addEventListener("click", function () {
-    authNumberVerification(requestEmailVerifyButton ,verifyAuthNumberButton, authNumberInput, emailInput, function () {
+    authNumberVerification(requestEmailVerifyButton, verifyAuthNumberButton, authNumberInput, emailInput, function () {
         applyValidationClass(emailInput, true);
         applyValidationClass(requestEmailVerifyButton, true);
         applyValidationClass(verifyAuthNumberButton, true);
@@ -146,12 +146,12 @@ function checkRequiredFields() {
     toggleButtonState(saveButton, allValid);
 }
 
-document.getElementById("registerTogglePassword").addEventListener("click", function() {
+document.getElementById("registerTogglePassword").addEventListener("click", function () {
     const icon = this.querySelector("img");
     togglePasswordVisibility(icon, registerPasswordInput);
 });
 
-document.getElementById("registerTogglePasswordConfirm").addEventListener("click", function() {
+document.getElementById("registerTogglePasswordConfirm").addEventListener("click", function () {
     const icon = this.querySelector("img");
     togglePasswordVisibility(icon, registerPasswordConfirmInput);
 })

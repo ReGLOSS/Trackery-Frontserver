@@ -116,7 +116,8 @@ public class OAuthController {
 				if (stateIndex != -1) {
 					// 기존 state 값 추출
 					int stateEndIndex = authUrl.indexOf("&", stateIndex);
-					if (stateEndIndex == -1) stateEndIndex = authUrl.length();
+					if (stateEndIndex == -1)
+						stateEndIndex = authUrl.length();
 					String originalState = authUrl.substring(stateIndex + 6, stateEndIndex);
 
 					// 원래 state값과 link_token을 합쳐서 새 state 생성
@@ -269,7 +270,6 @@ public class OAuthController {
 			return "oauth/error";
 		}
 	}
-
 
 	/**
 	 * 계정 연동 처리를 시작합니다 (폼 제출 방식).
