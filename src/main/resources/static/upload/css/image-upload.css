@@ -230,4 +230,8 @@ label {
     --tblr-spinner-border-width: 0.5rem;
 }
 
+#resultInfoBlock {
+    display: none;
+}
+
 

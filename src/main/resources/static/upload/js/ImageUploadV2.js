@@ -16,7 +16,10 @@ const DOM = {
     uploadFailedImageCount: document.querySelector('#uploadFailedImageCount'),
     modalGallery: document.querySelector(".uploading-modal-gallery"),
     reloadUploadPageBtn: document.querySelector("#reloadUploadPageBtn"),
-    confirmBtn: document.querySelector("#confirmBtn")
+    confirmBtn: document.querySelector("#confirmBtn"),
+    whileUploadingModal: document.querySelector('.while-uploading-modal'),
+    uploadingBlock: document.querySelector('#uploadingBlock'),
+    resultInfoBlock: document.querySelector('#resultInfoBlock'),
 };
 
 // 이미지 처리 관련 함수들
@@ -373,6 +376,7 @@ const EventHandlers = {
 
     // 이미지 업로드 버튼 클릭 핸들러
     async onImageUploadClick() {
+        DOM.whileUploadingModal.style.display = "flex";
         const images = document.querySelectorAll(".gallery-image");
 
         const successImageUUIDs = [];
@@ -396,6 +400,8 @@ const EventHandlers = {
         await console.log("실패한 이미지 : {}", failedImageUUIDs);
 
         await addFailedImage(failedImageUUIDs);
+
+        await hideUploadingBlockAndShowResultBlock();
     },
 
     async onReloadPageBtnClick() {
@@ -404,8 +410,13 @@ const EventHandlers = {
 
     async onConfirmBtnClick() {
         window.location.href = "/upload/success";
-    }
+    },
 };
+
+async function hideUploadingBlockAndShowResultBlock() {
+    DOM.uploadingBlock.style.display = "none";
+    DOM.resultInfoBlock.style.display = "flex";
+}
 
 async function moveToSuccessPage() {
     window.location.href = "/upload/success";
