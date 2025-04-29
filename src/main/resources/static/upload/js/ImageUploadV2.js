@@ -116,16 +116,14 @@ const ApiService = {
             });
 
             if (response.status === 400) {
-                const data = await response.json();
-                console.log("PUT URL 가져오기 실패");
-                return "";
+                throw new Error(imageElement.dataset.uuid);
             }
 
             const data = await response.json();
             return data.data;
         } catch (error) {
-            console.error("Presigned URL 요청 실패:", error);
-            return "";
+            console.error("Presigned URL 요청 실패 :", error);
+            throw error;
         }
     },
 
@@ -376,10 +374,8 @@ const EventHandlers = {
         const failedImageUUIDs = [];
 
         for (const img of images) {
-            const url = await ApiService.requestPresignedPutUrl(img);
-            if (!url) continue;
-
             try {
+                const url = await ApiService.requestPresignedPutUrl(img);
                 await ApiService.uploadImageToS3(img, url);
                 await ApiService.fetchImgMetaData(img);
 
@@ -390,11 +386,29 @@ const EventHandlers = {
         }
         await console.log("성공한 이미지 : {}", successImageUUIDs);
         await console.log("실패한 이미지 : {}", failedImageUUIDs);
+
+        await addFailedImage(failedImageUUIDs);
     }
 };
 
 async function moveToSuccessPage() {
     window.location.href = "/upload/success";
+}
+
+async function addFailedImage(failedImageUUIDs = []) {
+    const modalGallery = document.querySelector(".uploading-modal-gallery");
+
+    failedImageUUIDs.forEach(uuid => {
+        const failedImage = document.querySelector(`.gallery-image[data-uuid="${uuid}"]`);
+        if (failedImage) {
+            const img = document.createElement("img")
+            img.src = failedImage.src;
+            img.classList.add("uploading-modal-gallery-image");
+            img.alt = "업로드 실패한 이미지";
+
+            modalGallery.appendChild(img);
+        }
+    })
 }
 
 // 초기화 함수
