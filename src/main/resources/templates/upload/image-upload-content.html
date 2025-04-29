@@ -14,6 +14,32 @@
 </head>
 <body>
 <section layout:fragment="content" class="image-upload-container">
+    <!--업로드 중 모달-->
+    <div class="while-uploading-modal">
+        <div class="uploading-modal-container">
+            <div id="uploadingBlock" class="uploading-modal-block">
+                <div class="spinner-border"></div>
+                이미지를 업로드하는 중입니다. 잠시만 기다려주세요...
+            </div>
+
+            <div id="resultInfoBlock" class="uploading-modal-block">
+                <p id="uploadedImageCount">N장의 이미지를 성공적으로 업로드했습니다.</p>
+
+                <div id="failedUploadInfoGroup">
+                    <p id="uploadFailedImageCount">N장의 이미지는 업로드에 실패했습니다.</p>
+                    <p class="text-muted upload-failed-gallery-label">업로드에 실패한 이미지</p>
+                    <div id="uploadingModalGallery" class="uploading-modal-gallery"></div>
+                </div>
+
+                <div id="uploadingModalInteractionBlock">
+                    <button class="btn btn-dark" id="reloadUploadPageBtn">이미지 업로드 다시하기</button>
+                    <button class=" btn btn-dark" id="confirmBtn">확인</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
     <!--  메인탭-->
     <div class="base-container">
         <div class="gallery">
@@ -74,12 +100,11 @@
                 </label>
             </div>
         </div>
-
     </div>
 </section>
 <div layout:fragment="scripts">
     <script src="/js/lib/exif-js/exif.js"></script>
-    <script type="module" src="/upload/js/ImageUpload.js"></script>
+    <script type="module" src="/upload/js/ImageUploadV2.js"></script>
     <script th:replace="~{map/map-picker-modal :: mapPickerModalJs}"></script>
 </div>
 </body>

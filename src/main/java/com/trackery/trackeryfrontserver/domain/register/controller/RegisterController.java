@@ -20,12 +20,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/register")
 public class RegisterController {
 	//TODO 로그인 페이지 후 삭제
+
 	/**
 	 * 로그인 모달 창을 만들기 전 사용될 임시 회원가입 모달 버튼용 페이지
 	 * @return : 임시 버튼 페이지
 	 */
 	@GetMapping("/modal-test")
-	public String testModal() { return "register/temporal-plate";}
+	public String testModal() {
+		return "register/temporal-plate";
+	}
 
 	/**
 	 * 실제 회원가입을 담당하는 모달용 HTML
@@ -37,6 +40,7 @@ public class RegisterController {
 	}
 
 	//TODO 기능 개발 후 이 엔드포인트 삭제 후 진짜 메인페이지로 이동되게 수정
+
 	/**
 	 * 회원가입이 완료되면 이동될 임시 메인페이지입니다.
 	 * @return : 메인페이지

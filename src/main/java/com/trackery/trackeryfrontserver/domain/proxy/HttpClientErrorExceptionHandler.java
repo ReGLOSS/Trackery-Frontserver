@@ -52,7 +52,8 @@ public class HttpClientErrorExceptionHandler implements ResponseErrorHandler {
 	@Override
 	public void handleError(@NonNull ClientHttpResponse response) throws IOException {
 		String responseBody = IOUtils.toString(response.getBody(), StandardCharsets.UTF_8);
-		Map<String, Object> errorResponse = objectMapper.readValue(responseBody, new TypeReference<>() {});
+		Map<String, Object> errorResponse = objectMapper.readValue(responseBody, new TypeReference<>() {
+		});
 
 		log.error("프록시 컨트롤러 500 에러 발생: {}", errorResponse);
 

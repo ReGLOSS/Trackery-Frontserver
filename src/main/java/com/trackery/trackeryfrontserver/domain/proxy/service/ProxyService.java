@@ -78,9 +78,9 @@ public class ProxyService {
 			proxyHeaders.remove("Connection");
 
 			return ResponseEntity
-					.status(response.getStatusCode())
-					.headers(proxyHeaders)
-					.body(response.getBody());
+				.status(response.getStatusCode())
+				.headers(proxyHeaders)
+				.body(response.getBody());
 
 		} catch (ServerException | RestClientException e) {
 			log.error("프록시 작업 중 서버 에러 발생 : {}", e.getMessage());

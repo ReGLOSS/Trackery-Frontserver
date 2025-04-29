@@ -1,6 +1,6 @@
 import {loadModal} from "/module/modal/ModalUtil.js";
 
-document.addEventListener("DOMContentLoaded", async function() {
+document.addEventListener("DOMContentLoaded", async function () {
     try {
         await loadModal("/mypage/update-user-info-modal", document.getElementsByClassName("update-user-info-modal-container")[0], "/mypage/js/UpdateUserInfo.js");
     } catch (error) {
@@ -18,7 +18,7 @@ async function fetchUserDetail() {
         .then(response => response.json())
         .then(data => {
             const userData = data.data;
-            console.log("유저 정보 : {}",data);
+            console.log("유저 정보 : {}", data);
             document.getElementById("userName").textContent = "@" + userData.userName;
             document.getElementById("nickname").textContent = userData.nickname;
             document.getElementById("presentUserNameInputForm").value = userData.userName;
@@ -29,7 +29,7 @@ async function fetchUserDetail() {
 
             activatedOAuthProviders.forEach(provider => {
                 const iconElement = document.getElementById(`${provider}-login`);
-                if(iconElement) {
+                if (iconElement) {
                     iconElement.classList.add("active");
                 }
             })
@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     document.getElementById("update-user-info-btn")
-        .addEventListener("click", function() {
+        .addEventListener("click", function () {
             document.getElementsByClassName("update-user-info-modal-container")[0]
                 .classList.add("active");
             localStorage.setItem("updateUserInfoModal", "true");

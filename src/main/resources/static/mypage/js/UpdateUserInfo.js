@@ -4,7 +4,7 @@ import {sendRequestVerificationEmail, authNumberVerification} from "/module/land
 //모달 닫기 버튼
 document.getElementsByClassName("update-user-info-modal-close")[0]
     .addEventListener("click", function () {
-        const modal =  document.getElementsByClassName("update-user-info-modal-container")[0];
+        const modal = document.getElementsByClassName("update-user-info-modal-container")[0];
         const modalContent = modal.getElementsByClassName("modal-content")[0];
 
         modalContent.style.transform = "translateX(100%)";

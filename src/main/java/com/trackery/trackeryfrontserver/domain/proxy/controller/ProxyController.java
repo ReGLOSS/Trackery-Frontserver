@@ -55,7 +55,7 @@ public class ProxyController {
 		@RequestHeader HttpHeaders headers) {
 
 		String baseurl = request.getRequestURL().toString().replace(projectUrl, "");
-		String queryString  = request.getQueryString();
+		String queryString = request.getQueryString();
 		String fullUrl = (queryString != null) ? baseurl + "?" + queryString : baseurl;
 
 		return proxyService.forwardRequest(

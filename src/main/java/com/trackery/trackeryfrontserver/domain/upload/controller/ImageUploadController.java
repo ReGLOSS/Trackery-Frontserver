@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 @RequestMapping("/image-upload")
 public class ImageUploadController {
-    @GetMapping("")
-    public String imageUploadPage() {
-        return "upload/image-upload-content";
-    }
+	@GetMapping("")
+	public String imageUploadPage() {
+		return "upload/image-upload-content";
+	}
 }
