@@ -16,18 +16,6 @@ const DOM = {
 
 // 이미지 처리 관련 함수들
 const ImageProcessor = {
-    // 이미지 Base64를 바이너리 데이터로 변환
-    base64ToBinaryData(imgUrl) {
-        const base64Data = imgUrl.split(',')[1];
-        const binaryData = atob(base64Data);
-        const arrayBuffer = new Uint8Array(binaryData.length);
-
-        for (let i = 0; i < binaryData.length; i++) {
-            arrayBuffer[i] = binaryData.charCodeAt(i);
-        }
-        return arrayBuffer;
-    },
-
     // 파일 확장자에 따른 MIME 타입 결정
     extensionToMimeType(extension) {
         const mimeTypes = {
@@ -143,14 +131,18 @@ const ApiService = {
 
     // S3에 이미지 업로드
     async uploadImageToS3(imageElement, url) {
-        const binaryData = ImageProcessor.base64ToBinaryData(imageElement.src);
+        const response = await fetch(imageElement.src);
+        if (!response.ok) {
+            throw new Error(imageElement.dataset.uuid);
+        }
+        const blob = await response.blob();
         const contentType = ImageProcessor.extensionToMimeType(imageElement.dataset.fileExtension);
 
         try {
             const response = await fetch(url, {
                 method: "PUT",
                 headers: {"Content-Type": contentType},
-                body: binaryData
+                body: blob
             });
 
             if (response.status !== 200) {
@@ -280,42 +272,34 @@ const EventHandlers = {
         const parsedData = await ApiService.fetchLocation(file);
         const {location = '', dateTime = ''} = parsedData;
 
+        const objectUrl = URL.createObjectURL(file);
+
         // 이미지 UI 추가
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const result = e.target.result;
+        const img = document.createElement("img");
 
-            if (typeof result !== "string") {
-                console.warn("파일 읽기 결과가 문자열이 아님.");
-                return;
-            }
-            const img = document.createElement("img");
+        img.src = objectUrl;
+        img.classList.add("gallery-image");
+        img.alt = "추가된 이미지";
 
-            img.src = result;
-            img.classList.add("gallery-image");
-            img.alt = "추가된 이미지";
+        img.dataset.preview = objectUrl;
+        img.dataset.location = location;
+        img.dataset.dateTime = dateTime;
+        img.dataset.description = "";
+        img.dataset.public = "false";
+        img.dataset.uuid = crypto.randomUUID();
+        img.dataset.fileExtension = fileExtension;
+        img.dataset.latitude = parsedData.latitude;
+        img.dataset.longitude = parsedData.longitude;
 
-            img.dataset.preview = result;
-            img.dataset.location = location;
-            img.dataset.dateTime = dateTime;
-            img.dataset.description = "";
-            img.dataset.public = "false";
-            img.dataset.uuid = crypto.randomUUID();
-            img.dataset.fileExtension = fileExtension;
-            img.dataset.latitude = parsedData.latitude;
-            img.dataset.longitude = parsedData.longitude;
+        if (dateTime && location) {
+            img.classList.add("valid");
+        }
 
-            if (dateTime && location) {
-                img.classList.add("valid");
-            }
+        if (!dateTime || !location) {
+            img.classList.add("invalid");
+        }
 
-            if (!dateTime || !location) {
-                img.classList.add("invalid");
-            }
-
-            DOM.gallery.appendChild(img);
-        };
-        reader.readAsDataURL(file);
+        DOM.gallery.appendChild(img);
     },
 
     // 갤러리 이미지 클릭 핸들러

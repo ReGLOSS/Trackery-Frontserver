@@ -169,7 +169,7 @@ label {
 }
 
 .while-uploading-modal {
-    display: flex;
+    display: none;
     position: fixed;
     z-index: 1557;
     left: 0;
