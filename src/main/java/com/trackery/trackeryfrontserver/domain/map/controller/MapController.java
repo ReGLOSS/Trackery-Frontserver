@@ -41,6 +41,8 @@ public class MapController {
 	 * 지도를 생성할 수 있게 kostat에서 자바스크립트와 css를 로드하는 프록시 API입니다.
 	 * @return 지도 SOP css, JS
 	 */
+
+	// https://sgisapi.kostat.go.kr/OpenAPI3/auth/javascriptAuth?consumer_key=[사용자서비스키]
 	@GetMapping("/sop")
 	public ResponseEntity<String> loadKostatMapResources(HttpServletRequest request) {
 		String protocol = request.isSecure() ? "https://" : "http://";
