@@ -28,3 +28,51 @@
     flex-direction: column;
     gap: 3%;
 }
+
+.div-section {
+    border: 1px solid gray;
+}
+
+.album-nav-container {
+
+}
+
+
+
+.album-gallery {
+    border: 1px solid red;
+    flex: 2;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5%;
+    padding: 3%;
+    background-color: lightgray;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.album-card {
+    background: #ffffff;
+    border-radius: 2px;
+    padding: 20px 20px 25px 20px;
+    transition: all 0.3s ease;
+    position: relative;
+    cursor: pointer;
+    max-width: 320px;
+    aspect-ratio: 12/15;
+}
+
+.card-album-title {
+    text-align: center;
+    font-size: 1.2rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    font-weight: bold;
+}
+
+.card-album-image-count {
+    font-size: 0.8rem;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+}
