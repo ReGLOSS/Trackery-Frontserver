@@ -6,6 +6,7 @@
 <head>
     <title>Trackery - 앨범</title>
     <link rel="stylesheet" href="/album/css/album.css">
+    <link rel="stylesheet" href="/album/css/album-detail.css">
 </head>
 <body>
 <section layout:fragment="content" class="album-container">
@@ -22,11 +23,13 @@
         <div class="album-exists-container div-section">
 <!--            선택창-->
             <div class="album-nav-container div-section">
-                <div class="album-visiblity-btn-group">
+                <div class="album-visibility-btn-group">
 
                 </div>
 
-                <button class="btn btn-dark small-album-create-btn"></button>
+                <button class="btn btn-dark small-album-create-btn">
+                    앨범 생성
+                </button>
 
             </div>
 
@@ -49,6 +52,27 @@
     </div>
     <!--  우측 사이드탭-->
     <div class="detail-container">
+    </div>
+
+<!--    앨범 상세조회 모달-->
+    <div class="album-detail-container">
+<!--        이미지 보이는 곳-->
+        <div class="album-image-container">
+
+        </div>
+<!--        우측 사이드탭 컨테이너-->
+        <div class="album-detail-right-sidebar-container">
+            <div class="album-detail-info">
+                <p>앨범 제목</p>
+                <p>앨범 설명</p>
+                <p>공개 앨범</p>
+                <p>사진 매수</p>
+            </div>
+
+            <div class="album-detail-gallery">
+
+            </div>
+        </div>
     </div>
 </section>
 <div layout:fragment="scripts">

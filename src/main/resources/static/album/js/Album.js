@@ -13,10 +13,8 @@ document.addEventListener("DOMContentLoaded", function () {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json();
-    }).then(apiResponse => { // JSON 전체 응답 객체
-        console.log("전체 API 응답:", apiResponse);
-
-        const actualData = apiResponse.data; // 실제 데이터가 담긴 객체에 접근
+    }).then(apiResponse => {
+        const actualData = apiResponse.data;
 
         if (!actualData) {
             console.error("응답에서 'data' 필드를 찾을 수 없습니다.", apiResponse);
@@ -24,13 +22,9 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        // 이제 actualData를 사용하여 albumCount와 albumList에 접근합니다.
         if (actualData.albumCount === null) {
-            // 이 부분은 실제 응답에서 albumCount가 null일 가능성이 있는지에 따라 유지하거나 수정할 수 있습니다.
-            // 보통 count는 0으로 오므로, null 체크가 반드시 필요한지 확인해보세요.
-            console.warn("albumCount가 null입니다. API 응답 확인 필요:", actualData);
             alert("앨범 개수 정보가 올바르지 않습니다.");
-            return; // 오류 상황이므로 추가 진행을 막습니다.
+            return;
         }
 
         if (actualData.albumCount <= 0) {
@@ -40,12 +34,14 @@ document.addEventListener("DOMContentLoaded", function () {
             const albumGallery = document.getElementsByClassName('album-gallery')[0];
 
             if (albumGallery) {
-                albumGallery.innerHTML = ''; // 기존 내용 초기화
+                albumGallery.innerHTML = '';
 
                 if (actualData.albumList && Array.isArray(actualData.albumList)) {
                     for (const album of actualData.albumList) {
                         const albumCard = document.createElement('div');
                         albumCard.className = 'album-card';
+
+                        albumCard.dataset.albumId = album.albumId;
 
                         albumCard.innerHTML = `
                             <a>

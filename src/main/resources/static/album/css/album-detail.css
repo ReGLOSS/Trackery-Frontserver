@@ -1,0 +1,47 @@
+.album-detail-container {
+    z-index: 3500;
+    position: fixed;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid red;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    display: flex;
+    padding-left:20rem;
+}
+
+.album-image-container {
+    border: 1px solid green;
+    flex: 1;
+}
+
+.album-detail-right-sidebar-container {
+    border: 1px solid blue;
+    background-color: #d3d9e8;
+    width: 37.5%;
+    flex-shrink: 0;
+    height: 100vh;
+    overflow-y: auto;
+    scrollbar-width: none;
+    display: flex;
+    flex-direction: column;
+    gap: 3%;
+}
+
+.album-detail-info {
+    padding: 5%;
+    border: 1px solid rebeccapurple;
+}
+
+.album-detail-gallery {
+    border: 1px solid yellow;
+    flex: 2;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5%;
+    background-color: lightgray;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
