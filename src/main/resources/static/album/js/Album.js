@@ -42,6 +42,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         albumCard.className = 'album-card';
 
                         albumCard.dataset.albumId = album.albumId;
+                        albumCard.dataset.isPublic = album.isPublic; // 공개/비공개 정보 추가
 
                         albumCard.innerHTML = `
                             <a>
@@ -56,6 +57,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         `;
                         albumGallery.appendChild(albumCard);
                     }
+                    
+                    // 내비게이션 바 이벤트 리스너 초기화
+                    initAlbumNavigation();
                 } else {
                     console.error('actualData.albumList가 배열이 아니거나 존재하지 않습니다:', actualData);
                     alert("앨범 목록을 불러오는 데 실패했습니다.");
@@ -157,8 +161,8 @@ async function fetchAlbumDetail(albumId) {
 //앨범 정보 섹션 업데이트
 
 const IS_PUBLIC = {
-    0: "비공개 앨범",
-    1: "공개 앨범"
+    0: "비공개",
+    1: "공개"
 }
 
 function updateAlbumDetailInfo(albumTitle, albumDescription, isPublic, imageCount) {
@@ -463,6 +467,19 @@ function showImageInMainView(galleryCard) {
 function showImageDataset(galleryCard) {
     const dataset = galleryCard.dataset;
     
+    // 날짜 포맷팅 함수
+    function formatDateOnly(dateString) {
+        if (!dateString || dateString === 'N/A' || dateString === '') return '';
+        
+        try {
+            // T00:00:00 부분 제거하고 날짜만 추출
+            const dateOnly = dateString.split('T')[0];
+            return dateOnly;
+        } catch (e) {
+            return dateString; // 파싱 실패 시 원본 반환
+        }
+    }
+    
     // 모달 또는 오버레이 생성
     const infoOverlay = document.createElement('div');
     infoOverlay.className = 'image-info-overlay';
@@ -530,28 +547,28 @@ function showImageDataset(galleryCard) {
         
         <div style="display: grid; gap: 15px;">
             <div style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                <strong style="color: #555; display: block; margin-bottom: 5px;">설명:</strong>
-                <span style="color: #333;">${dataset.imageContent || 'N/A'}</span>
+                <strong style="color: #555; display: block; margin-bottom: 5px;">설명</strong>
+                <span style="color: #333;">${dataset.imageContent || ''}</span>
             </div>
             
             <div style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                <strong style="color: #555; display: block; margin-bottom: 5px;">촬영 날짜:</strong>
-                <span style="color: #333;">${dataset.imageDate || 'N/A'}</span>
+                <strong style="color: #555; display: block; margin-bottom: 5px;">촬영 날짜</strong>
+                <span style="color: #333;">${formatDateOnly(dataset.imageDate)}</span>
             </div>
             
             <div style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                <strong style="color: #555; display: block; margin-bottom: 5px;">등록 날짜:</strong>
-                <span style="color: #333;">${dataset.imageRegDate || 'N/A'}</span>
+                <strong style="color: #555; display: block; margin-bottom: 5px;">등록 날짜</strong>
+                <span style="color: #333;">${formatDateOnly(dataset.imageRegDate)}</span>
             </div>
             
             <div style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                <strong style="color: #555; display: block; margin-bottom: 5px;">위치:</strong>
-                <span style="color: #333;">${dataset.sdName || 'N/A'} ${dataset.sggName || ''}</span>
+                <strong style="color: #555; display: block; margin-bottom: 5px;">위치</strong>
+                <span style="color: #333;">${dataset.sdName || ''} ${dataset.sggName || ''}</span>
             </div>
             
             <div style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                <strong style="color: #555; display: block; margin-bottom: 5px;">공개 설정:</strong>
-                <span style="color: #333;">${dataset.isPublic === '1' ? '공개' : '비공개'}</span>
+                <strong style="color: #555; display: block; margin-bottom: 5px;">공개 설정</strong>
+                <span style="color: #333;">${IS_PUBLIC[dataset.isPublic]}</span>
             </div>
         </div>
     `;
@@ -561,4 +578,56 @@ function showImageDataset(galleryCard) {
     infoOverlay.appendChild(infoPanel);
     
     document.body.appendChild(infoOverlay);
+}
+
+// 앨범 내비게이션 기능 초기화
+function initAlbumNavigation() {
+    const navButtons = document.querySelectorAll('.nav-btn');
+    
+    navButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // 이전 활성 버튼에서 active 클래스 제거
+            navButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // 현재 클릭된 버튼에 active 클래스 추가
+            this.classList.add('active');
+            
+            // 필터 적용
+            const filter = this.dataset.filter;
+            filterAlbums(filter);
+        });
+    });
+}
+
+// 앨범 필터링 함수
+function filterAlbums(filter) {
+    const albumCards = document.querySelectorAll('.album-card');
+    
+    albumCards.forEach(card => {
+        const isPublic = card.dataset.isPublic;
+        let shouldShow = false;
+        
+        switch(filter) {
+            case 'all':
+                shouldShow = true;
+                break;
+            case 'public':
+                shouldShow = isPublic === '1' || isPublic === 'true';
+                break;
+            case 'private':
+                shouldShow = isPublic === '0' || isPublic === 'false';
+                break;
+        }
+        
+        if (shouldShow) {
+            card.style.display = 'block';
+            card.style.animation = 'fadeIn 0.3s ease';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    // 필터링 결과 확인
+    const visibleCards = document.querySelectorAll('.album-card[style*="display: block"], .album-card:not([style*="display: none"])');
+    console.log(`${filter} 필터 적용됨: ${visibleCards.length}개 앨범 표시`);
 }

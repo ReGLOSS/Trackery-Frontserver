@@ -33,8 +33,80 @@
     border: 1px solid gray;
 }
 
+.album-exists-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
 .album-nav-container {
 
+}
+
+/* 앨범 내비게이션 바 스타일 */
+.album-navigation-bar {
+    margin-bottom: 30px;
+    margin-top: 20px;
+    padding: 0 3%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-buttons {
+    display: flex;
+    gap: 0;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e6ed;
+    width: fit-content;
+}
+
+.nav-btn {
+    padding: 10px 20px;
+    border: none;
+    background-color: transparent;
+    color: #6c757d;
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    position: relative;
+}
+
+.nav-btn:hover {
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+.nav-btn.active {
+    background-color: #007bff;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.nav-btn.active:hover {
+    background-color: #0056b3;
+    color: white;
+}
+
+/* 앨범 생성 버튼 스타일 */
+.small-album-create-btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border: none;
+    transition: background-color 0.3s ease;
+    height: fit-content;
+}
+
+.small-album-create-btn:hover {
+    background-color: #343a40 !important;
 }
 
 
@@ -75,4 +147,16 @@
     position: absolute;
     right: 10px;
     bottom: 10px;
+}
+
+/* 앨범 카드 애니메이션 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

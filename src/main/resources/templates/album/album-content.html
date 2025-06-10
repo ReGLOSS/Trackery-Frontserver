@@ -21,19 +21,20 @@
 
         <!-- 앨범이 있을 때 보일 화면 -->
         <div class="album-exists-container div-section">
-<!--            선택창-->
-            <div class="album-nav-container div-section">
-                <div class="album-visibility-btn-group">
 
+            <!--            앨범 갤러리-->
+            <div class="album-navigation-bar">
+                <div class="nav-buttons">
+                    <button class="nav-btn active" data-filter="all">전체</button>
+                    <button class="nav-btn" data-filter="public">공개</button>
+                    <button class="nav-btn" data-filter="private">비공개</button>
                 </div>
-
+                
                 <button class="btn btn-dark small-album-create-btn">
                     앨범 생성
                 </button>
-
             </div>
-
-            <!--            앨범 갤러리-->
+            
             <div class="album-gallery">
                <div class="album-card">
                    <a>
