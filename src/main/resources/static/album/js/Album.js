@@ -69,3 +69,107 @@ document.addEventListener("DOMContentLoaded", function () {
         alert('앨범을 불러오는 중 오류가 발생했습니다: ' + error.message);
     });
 });
+
+document.addEventListener("DOMContentLoaded", function () {
+    fetchAlbumDetail(2);
+})
+
+//앨범 상세 정보 조회
+async function fetchAlbumDetail(albumId) {
+    fetch("/api/albums?albumId=" + albumId,
+        {
+            method: "GET",
+            credentials: "include"
+        })
+        .then(response => {
+            if (!response.ok) {
+                console.error("앨범 상세 정보 조회 실패")
+                throw new Error(`HTTP error! status: ${response.status}`);
+            } else {
+                return response.json();
+            }
+        }).then(async response => {
+        const actualData = response.data;
+
+        const PARSED_DATA = {
+            albumTitle: actualData.albumTitle,
+            albumDescription: actualData.albumDescription,
+            isPublic: actualData.isPublic,
+            imageCount: actualData.imageCount,
+            imageList: actualData.imageList
+        };
+
+        console.log(PARSED_DATA);
+
+        updateAlbumDetailInfo(PARSED_DATA.albumTitle, PARSED_DATA.albumDescription, PARSED_DATA.isPublic, PARSED_DATA.imageCount);
+
+        if (PARSED_DATA.imageCount === 0) {
+            return;
+        }
+
+        const albumDetailGallery = document.getElementsByClassName('album-detail-gallery')[0];
+
+        albumDetailGallery.innerHTML = '';
+
+        for (const image of PARSED_DATA.imageList) {
+            const blobUrl = await convertS3UrlToBlobUrl(image.imageUrl);
+            if(blobUrl) {
+                const galleryCard = document.createElement('div');
+                galleryCard.className = 'gallery-card';
+
+                galleryCard.dataset.imageId = image.imageId;
+                galleryCard.dataset.userId = image.userId;
+                galleryCard.dataset.imageRegDate = image.imageRegDate;
+                galleryCard.dataset.sdName = image.sdName;
+                galleryCard.dataset.sggName = image.sggName;
+                galleryCard.dataset.latitude = image.latitude;
+                galleryCard.dataset.longitude = image.longitude;
+                galleryCard.dataset.imageName = image.imageName;
+                galleryCard.dataset.imageContent = image.imageContent;
+                galleryCard.dataset.imageDate = image.imageDate;
+                galleryCard.dataset.isPublic = image.isPublic;
+                galleryCard.dataset.imageUrl = blobUrl;
+
+                galleryCard.innerHTML = `
+                <img src="${blobUrl}" alt="${image.imageName}">
+                `
+                albumDetailGallery.appendChild(galleryCard);
+            }
+        }
+    })
+}
+
+
+//앨범 정보 섹션 업데이트
+
+const IS_PUBLIC = {
+    0: "비공개 앨범",
+    1: "공개 앨범"
+}
+
+function updateAlbumDetailInfo(albumTitle, albumDescription, isPublic, imageCount) {
+    const albumDetailTitle = document.querySelector('.album-detail-title');
+    const albumDetailDescription = document.querySelector('.album-detail-description');
+    const albumDetailPublic = document.querySelector('.album-detail-is-public');
+    const albumDetailImageCount = document.querySelector('.album-detail-image-count');
+
+    albumDetailTitle.textContent= albumTitle;
+    albumDetailDescription.textContent= albumDescription;
+    albumDetailPublic.textContent= IS_PUBLIC[isPublic];
+    albumDetailImageCount.textContent = "사진 " + imageCount + "장";
+}
+
+//S3 링크를 BLOB URL로
+async function convertS3UrlToBlobUrl(s3Url) {
+    const response = await fetch(s3Url);
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+}
+
+const closeBtn = document.getElementById("album-detail-close-btn");
+
+closeBtn.addEventListener("click", function () {
+    console.log("닫기 버튼 클릭");
+    const albumDetailContainer = document.getElementsByClassName("album-detail-container")[0];
+    albumDetailContainer.style.display = "none";
+})

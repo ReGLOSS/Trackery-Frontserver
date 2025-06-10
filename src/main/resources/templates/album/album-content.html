@@ -63,10 +63,26 @@
 <!--        우측 사이드탭 컨테이너-->
         <div class="album-detail-right-sidebar-container">
             <div class="album-detail-info">
-                <p>앨범 제목</p>
-                <p>앨범 설명</p>
-                <p>공개 앨범</p>
-                <p>사진 매수</p>
+                <div class="info-btn-group">
+                    <div class="dropdown">
+                            <span class="dropdown-btn" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <img id="three-dots" src="/icons/common/three-dots-vertical.svg" alt="three-dots-icon" class="three-dots-icon">
+                            </span>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">편집</a></li>
+                            <li><a class="dropdown-item" href="#">삭제</a></li>
+                            <li><a class="dropdown-item" href="#">설정</a></li>
+                        </ul>
+                    </div>
+
+                    <button id="album-detail-close-btn" class="btn-close"></button>
+                </div>
+                <p class="album-detail-title">앨범 제목</p>
+                <p class="album-detail-description">앨범 설명</p>
+                <div class="album-detail-meta">
+                    <p class="album-detail-image-count">사진 매수</p>
+                    <span class="album-detail-is-public">공개 앨범</span>
+                </div>
             </div>
 
             <div class="album-detail-gallery">

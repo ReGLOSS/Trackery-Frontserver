@@ -8,7 +8,7 @@
     top: 0;
     left: 0;
     display: flex;
-    padding-left:20rem;
+    padding-left: 20rem;
 }
 
 .album-image-container {
@@ -32,16 +32,71 @@
 .album-detail-info {
     padding: 5%;
     border: 1px solid rebeccapurple;
+    display: flex;
+    flex-direction: column;
+}
+
+.info-btn-group {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    justify-content: flex-end;
+}
+
+.dropdown-btn {
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+    display: inline-block;
+}
+
+#three-dots{
+    color: #6c757d;
+    object-fit: fill;
+}
+
+.btn-close {
+    width: 30px;
+    height: 30px;
+    font-size: 20px;
+    color: #6c757d;
+}
+
+.album-detail-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0 0 0.5rem 0;
+}
+
+.album-detail-description {
+    font-size: 0.9rem;
+    color: #686868;
+    margin: 0 0 auto 0;
 }
 
 .album-detail-gallery {
     border: 1px solid yellow;
     flex: 2;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 5%;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: min-content;
     background-color: lightgray;
     overflow-y: auto;
     scrollbar-width: none;
+}
+
+.gallery-card {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1/1;
+    overflow: hidden;
+}
+
+.gallery-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
