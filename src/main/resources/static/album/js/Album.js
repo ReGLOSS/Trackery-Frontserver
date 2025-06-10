@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
-    fetchAlbumDetail(2);
+    fetchAlbumDetail(1);
 })
 
 //앨범 상세 정보 조회
