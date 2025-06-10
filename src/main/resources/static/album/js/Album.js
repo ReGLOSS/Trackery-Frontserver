@@ -74,12 +74,18 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
+// 현재 앨범 ID 관리
+let currentAlbumId = null;
+
 document.addEventListener("DOMContentLoaded", function () {
     fetchAlbumDetail(1);
 })
 
 //앨범 상세 정보 조회
 async function fetchAlbumDetail(albumId) {
+    // 현재 앨범 ID 저장
+    currentAlbumId = albumId;
+    
     fetch("/api/albums?albumId=" + albumId,
         {
             method: "GET",
@@ -190,6 +196,9 @@ closeBtn.addEventListener("click", function () {
     console.log("닫기 버튼 클릭");
     const albumDetailContainer = document.getElementsByClassName("album-detail-container")[0];
     albumDetailContainer.style.display = "none";
+    
+    // 현재 앨범 ID 초기화
+    currentAlbumId = null;
 })
 
 // 편집 모드 상태 변수
@@ -298,19 +307,19 @@ function saveEdit() {
         return;
     }
     
-    // TODO: 여기서 API 호출로 서버에 업데이트 요청
-    // updateAlbumInfo(albumId, newTitle, newDescription);
+    // 현재 조회 중인 앨범 ID 가져오기
+    const currentAlbumId = getCurrentAlbumId();
     
-    console.log('앨범 정보 업데이트:', {
-        title: newTitle,
-        description: newDescription
-    });
+    if (!currentAlbumId) {
+        showNotification('앨범 ID를 찾을 수 없습니다.', 'error');
+        return;
+    }
+    
+    // API 호출
+    updateAlbumInfo(currentAlbumId, newTitle, newDescription);
     
     // 편집 모드 종료
     endEditMode(titleElement, descriptionElement);
-    
-    // 임시로 성공 메시지 표시
-    showNotification('앨범 정보가 업데이트되었습니다.', 'success');
 }
 
 // 편집 취소
@@ -411,6 +420,47 @@ function showNotification(message, type = 'info') {
             }, 300);
         }
     }, 3000);
+}
+
+// 현재 앨범 ID 가져오기 함수
+function getCurrentAlbumId() {
+    return currentAlbumId;
+}
+
+// 앨범 정보 업데이트 API 호출
+async function updateAlbumInfo(albumId, newTitle, newDescription) {
+    try {
+        const response = await fetch("/api/albums", {
+            method: "PATCH", // 소문자로 수정
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                albumId: albumId,
+                albumTitle: newTitle,
+                albumDescription: newDescription
+            })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            console.log('앨범 정보 업데이트 성공:', result);
+            
+            showNotification('앨범 정보가 업데이트되었습니다.', 'success');
+        } else {
+            // HTTP 에러 상태별 처리
+            const errorData = await response.json().catch(() => ({}));
+            const errorMessage = errorData.message || `서버 오류 (${response.status})`;
+            
+            console.error('앨범 업데이트 실패:', response.status, errorMessage);
+            showNotification(`업데이트 실패: ${errorMessage}`, 'error');
+        }
+    } catch (error) {
+        // 네트워크 오류 등
+        console.error('앨범 업데이트 중 오류:', error);
+        showNotification('네트워크 오류가 발생했습니다.', 'error');
+    }
 }
 
 // gallery-card 클릭 시 왼쪽에 원본 이미지 표시
