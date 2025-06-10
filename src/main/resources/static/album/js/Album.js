@@ -111,6 +111,8 @@ async function fetchAlbumDetail(albumId) {
 
         albumDetailGallery.innerHTML = '';
 
+        let isFirstImage = true; // 첫 번째 이미지 확인용
+
         for (const image of PARSED_DATA.imageList) {
             const blobUrl = await convertS3UrlToBlobUrl(image.imageUrl);
             if(blobUrl) {
@@ -140,6 +142,12 @@ async function fetchAlbumDetail(albumId) {
                 });
                 
                 albumDetailGallery.appendChild(galleryCard);
+                
+                // 첫 번째 이미지를 자동으로 선택
+                if (isFirstImage) {
+                    setTimeout(() => showImageInMainView(galleryCard), 100); // 약간의 딜레이를 주어 DOM 렌더링 완료 후 실행
+                    isFirstImage = false;
+                }
             }
         }
     })
@@ -180,10 +188,240 @@ closeBtn.addEventListener("click", function () {
     albumDetailContainer.style.display = "none";
 })
 
+// 편집 모드 상태 변수
+let isEditingMode = false;
+let originalAlbumData = {};
+
+// 편집 버튼 이벤트 리스너 추가
+document.addEventListener("DOMContentLoaded", function() {
+    const editBtn = document.getElementById("album-edit-btn");
+    if (editBtn) {
+        editBtn.addEventListener("click", function(e) {
+            e.preventDefault();
+            toggleEditMode();
+        });
+    }
+});
+
+// 편집 모드 토글 함수
+function toggleEditMode() {
+    const titleElement = document.querySelector('.album-detail-title');
+    const descriptionElement = document.querySelector('.album-detail-description');
+    
+    if (!isEditingMode) {
+        // 편집 모드 시작
+        startEditMode(titleElement, descriptionElement);
+    } else {
+        // 편집 모드 종료
+        cancelEdit(titleElement, descriptionElement);
+    }
+}
+
+// 편집 모드 시작
+function startEditMode(titleElement, descriptionElement) {
+    isEditingMode = true;
+    
+    // 원본 데이터 저장
+    originalAlbumData = {
+        title: titleElement.textContent,
+        description: descriptionElement.textContent
+    };
+    
+    // 제목을 편집 가능한 input으로 변경
+    titleElement.contentEditable = true;
+    titleElement.classList.add('editing');
+    titleElement.focus();
+    
+    // 설명을 편집 가능한 textarea로 변경
+    descriptionElement.contentEditable = true;
+    descriptionElement.classList.add('editing');
+    
+    // 편집 컨트롤 버튼 추가
+    const editControls = document.createElement('div');
+    editControls.className = 'edit-controls';
+    
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'save-btn';
+    saveBtn.textContent = '저장';
+    saveBtn.addEventListener('click', saveEdit);
+    
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'cancel-btn';
+    cancelBtn.textContent = '취소';
+    cancelBtn.addEventListener('click', cancelEdit);
+    
+    editControls.appendChild(saveBtn);
+    editControls.appendChild(cancelBtn);
+    
+    // 기존 edit-controls가 있으면 제거
+    const existingControls = document.querySelector('.edit-controls');
+    if (existingControls) {
+        existingControls.remove();
+    }
+    
+    // album-detail-info에 컨트롤 추가
+    const albumDetailInfo = document.querySelector('.album-detail-info');
+    albumDetailInfo.appendChild(editControls);
+    
+    // Enter 키로 저장, Escape 키로 취소
+    titleElement.addEventListener('keydown', handleEditKeydown);
+    descriptionElement.addEventListener('keydown', handleEditKeydown);
+}
+
+// 키보드 이벤트 처리
+function handleEditKeydown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        saveEdit();
+    } else if (e.key === 'Escape') {
+        e.preventDefault();
+        cancelEdit();
+    }
+}
+
+// 편집 저장
+function saveEdit() {
+    const titleElement = document.querySelector('.album-detail-title');
+    const descriptionElement = document.querySelector('.album-detail-description');
+    
+    const newTitle = titleElement.textContent.trim();
+    const newDescription = descriptionElement.textContent.trim();
+    
+    // 빈 제목 검증
+    if (!newTitle) {
+        alert('앨범 제목은 비워둘 수 없습니다.');
+        titleElement.focus();
+        return;
+    }
+    
+    // TODO: 여기서 API 호출로 서버에 업데이트 요청
+    // updateAlbumInfo(albumId, newTitle, newDescription);
+    
+    console.log('앨범 정보 업데이트:', {
+        title: newTitle,
+        description: newDescription
+    });
+    
+    // 편집 모드 종료
+    endEditMode(titleElement, descriptionElement);
+    
+    // 임시로 성공 메시지 표시
+    showNotification('앨범 정보가 업데이트되었습니다.', 'success');
+}
+
+// 편집 취소
+function cancelEdit() {
+    const titleElement = document.querySelector('.album-detail-title');
+    const descriptionElement = document.querySelector('.album-detail-description');
+    
+    // 원본 데이터로 복원
+    titleElement.textContent = originalAlbumData.title;
+    descriptionElement.textContent = originalAlbumData.description;
+    
+    // 편집 모드 종료
+    endEditMode(titleElement, descriptionElement);
+}
+
+// 편집 모드 종료
+function endEditMode(titleElement, descriptionElement) {
+    isEditingMode = false;
+    
+    // 편집 모드 스타일 제거
+    titleElement.contentEditable = false;
+    titleElement.classList.remove('editing');
+    
+    descriptionElement.contentEditable = false;
+    descriptionElement.classList.remove('editing');
+    
+    // 이벤트 리스너 제거
+    titleElement.removeEventListener('keydown', handleEditKeydown);
+    descriptionElement.removeEventListener('keydown', handleEditKeydown);
+    
+    // 편집 컨트롤 제거
+    const editControls = document.querySelector('.edit-controls');
+    if (editControls) {
+        editControls.remove();
+    }
+}
+
+// 알림 메시지 표시 함수
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 6px;
+        color: white;
+        font-weight: 500;
+        z-index: 5000;
+        animation: slideInNotification 0.3s ease;
+        max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    `;
+    
+    // 타입에 따른 배경색 설정
+    switch(type) {
+        case 'success':
+            notification.style.backgroundColor = '#28a745';
+            break;
+        case 'error':
+            notification.style.backgroundColor = '#dc3545';
+            break;
+        default:
+            notification.style.backgroundColor = '#007bff';
+    }
+    
+    notification.textContent = message;
+    
+    // 애니메이션 CSS 추가
+    if (!document.querySelector('#notification-styles')) {
+        const style = document.createElement('style');
+        style.id = 'notification-styles';
+        style.textContent = `
+            @keyframes slideInNotification {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(notification);
+    
+    // 3초 후 자동 제거
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.animation = 'slideInNotification 0.3s ease reverse';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    document.body.removeChild(notification);
+                }
+            }, 300);
+        }
+    }, 3000);
+}
+
 // gallery-card 클릭 시 왼쪽에 원본 이미지 표시
 function showImageInMainView(galleryCard) {
     const imageUrl = galleryCard.dataset.imageUrl;
     const imageName = galleryCard.dataset.imageName;
+    
+    // 이전에 선택된 카드의 선택 상태 제거
+    const previousSelected = document.querySelector('.gallery-card.selected');
+    if (previousSelected) {
+        previousSelected.classList.remove('selected');
+    }
+    
+    // 현재 클릭된 카드에 선택 상태 추가
+    galleryCard.classList.add('selected');
     
     const albumImageContainer = document.querySelector('.album-image-container');
     
@@ -210,17 +448,7 @@ function showImageInMainView(galleryCard) {
         max-width: 100%;
         max-height: 100%;
         object-fit: contain;
-        transition: transform 0.2s ease;
     `;
-    
-    // 호버 효과
-    mainImage.addEventListener('mouseenter', function() {
-        this.style.transform = 'scale(1.02)';
-    });
-    
-    mainImage.addEventListener('mouseleave', function() {
-        this.style.transform = 'scale(1)';
-    });
     
     // 메인 이미지 클릭 시 dataset 정보 표시
     mainImageWrapper.addEventListener('click', function() {
@@ -302,11 +530,6 @@ function showImageDataset(galleryCard) {
         
         <div style="display: grid; gap: 15px;">
             <div style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                <strong style="color: #555; display: block; margin-bottom: 5px;">이미지 이름:</strong>
-                <span style="color: #333;">${dataset.imageName || 'N/A'}</span>
-            </div>
-            
-            <div style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
                 <strong style="color: #555; display: block; margin-bottom: 5px;">설명:</strong>
                 <span style="color: #333;">${dataset.imageContent || 'N/A'}</span>
             </div>
@@ -327,23 +550,8 @@ function showImageDataset(galleryCard) {
             </div>
             
             <div style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                <strong style="color: #555; display: block; margin-bottom: 5px;">좌표:</strong>
-                <span style="color: #333;">위도: ${dataset.latitude || 'N/A'}, 경도: ${dataset.longitude || 'N/A'}</span>
-            </div>
-            
-            <div style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
                 <strong style="color: #555; display: block; margin-bottom: 5px;">공개 설정:</strong>
                 <span style="color: #333;">${dataset.isPublic === '1' ? '공개' : '비공개'}</span>
-            </div>
-            
-            <div style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                <strong style="color: #555; display: block; margin-bottom: 5px;">이미지 ID:</strong>
-                <span style="color: #333;">${dataset.imageId || 'N/A'}</span>
-            </div>
-            
-            <div>
-                <strong style="color: #555; display: block; margin-bottom: 5px;">사용자 ID:</strong>
-                <span style="color: #333;">${dataset.userId || 'N/A'}</span>
             </div>
         </div>
     `;
