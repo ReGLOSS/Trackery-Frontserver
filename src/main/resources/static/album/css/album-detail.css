@@ -305,18 +305,37 @@
 /* 체크박스 호버 효과 */
 .image-checkbox:hover {
     transform: scale(1.1);
-    background-color: rgba(0, 123, 255, 0.7) !important;
+}
+
+/* 내 이미지 체크박스 호버 (초록색) */
+.my-image-card .image-checkbox:hover {
+    background-color: rgba(40, 167, 69, 0.7) !important;
+}
+
+/* 앨범 이미지 체크박스 호버 (빨간색) */
+.gallery-card .image-checkbox:hover {
+    background-color: rgba(220, 53, 69, 0.7) !important;
 }
 
 /* 선택된 이미지 카드 스타일 (편집 모드) */
-.gallery-card.edit-mode.selected, .my-image-card.edit-mode.selected {
-    border: 3px solid #007bff;
-    box-shadow: 0 0 15px rgba(0, 123, 255, 0.4);
+.gallery-card.edit-mode.selected {
+    border: 3px solid #dc3545; /* 빨간색 */
+    box-shadow: 0 0 15px rgba(220, 53, 69, 0.4);
 }
 
-.gallery-card.edit-mode.selected:hover, .my-image-card.edit-mode.selected:hover {
-    border: 3px solid #0056b3;
-    box-shadow: 0 0 20px rgba(0, 123, 255, 0.6);
+.gallery-card.edit-mode.selected:hover {
+    border: 3px solid #c82333;
+    box-shadow: 0 0 20px rgba(220, 53, 69, 0.6);
+}
+
+.my-image-card.edit-mode.selected {
+    border: 3px solid #28a745; /* 초록색 */
+    box-shadow: 0 0 15px rgba(40, 167, 69, 0.4);
+}
+
+.my-image-card.edit-mode.selected:hover {
+    border: 3px solid #218838;
+    box-shadow: 0 0 20px rgba(40, 167, 69, 0.6);
 }
 
 /* 체크박스 애니메이션 */
@@ -350,5 +369,115 @@
     background-color: #f8f9fa;
     border-radius: 8px;
     padding: 5px;
+}
+
+/* 갤러리 섹션 스타일 */
+.gallery-section {
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.gallery-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f9fa;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.gallery-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.gallery-toggle-btn {
+    background: none;
+    border: 1px solid #dee2e6;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #6c757d;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.gallery-toggle-btn:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+    color: #495057;
+}
+
+.gallery-content {
+    padding: 0;
+    transition: all 0.3s ease;
+}
+
+/* 갤러리 애니메이션 */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        max-height: 1000px;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 1;
+        max-height: 1000px;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        max-height: 0;
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 내 이미지 섹션 특별 스타일 */
+.my-images-section .gallery-header {
+    background-color: #e8f5e8;
+    border-bottom-color: #c3e6cb;
+}
+
+.my-images-section .gallery-title {
+    color: #155724;
+}
+
+/* 앨범 이미지 섹션 특별 스타일 */
+.album-images-section .gallery-header {
+    background-color: #f8d7da;
+    border-bottom-color: #f1b0b7;
+}
+
+.album-images-section .gallery-title {
+    color: #721c24;
 }
 

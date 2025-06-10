@@ -9,6 +9,8 @@ const DOM = {
     albumImageContainer: document.querySelector('.album-image-container'),
     albumDetailGallery: document.getElementsByClassName('album-detail-gallery')[0],
     albumDetailEditMyImagesGallery: document.getElementsByClassName('album-detail-edit-image-my-images-gallery')[0],
+    myImagesSection: document.querySelector('.my-images-section'),
+    albumImagesSection: document.querySelector('.album-images-section'),
     albumDetailTitle: document.querySelector('.album-detail-title'),
     albumDetailDescription: document.querySelector('.album-detail-description'),
     albumDetailPublic: document.querySelector('.album-detail-is-public'),
@@ -111,20 +113,6 @@ const ApiService = {
         const response = await fetch(s3Url);
         const blob = await response.blob();
         return URL.createObjectURL(blob);
-    },
-
-    // 내 이미지 조회
-    async fetchMyImages() {
-        const response = await fetch("/api/images/me",{
-            method: "GET",
-            credentials: "include"
-        })
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        return response.json();
     }
 };
 
@@ -178,19 +166,12 @@ const UiUpdater = {
         if (!DOM.albumDetailGallery) return;
 
         DOM.albumDetailGallery.innerHTML = '';
-        // let isFirstImage = true;
 
         for (const image of imageList) {
             const blobUrl = await ApiService.convertS3UrlToBlobUrl(image.imageUrl);
             if (blobUrl) {
                 const galleryCard = this.createGalleryCard(image, blobUrl, 'album');
                 DOM.albumDetailGallery.appendChild(galleryCard);
-
-                // // 첫 번째 이미지 자동 선택
-                // if (isFirstImage) {
-                //     setTimeout(() => ImageViewer.showImageInMainView(galleryCard), 100);
-                //     isFirstImage = false;
-                // }
             }
         }
     },
@@ -214,7 +195,7 @@ const UiUpdater = {
     createGalleryCard(image, blobUrl, type = 'album') {
         const galleryCard = document.createElement('div');
         galleryCard.className = type === 'myImages' ? 'my-image-card' : 'gallery-card';
-        galleryCard.style.position = 'relative'; // 체크박스 절대 위치를 위한 상대 위치 설정
+        galleryCard.style.position = 'relative';
 
         // 데이터셋 설정
         Object.assign(galleryCard.dataset, {
@@ -237,7 +218,7 @@ const UiUpdater = {
         
         // 클릭 이벤트 추가 (이미지 편집 모드가 아닐 때만, 그리고 앨범 이미지만)
         if (type === 'album') {
-            galleryCard.addEventListener('click', function(e) {
+            galleryCard.addEventListener('click', function() {
                 // 이미지 편집 모드에서는 메인 뷰 변경 비활성화
                 if (!State.isImageEditingMode) {
                     ImageViewer.showImageInMainView(this);
@@ -296,7 +277,6 @@ const UiUpdater = {
         }, 3000);
     }
 };
-
 // ============================================================
 // 이미지 뷰어 모듈
 // ============================================================
@@ -547,6 +527,70 @@ const EditMode = {
 };
 
 // ============================================================
+// 갤러리 토글 모듈
+// ============================================================
+const GalleryToggle = {
+    // 갤러리 토글 초기화
+    initGalleryToggle() {
+        const toggleButtons = document.querySelectorAll('.gallery-toggle-btn');
+
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = button.dataset.target;
+                this.toggleGallery(target, button);
+            });
+        });
+    },
+
+    // 갤러리 토글
+    toggleGallery(target, button) {
+        const toggleIcon = button.querySelector('.toggle-icon');
+        let galleryContent;
+
+        if (target === 'my-images') {
+            galleryContent = DOM.albumDetailEditMyImagesGallery;
+        } else if (target === 'album-images') {
+            galleryContent = DOM.albumDetailGallery;
+        }
+
+        if (!galleryContent) return;
+
+        const isCollapsed = galleryContent.style.display === 'none';
+
+        if (isCollapsed) {
+            // 갤러리 열기
+            galleryContent.style.display = 'grid';
+            toggleIcon.textContent = '−';
+            galleryContent.style.animation = 'slideDown 0.3s ease';
+        } else {
+            // 갤러리 닫기
+            galleryContent.style.animation = 'slideUp 0.3s ease';
+            setTimeout(() => {
+                galleryContent.style.display = 'none';
+            }, 280);
+            toggleIcon.textContent = '+';
+        }
+
+        console.log(`${target} 갤러리 ${isCollapsed ? '열림' : '닫힘'}`);
+    },
+
+    // 내 이미지 섹션 표시/숨김
+    showMyImagesSection() {
+        if (DOM.myImagesSection) {
+            DOM.myImagesSection.style.display = 'block';
+            DOM.myImagesSection.style.animation = 'fadeIn 0.3s ease';
+        }
+    },
+
+    hideMyImagesSection() {
+        if (DOM.myImagesSection) {
+            DOM.myImagesSection.style.display = 'none';
+        }
+    }
+};
+
+// ============================================================
 // 이미지 편집 모드 모듈
 // ============================================================
 const ImageEditMode = {
@@ -568,6 +612,9 @@ const ImageEditMode = {
         // 버튼 텍스트 변경
         DOM.imageEditBtn.textContent = '편집 완료';
         DOM.imageEditBtn.classList.add('editing-active');
+
+        // 내 이미지 섹션 표시
+        GalleryToggle.showMyImagesSection();
 
         try {
             // 내 이미지 목록 로드
@@ -621,10 +668,11 @@ const ImageEditMode = {
         // 모든 갤러리에서 체크박스 제거
         this.removeCheckboxesFromAllGalleries();
 
-        // 내 이미지 갤러리 초기화
+        // 내 이미지 갤러리 초기화 및 섹션 숨김
         if (DOM.albumDetailEditMyImagesGallery) {
             DOM.albumDetailEditMyImagesGallery.innerHTML = '';
         }
+        GalleryToggle.hideMyImagesSection();
 
         UiUpdater.showNotification('이미지 편집 모드가 종료되었습니다.', 'info');
     },
@@ -682,6 +730,10 @@ const ImageEditMode = {
         checkboxContainer.className = 'image-checkbox';
         checkboxContainer.dataset.imageId = galleryCard.dataset.imageId;
 
+        // 카드 타입에 따라 다른 스타일과 아이콘 설정
+        const cardType = galleryCard.dataset.cardType || 'album';
+        const isMyImage = cardType === 'myImages';
+
         // 체크박스 스타일
         checkboxContainer.style.cssText = `
             position: absolute;
@@ -701,18 +753,33 @@ const ImageEditMode = {
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         `;
 
-        // 체크 아이콘 (초기에는 숨김)
-        const checkIcon = document.createElement('div');
-        checkIcon.className = 'check-icon';
-        checkIcon.innerHTML = '✓';
-        checkIcon.style.cssText = `
-            color: white;
-            font-size: 14px;
-            font-weight: bold;
-            display: none;
-        `;
+        // 아이콘 생성 (타입에 따라 다른 아이콘과 색상)
+        const icon = document.createElement('div');
+        icon.className = 'check-icon';
+        
+        if (isMyImage) {
+            // 내 이미지: 초록색 +
+            icon.innerHTML = '+';
+            icon.style.cssText = `
+                color: white;
+                font-size: 18px;
+                font-weight: bold;
+                display: none;
+                line-height: 1;
+            `;
+        } else {
+            // 앨범 이미지: 빨간색 -
+            icon.innerHTML = '−';
+            icon.style.cssText = `
+                color: white;
+                font-size: 20px;
+                font-weight: bold;
+                display: none;
+                line-height: 1;
+            `;
+        }
 
-        checkboxContainer.appendChild(checkIcon);
+        checkboxContainer.appendChild(icon);
 
         // 클릭 이벤트 추가
         checkboxContainer.addEventListener('click', (e) => {
@@ -727,6 +794,8 @@ const ImageEditMode = {
     toggleImageSelection(galleryCard, checkboxContainer) {
         const imageId = galleryCard.dataset.imageId;
         const checkIcon = checkboxContainer.querySelector('.check-icon');
+        const cardType = galleryCard.dataset.cardType || 'album';
+        const isMyImage = cardType === 'myImages';
 
         if (State.selectedImages.has(imageId)) {
             // 선택 해제
@@ -734,14 +803,21 @@ const ImageEditMode = {
             galleryCard.classList.remove('selected');
             checkboxContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
             checkIcon.style.display = 'none';
-            console.log(`이미지 ${imageId} 선택 해제`);
+            console.log(`이미지 ${imageId} 선택 해제 (${isMyImage ? '내 이미지' : '앨범 이미지'})`);
         } else {
             // 선택
             State.selectedImages.add(imageId);
             galleryCard.classList.add('selected');
-            checkboxContainer.style.backgroundColor = '#007bff';
+            
+            // 타입에 따라 다른 배경색 설정
+            if (isMyImage) {
+                checkboxContainer.style.backgroundColor = '#28a745'; // 초록색
+            } else {
+                checkboxContainer.style.backgroundColor = '#dc3545'; // 빨간색
+            }
+            
             checkIcon.style.display = 'block';
-            console.log(`이미지 ${imageId} 선택`);
+            console.log(`이미지 ${imageId} 선택 (${isMyImage ? '내 이미지' : '앨범 이미지'})`);
         }
 
         console.log(`현재 선택된 이미지 수: ${State.selectedImages.size}`);
@@ -998,6 +1074,9 @@ function initialize() {
             ImageEditMode.toggleImageEditMode();
         });
     }
+
+    // 갤러리 토글 기능 초기화
+    GalleryToggle.initGalleryToggle();
 
     // 초기 데이터 로드
     EventHandlers.loadAlbumList();

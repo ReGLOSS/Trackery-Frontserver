@@ -94,9 +94,27 @@
                     <button id="album-image-edit-btn" class="btn btn-dark">이미지 추가/삭제</button>
                 </div>
 
-                <div class="album-detail-edit-image-my-images-gallery"></div>
+                <!-- 내 이미지 섹션 -->
+                <div class="gallery-section my-images-section" style="display: none;">
+                    <div class="gallery-header">
+                        <h4 class="gallery-title">내 이미지</h4>
+                        <button class="gallery-toggle-btn" data-target="my-images">
+                            <span class="toggle-icon">−</span>
+                        </button>
+                    </div>
+                    <div class="album-detail-edit-image-my-images-gallery gallery-content"></div>
+                </div>
 
-                <div class="album-detail-gallery"></div>
+                <!-- 앨범 이미지 섹션 -->
+                <div class="gallery-section album-images-section">
+                    <div class="gallery-header">
+                        <h4 class="gallery-title">앨범 이미지</h4>
+                        <button class="gallery-toggle-btn" data-target="album-images">
+                            <span class="toggle-icon">−</span>
+                        </button>
+                    </div>
+                    <div class="album-detail-gallery gallery-content"></div>
+                </div>
             </div>
 
         </div>
