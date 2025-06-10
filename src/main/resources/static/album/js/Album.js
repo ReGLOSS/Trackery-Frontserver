@@ -109,6 +109,7 @@ const UiUpdater = {
         albumList.forEach(album => {
             const albumCard = document.createElement('div');
             albumCard.className = 'album-card';
+            albumCard.style.cursor = 'pointer'; // 클릭 가능함을 표시
             albumCard.dataset.albumId = album.albumId;
             albumCard.dataset.isPublic = album.isPublic;
 
@@ -119,6 +120,12 @@ const UiUpdater = {
                 <p class="card-album-title">${album.albumTitle}</p>
                 <p class="text-muted card-album-image-count">항목 : ${album.albumImageCount} 장</p>
             `;
+
+            // 앨범 카드 클릭 이벤트 추가
+            albumCard.addEventListener('click', () => {
+                const albumId = albumCard.dataset.albumId;
+                EventHandlers.openAlbumDetail(albumId);
+            });
 
             DOM.albumGallery.appendChild(albumCard);
         });
@@ -139,7 +146,7 @@ const UiUpdater = {
         if (!DOM.albumDetailGallery) return;
 
         DOM.albumDetailGallery.innerHTML = '';
-        let isFirstImage = true;
+        // let isFirstImage = true;
 
         for (const image of imageList) {
             const blobUrl = await ApiService.convertS3UrlToBlobUrl(image.imageUrl);
@@ -147,11 +154,11 @@ const UiUpdater = {
                 const galleryCard = this.createGalleryCard(image, blobUrl);
                 DOM.albumDetailGallery.appendChild(galleryCard);
 
-                // 첫 번째 이미지 자동 선택
-                if (isFirstImage) {
-                    setTimeout(() => ImageViewer.showImageInMainView(galleryCard), 100);
-                    isFirstImage = false;
-                }
+                // // 첫 번째 이미지 자동 선택
+                // if (isFirstImage) {
+                //     setTimeout(() => ImageViewer.showImageInMainView(galleryCard), 100);
+                //     isFirstImage = false;
+                // }
             }
         }
     },
@@ -192,7 +199,7 @@ const UiUpdater = {
         const notification = document.createElement('div');
         notification.className = 'notification';
         notification.style.cssText = `
-            position: fixed; top: 20px; right: 20px; padding: 12px 20px;
+            position: fixed; bottom: 20px; right: 20px; padding: 12px 20px;
             border-radius: 6px; color: white; font-weight: 500; z-index: 5000;
             animation: slideInNotification 0.3s ease; max-width: 300px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -588,9 +595,39 @@ const EventHandlers = {
         }
     },
 
+    // 앨범 상세 모달 열기
+    async openAlbumDetail(albumId) {
+        try {
+            // 로딩 인디케이터 표시 (선택사항)
+            UiUpdater.showNotification(`앨범 ${albumId} 로딩 중...`, 'info');
+            
+            // 먼저 모든 데이터 로드
+            await this.loadAlbumDetail(albumId);
+            
+            // 데이터 로드 완료 후 모달 표시
+            DOM.albumDetailContainer.style.display = "flex";
+            
+            console.log(`앨범 ${albumId} 로드 완료`);
+        } catch (error) {
+            console.error("앨범 상세 모달 열기 실패:", error);
+            UiUpdater.showNotification("앨범을 불러오는 중 오류가 발생했습니다.", 'error');
+        }
+    },
+
     // 앨범 상세 정보 로드
     async loadAlbumDetail(albumId) {
         try {
+            // 새 앨범 로드 전 이전 데이터 초기화
+            const albumImageContainer = document.querySelector('.album-image-container');
+            const albumDetailGallery = document.querySelector('.album-detail-gallery');
+            
+            if (albumImageContainer) {
+                albumImageContainer.innerHTML = '';
+            }
+            if (albumDetailGallery) {
+                albumDetailGallery.innerHTML = '';
+            }
+            
             State.currentAlbumId = albumId;
 
             const response = await ApiService.fetchAlbumDetail(albumId);
@@ -618,15 +655,68 @@ const EventHandlers = {
             }
         } catch (error) {
             console.error("앨범 상세 정보 조회 실패:", error);
-            alert("앨범 상세 정보를 불러오는 중 오류가 발생했습니다.");
+            throw error; // 에러를 다시 던져서 상위에서 처리할 수 있도록
         }
+    },
+
+    // 모달 상태 초기화
+    resetModalState() {
+        console.log("모달 상태 초기화 시작");
+        
+        // 앨범 이미지 컨테이너 초기화
+        const albumImageContainer = document.querySelector('.album-image-container');
+        if (albumImageContainer) {
+            albumImageContainer.innerHTML = '';
+            console.log("메인 이미지 컨테이너 초기화");
+        }
+
+        // 앨범 상세 갤러리 초기화
+        const albumDetailGallery = document.querySelector('.album-detail-gallery');
+        if (albumDetailGallery) {
+            albumDetailGallery.innerHTML = '';
+            console.log("상세 갤러리 초기화");
+        }
+
+        // 앨범 정보 초기화
+        const albumDetailTitle = document.querySelector('.album-detail-title');
+        const albumDetailDescription = document.querySelector('.album-detail-description');
+        const albumDetailPublic = document.querySelector('.album-detail-is-public');
+        const albumDetailImageCount = document.querySelector('.album-detail-image-count');
+        
+        if (albumDetailTitle) {
+            albumDetailTitle.textContent = '앨범 제목';
+        }
+        if (albumDetailDescription) {
+            albumDetailDescription.textContent = '앨범 설명';
+        }
+        if (albumDetailPublic) {
+            albumDetailPublic.textContent = '공개 앨범';
+        }
+        if (albumDetailImageCount) {
+            albumDetailImageCount.textContent = '사진 매수';
+        }
+
+        // 편집 모드가 활성화되어 있다면 종료
+        if (State.isEditingMode) {
+            EditMode.endEditMode();
+        }
+
+        // 상태 변수 초기화
+        State.currentAlbumId = null;
+        State.originalAlbumData = {};
+
+        console.log("모달 상태 초기화 완료");
     },
 
     // 모달 닫기
     closeModal() {
         console.log("닫기 버튼 클릭");
+        
+        // 모달 숨기기
         DOM.albumDetailContainer.style.display = "none";
-        State.currentAlbumId = null;
+        
+        // 모달 상태 초기화
+        this.resetModalState();
     }
 };
 
@@ -650,7 +740,7 @@ function initialize() {
 
     // 초기 데이터 로드
     EventHandlers.loadAlbumList();
-    EventHandlers.loadAlbumDetail(1);
+    // EventHandlers.loadAlbumDetail(1); // 제거: 이제 카드 클릭으로만 로드
 }
 
 // DOM이 로드된 후 초기화
