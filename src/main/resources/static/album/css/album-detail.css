@@ -126,3 +126,48 @@
     display: block;
 }
 
+/* 갤러리 카드 호버 효과 */
+.gallery-card {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gallery-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+    position: relative;
+}
+
+/* 메인 이미지 컨테이너 스타일 */
+.main-image-wrapper {
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* 정보 오버레이 애니메이션 */
+.image-info-overlay {
+    animation: fadeIn 0.3s ease;
+}
+
+.image-info-panel {
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { 
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+

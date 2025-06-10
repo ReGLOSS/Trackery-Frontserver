@@ -133,6 +133,12 @@ async function fetchAlbumDetail(albumId) {
                 galleryCard.innerHTML = `
                 <img src="${blobUrl}" alt="${image.imageName}">
                 `
+                
+                // gallery-card 클릭 이벤트 추가
+                galleryCard.addEventListener('click', function() {
+                    showImageInMainView(this);
+                });
+                
                 albumDetailGallery.appendChild(galleryCard);
             }
         }
@@ -173,3 +179,178 @@ closeBtn.addEventListener("click", function () {
     const albumDetailContainer = document.getElementsByClassName("album-detail-container")[0];
     albumDetailContainer.style.display = "none";
 })
+
+// gallery-card 클릭 시 왼쪽에 원본 이미지 표시
+function showImageInMainView(galleryCard) {
+    const imageUrl = galleryCard.dataset.imageUrl;
+    const imageName = galleryCard.dataset.imageName;
+    
+    const albumImageContainer = document.querySelector('.album-image-container');
+    
+    // 기존 내용 제거
+    albumImageContainer.innerHTML = '';
+    
+    // 새 이미지 엘리먼트 생성
+    const mainImageWrapper = document.createElement('div');
+    mainImageWrapper.className = 'main-image-wrapper';
+    mainImageWrapper.style.cssText = `
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        position: relative;
+    `;
+    
+    const mainImage = document.createElement('img');
+    mainImage.src = imageUrl;
+    mainImage.alt = imageName;
+    mainImage.style.cssText = `
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        transition: transform 0.2s ease;
+    `;
+    
+    // 호버 효과
+    mainImage.addEventListener('mouseenter', function() {
+        this.style.transform = 'scale(1.02)';
+    });
+    
+    mainImage.addEventListener('mouseleave', function() {
+        this.style.transform = 'scale(1)';
+    });
+    
+    // 메인 이미지 클릭 시 dataset 정보 표시
+    mainImageWrapper.addEventListener('click', function() {
+        showImageDataset(galleryCard);
+    });
+    
+    mainImageWrapper.appendChild(mainImage);
+    albumImageContainer.appendChild(mainImageWrapper);
+}
+
+// 이미지 dataset 정보 표시
+function showImageDataset(galleryCard) {
+    const dataset = galleryCard.dataset;
+    
+    // 모달 또는 오버레이 생성
+    const infoOverlay = document.createElement('div');
+    infoOverlay.className = 'image-info-overlay';
+    infoOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 4000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    `;
+    
+    const infoPanel = document.createElement('div');
+    infoPanel.className = 'image-info-panel';
+    infoPanel.style.cssText = `
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        max-width: 600px;
+        width: 100%;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    `;
+    
+    // 닫기 버튼
+    const closeButton = document.createElement('button');
+    closeButton.innerHTML = '×';
+    closeButton.style.cssText = `
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        background: none;
+        border: none;
+        font-size: 30px;
+        cursor: pointer;
+        color: #666;
+        line-height: 1;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+    `;
+    
+    closeButton.addEventListener('click', function() {
+        document.body.removeChild(infoOverlay);
+    });
+    
+    // 오버레이 클릭 시 닫기
+    infoOverlay.addEventListener('click', function(e) {
+        if (e.target === infoOverlay) {
+            document.body.removeChild(infoOverlay);
+        }
+    });
+    
+    // 정보 내용 생성
+    const infoContent = document.createElement('div');
+    infoContent.innerHTML = `
+        <h3 style="margin-top: 0; margin-bottom: 25px; color: #333; font-size: 1.5rem;">사진 정보</h3>
+        
+        <div style="display: grid; gap: 15px;">
+            <div style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                <strong style="color: #555; display: block; margin-bottom: 5px;">이미지 이름:</strong>
+                <span style="color: #333;">${dataset.imageName || 'N/A'}</span>
+            </div>
+            
+            <div style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                <strong style="color: #555; display: block; margin-bottom: 5px;">설명:</strong>
+                <span style="color: #333;">${dataset.imageContent || 'N/A'}</span>
+            </div>
+            
+            <div style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                <strong style="color: #555; display: block; margin-bottom: 5px;">촬영 날짜:</strong>
+                <span style="color: #333;">${dataset.imageDate || 'N/A'}</span>
+            </div>
+            
+            <div style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                <strong style="color: #555; display: block; margin-bottom: 5px;">등록 날짜:</strong>
+                <span style="color: #333;">${dataset.imageRegDate || 'N/A'}</span>
+            </div>
+            
+            <div style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                <strong style="color: #555; display: block; margin-bottom: 5px;">위치:</strong>
+                <span style="color: #333;">${dataset.sdName || 'N/A'} ${dataset.sggName || ''}</span>
+            </div>
+            
+            <div style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                <strong style="color: #555; display: block; margin-bottom: 5px;">좌표:</strong>
+                <span style="color: #333;">위도: ${dataset.latitude || 'N/A'}, 경도: ${dataset.longitude || 'N/A'}</span>
+            </div>
+            
+            <div style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                <strong style="color: #555; display: block; margin-bottom: 5px;">공개 설정:</strong>
+                <span style="color: #333;">${dataset.isPublic === '1' ? '공개' : '비공개'}</span>
+            </div>
+            
+            <div style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                <strong style="color: #555; display: block; margin-bottom: 5px;">이미지 ID:</strong>
+                <span style="color: #333;">${dataset.imageId || 'N/A'}</span>
+            </div>
+            
+            <div>
+                <strong style="color: #555; display: block; margin-bottom: 5px;">사용자 ID:</strong>
+                <span style="color: #333;">${dataset.userId || 'N/A'}</span>
+            </div>
+        </div>
+    `;
+    
+    infoPanel.appendChild(closeButton);
+    infoPanel.appendChild(infoContent);
+    infoOverlay.appendChild(infoPanel);
+    
+    document.body.appendChild(infoOverlay);
+}
