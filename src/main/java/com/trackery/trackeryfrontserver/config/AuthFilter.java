@@ -152,14 +152,23 @@ public class AuthFilter extends OncePerRequestFilter {
 				JsonNode rootNode = objectMapper.readTree(profileResponse.getBody());
 				JsonNode dataNode = rootNode.get("data");
 
-				UserProfileViewModel profile = new UserProfileViewModel(
-					dataNode.get("userId").asLong(),
-					dataNode.get("userName").asText(),
-					dataNode.get("nickname").asText(),
-					dataNode.get("userProfile").asText()
-				);
+				if (dataNode != null) {
+					JsonNode userIdNode = dataNode.get("userId");
+					JsonNode userNameNode = dataNode.get("userName");
+					JsonNode nicknameNode = dataNode.get("nickname");
+					JsonNode userProfileNode = dataNode.get("userProfile");
 
-				request.getSession().setAttribute("userProfile", profile);
+					if (userIdNode != null && userNameNode != null && nicknameNode != null) {
+						UserProfileViewModel profile = new UserProfileViewModel(
+							userIdNode.asLong(),
+							userNameNode.asText(),
+							nicknameNode.asText(),
+							userProfileNode != null ? userProfileNode.asText() : null
+						);
+
+						request.getSession().setAttribute("userProfile", profile);
+					}
+				}
 			}
 		} catch (Exception e) {
 			log.error("프로필 정보 가져오기 실패", e);

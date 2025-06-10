@@ -111,7 +111,7 @@ function setupOAuthButtons() {
                 window.addEventListener('message', function (event) {
                     if (event.data && event.data.oauthComplete) {
                         // 인증 완료 시 temporal-main 페이지로 이동
-                        window.location.href = '/register/temporal-main';
+                        window.location.href = '/home';
                     }
                 });
             });
