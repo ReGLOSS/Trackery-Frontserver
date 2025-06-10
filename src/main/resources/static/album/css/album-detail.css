@@ -7,7 +7,7 @@
     height: 100%;
     top: 0;
     left: 0;
-    display: none;
+    display: flex;
     padding-left: 20rem;
 }
 
@@ -16,7 +16,7 @@
     flex: 1;
 }
 
-.album-detail-right-sidebar-container {
+.album-modal-sidebar-container {
     border: 1px solid blue;
     background-color: #d3d9e8;
     width: 37.5%;
@@ -103,6 +103,17 @@
 
 .album-detail-gallery {
     border: 1px solid yellow;
+    flex: 2;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: min-content;
+    background-color: lightgray;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.album-detail-edit-image-my-images-gallery {
+    border: 1px solid mediumvioletred;
     flex: 2;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -235,5 +246,90 @@
 
 .cancel-btn:hover {
     background-color: #5a6268;
+}
+
+.album-detail-gallery-nav-container {
+    border: 1px solid green;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    width: 100%;
+    padding: 10px 20px;
+}
+
+#album-image-edit-btn {
+    /* justify-self는 flexbox에서 작동하지 않으므로 제거 */
+    transition: all 0.3s ease;
+}
+
+/* 이미지 편집 모드 스타일 */
+#album-image-edit-btn.editing-active {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+#album-image-edit-btn.editing-active:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+/* 이미지 편집 모드에서 갤러리 카드 스타일 */
+.gallery-card.edit-mode {
+    cursor: default;
+}
+
+.gallery-card.edit-mode:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* 체크박스 호버 효과 */
+.image-checkbox:hover {
+    transform: scale(1.1);
+    background-color: rgba(0, 123, 255, 0.7) !important;
+}
+
+/* 선택된 이미지 카드 스타일 (편집 모드) */
+.gallery-card.edit-mode.selected {
+    border: 3px solid #007bff;
+    box-shadow: 0 0 15px rgba(0, 123, 255, 0.4);
+}
+
+.gallery-card.edit-mode.selected:hover {
+    border: 3px solid #0056b3;
+    box-shadow: 0 0 20px rgba(0, 123, 255, 0.6);
+}
+
+/* 체크박스 애니메이션 */
+.image-checkbox {
+    animation: checkboxFadeIn 0.3s ease;
+}
+
+@keyframes checkboxFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* 체크 아이콘 애니메이션 */
+.check-icon {
+    transition: all 0.2s ease;
+}
+
+/* 이미지 편집 모드에서 갤러리 전체 스타일 조정 */
+.album-detail-gallery.image-edit-mode {
+    gap: 2px;
+}
+
+/* 편집 모드 활성화 시 전체 갤러리 컨테이너 스타일 */
+.album-detail-gallery-container.edit-mode-active {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 5px;
 }
 

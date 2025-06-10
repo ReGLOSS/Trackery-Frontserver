@@ -62,7 +62,7 @@
 
         </div>
 <!--        우측 사이드탭 컨테이너-->
-        <div class="album-detail-right-sidebar-container">
+        <div class="album-modal-sidebar-container">
             <div class="album-detail-info">
                 <div class="album-header">
                     <p class="album-detail-title">앨범 제목</p>
@@ -88,9 +88,17 @@
                 </div>
             </div>
 
-            <div class="album-detail-gallery">
+            <div class="album-detail-gallery-container">
+                <div class="album-detail-gallery-nav-container">
+<!--                    TODO 페이지네이션 구현 후 관련 버튼 추가 필요-->
+                    <button id="album-image-edit-btn" class="btn btn-dark">이미지 추가/삭제</button>
+                </div>
 
+                <div class="album-detail-edit-image-my-images-gallery"></div>
+
+                <div class="album-detail-gallery"></div>
             </div>
+
         </div>
     </div>
 </section>
