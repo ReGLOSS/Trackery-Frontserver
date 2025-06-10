@@ -39,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
  * 25. 3. 26.		durururuk		필터 작성
  * 25. 3. 26.		durururuk		메서드 분리
  * 25. 3. 26.		durururuk		주석 작성
+ * 25. 6. 11.		inari			프로필정보 가져오기 수정
  */
 @Slf4j
 @RequiredArgsConstructor
