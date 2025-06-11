@@ -138,6 +138,29 @@ const ApiService = {
         }
 
         return response.json();
+    },
+
+    //앨범에서 이미지 삭제
+    async removeAlbumImage(albumId, imageIdList) {
+        const response = await fetch("/api/albums/images", {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                albumId: albumId,
+                imageIdList: imageIdList
+            })
+        })
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            const errorMessage = errorData.message || `서버 오류 (${response.status})`;
+            throw new Error(errorMessage);
+        }
+
+        return response.json();
     }
 };
 
@@ -735,7 +758,7 @@ const ImageEditMode = {
                 // TODO: 이미지 삭제 API도 필요한 경우 추가
                 if (State.toRemoveImageIds.length > 0) {
                     console.log('삭제할 이미지 IDs:', State.toRemoveImageIds);
-                    // await ApiService.removeAlbumImage(State.currentAlbumId, State.toRemoveImageIds);
+                    await ApiService.removeAlbumImage(State.currentAlbumId, State.toRemoveImageIds);
                 }
                 
                 UiUpdater.showNotification(`${State.toAddImageIds.length}개 이미지가 추가되었습니다.`, 'success');
