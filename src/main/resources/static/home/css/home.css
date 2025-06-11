@@ -1,0 +1,67 @@
+.map-container {
+    max-width: 1200px;
+}
+
+.map-display svg {
+    max-width: 100%;
+    height: auto;
+    cursor: pointer;
+}
+
+.region-path {
+    transition: fill 0.3s ease, stroke-width 0.3s ease;
+}
+
+.region-path:hover {
+    fill: #007bff !important;
+    stroke-width: 3px;
+}
+
+.region-path.selected {
+    fill: #28a745 !important;
+    stroke-width: 3px;
+}
+
+#back-btn {
+    min-width: 100px;
+}
+
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 400px;
+    font-size: 18px;
+    color: #6c757d;
+}
+
+.selected-region-display {
+    background-color: #e7f3ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 6px;
+    padding: 8px 16px;
+    margin-top: 10px;
+    display: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.selected-region-label {
+    color: #0066cc;
+    font-size: 14px;
+}
+
+.selected-region-display strong {
+    color: #003d7a;
+    font-size: 16px;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
