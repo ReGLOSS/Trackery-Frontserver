@@ -18,7 +18,9 @@ const DOM = {
     closeBtn: document.getElementById("album-detail-close-btn"),
     editBtn: document.getElementById("album-edit-btn"),
     imageEditBtn: document.getElementById("album-image-edit-btn"),
-    navButtons: document.querySelectorAll('.nav-btn')
+    navButtons: document.querySelectorAll('.nav-btn'),
+    smallAlbumCreateBtn: document.querySelector('.small-album-create-btn'),
+    bigAlbumCreateBtn: document.querySelector('.big-album-create-btn')
 };
 
 // 상태 관리
@@ -29,7 +31,8 @@ const State = {
     selectedImages: new Set(),
     originalAlbumData: {},
     toAddImageIds: [],
-    toRemoveImageIds: []
+    toRemoveImageIds: [],
+    isCreatingMode: false
 };
 
 // 상수 정의
@@ -98,6 +101,30 @@ const ApiService = {
                 albumId: albumId,
                 albumTitle: albumTitle,
                 albumDescription: albumDescription
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            const errorMessage = errorData.message || `서버 오류 (${response.status})`;
+            throw new Error(errorMessage);
+        }
+
+        return response.json();
+    },
+
+    // 앨범 생성
+    async createAlbum(albumTitle, albumDescription, isPublic = 0) {
+        const response = await fetch("/api/albums", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                albumTitle: albumTitle,
+                albumDescription: albumDescription,
+                isPublic: isPublic
             })
         });
 
@@ -569,31 +596,69 @@ const EditMode = {
             return;
         }
 
-        if (!State.currentAlbumId) {
-            UiUpdater.showNotification('앨범 ID를 찾을 수 없습니다.', 'error');
-            return;
-        }
-
         try {
-            await ApiService.updateAlbumInfo(State.currentAlbumId, newTitle, newDescription);
-            UiUpdater.showNotification('앨범 정보가 업데이트되었습니다.', 'success');
-            this.endEditMode();
+            if (State.isCreatingMode) {
+                // 앨범 생성 모드
+                UiUpdater.showNotification('앨범을 생성하는 중...', 'info');
+                const response = await ApiService.createAlbum(newTitle, newDescription);
+                
+                // 생성된 앨범 ID 받아오기
+                const newAlbumId = response.data.albumId || response.albumId;
+                
+                UiUpdater.showNotification('새 앨범이 생성되었습니다.', 'success');
+                
+                // 편집 모드 종료
+                this.endEditMode();
+                
+                // 바로 생성된 앨범의 상세 페이지로 이동
+                await EventHandlers.loadAlbumDetail(newAlbumId);
+                
+                // 앨범 목록도 새로고침 (백그라운드에서)
+                EventHandlers.loadAlbumList().catch(console.error);
+                
+            } else {
+                // 앨범 편집 모드
+                if (!State.currentAlbumId) {
+                    UiUpdater.showNotification('앨범 ID를 찾을 수 없습니다.', 'error');
+                    return;
+                }
+                
+                await ApiService.updateAlbumInfo(State.currentAlbumId, newTitle, newDescription);
+                UiUpdater.showNotification('앨범 정보가 업데이트되었습니다.', 'success');
+                this.endEditMode();
+            }
         } catch (error) {
-            console.error('앨범 업데이트 중 오류:', error);
-            UiUpdater.showNotification(`업데이트 실패: ${error.message}`, 'error');
+            console.error('앨범 저장 중 오류:', error);
+            UiUpdater.showNotification(`저장 실패: ${error.message}`, 'error');
         }
     },
 
     // 편집 취소
     cancelEdit() {
-        DOM.albumDetailTitle.textContent = State.originalAlbumData.title;
-        DOM.albumDetailDescription.textContent = State.originalAlbumData.description;
-        this.endEditMode();
+        if (State.isCreatingMode) {
+            // 생성 모드에서는 모달 닫기
+            EventHandlers.closeModal();
+            UiUpdater.showNotification('앨범 생성이 취소되었습니다.', 'info');
+        } else {
+            // 편집 모드에서는 원본 데이터로 복원
+            DOM.albumDetailTitle.textContent = State.originalAlbumData.title;
+            DOM.albumDetailDescription.textContent = State.originalAlbumData.description;
+            this.endEditMode();
+        }
     },
 
     // 편집 모드 종료
     endEditMode() {
         State.isEditingMode = false;
+        
+        // 생성 모드였다면 이미지 편집 버튼 다시 보이기
+        if (State.isCreatingMode) {
+            if (DOM.imageEditBtn) {
+                DOM.imageEditBtn.style.display = 'block';
+            }
+        }
+        
+        State.isCreatingMode = false;
 
         // 편집 가능 해제
         DOM.albumDetailTitle.contentEditable = false;
@@ -695,7 +760,7 @@ const ImageEditMode = {
         State.toRemoveImageIds = [];
 
         // 버튼 텍스트 변경
-        DOM.imageEditBtn.textContent = '편집 완료';
+        DOM.imageEditBtn.textContent = '저장';
         DOM.imageEditBtn.classList.add('editing-active');
 
         // 내 이미지 섹션 표시
@@ -1012,6 +1077,36 @@ const Navigation = {
 // 이벤트 핸들러 모듈
 // ============================================================
 const EventHandlers = {
+    // 앨범 생성 모달 열기
+    openAlbumCreateModal() {
+        console.log("앨범 생성 모달 열기");
+        
+        // 상태 초기화
+        State.isCreatingMode = true;
+        State.currentAlbumId = null;
+        
+        // 모달 기본 정보 설정
+        DOM.albumDetailTitle.textContent = '앨범 제목';
+        DOM.albumDetailDescription.textContent = '앨범 설명';
+        DOM.albumDetailPublic.textContent = '비공개';
+        DOM.albumDetailImageCount.textContent = '사진 0장';
+        
+        // 이미지 컨테이너 초기화
+        DOM.albumImageContainer.innerHTML = '';
+        DOM.albumDetailGallery.innerHTML = '';
+        
+        // 이미지 편집 버튼 숨기기 (생성 모드에서는 불필요)
+        DOM.imageEditBtn.style.display = 'none';
+        
+        // 모달 표시
+        DOM.albumDetailContainer.style.display = "flex";
+        
+        // 바로 편집 모드로 진입
+        EditMode.startEditMode();
+        
+        UiUpdater.showNotification('새 앨범을 생성합니다.', 'info');
+    },
+
     // 앨범 목록 로드
     async loadAlbumList() {
         try {
@@ -1159,10 +1254,16 @@ const EventHandlers = {
             EditMode.endEditMode();
         }
 
+        // 이미지 편집 버튼 다시 보이기
+        if (DOM.imageEditBtn) {
+            DOM.imageEditBtn.style.display = 'block';
+        }
+
         // 상태 변수 초기화
         State.currentAlbumId = null;
         State.originalAlbumData = {};
         State.selectedImages.clear();
+        State.isCreatingMode = false;
 
         console.log("모달 상태 초기화 완료");
     },
@@ -1201,6 +1302,21 @@ function initialize() {
         DOM.imageEditBtn.addEventListener("click", function(e) {
             e.preventDefault();
             ImageEditMode.toggleImageEditMode();
+        });
+    }
+
+    // 앨범 생성 버튼 이벤트 리스너
+    if (DOM.smallAlbumCreateBtn) {
+        DOM.smallAlbumCreateBtn.addEventListener("click", function(e) {
+            e.preventDefault();
+            EventHandlers.openAlbumCreateModal();
+        });
+    }
+
+    if (DOM.bigAlbumCreateBtn) {
+        DOM.bigAlbumCreateBtn.addEventListener("click", function(e) {
+            e.preventDefault();
+            EventHandlers.openAlbumCreateModal();
         });
     }
 
