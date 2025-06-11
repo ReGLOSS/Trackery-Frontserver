@@ -461,23 +461,3 @@
     }
 }
 
-/* 내 이미지 섹션 특별 스타일 */
-.my-images-section .gallery-header {
-    background-color: #e8f5e8;
-    border-bottom-color: #c3e6cb;
-}
-
-.my-images-section .gallery-title {
-    color: #155724;
-}
-
-/* 앨범 이미지 섹션 특별 스타일 */
-.album-images-section .gallery-header {
-    background-color: #f8d7da;
-    border-bottom-color: #f1b0b7;
-}
-
-.album-images-section .gallery-title {
-    color: #721c24;
-}
-

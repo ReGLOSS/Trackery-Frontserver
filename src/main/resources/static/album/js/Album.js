@@ -27,7 +27,9 @@ const State = {
     isEditingMode: false,
     isImageEditingMode: false,
     selectedImages: new Set(),
-    originalAlbumData: {}
+    originalAlbumData: {},
+    toAddImageIds: [],
+    toRemoveImageIds: []
 };
 
 // 상수 정의
@@ -113,6 +115,29 @@ const ApiService = {
         const response = await fetch(s3Url);
         const blob = await response.blob();
         return URL.createObjectURL(blob);
+    },
+
+    // 앨범에 이미지 추가
+    async addAlbumImage(albumId, imageIdList) {
+        const response = await fetch("/api/albums/images", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                albumId: albumId,
+                imageIdList: imageIdList
+            })
+        })
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            const errorMessage = errorData.message || `서버 오류 (${response.status})`;
+            throw new Error(errorMessage);
+        }
+
+        return response.json();
     }
 };
 
@@ -182,13 +207,54 @@ const UiUpdater = {
 
         DOM.albumDetailEditMyImagesGallery.innerHTML = '';
 
+        // 현재 앨범에 있는 이미지 ID들 수집
+        const albumImageIds = this.getCurrentAlbumImageIds();
+        console.log('현재 앨범 이미지 IDs:', albumImageIds);
+        console.log('내 이미지 목록 개수:', imageList.length);
+
+        let addedCount = 0;
+        let excludedCount = 0;
+
         for (const image of imageList) {
+            const imageIdStr = String(image.imageId); // 문자열로 통일
+            console.log(`처리 중인 이미지 ID: ${imageIdStr} (원본: ${image.imageId})`);
+            
+            // 이미 앨범에 있는 이미지는 건너뛰기
+            if (albumImageIds.includes(imageIdStr)) {
+                console.log(`이미지 ID ${imageIdStr}는 이미 앨범에 있으므로 제외`);
+                excludedCount++;
+                continue;
+            }
+
             const blobUrl = await ApiService.convertS3UrlToBlobUrl(image.imageUrl);
             if (blobUrl) {
                 const galleryCard = this.createGalleryCard(image, blobUrl, 'myImages');
                 DOM.albumDetailEditMyImagesGallery.appendChild(galleryCard);
+                addedCount++;
+                console.log(`이미지 ID ${imageIdStr} 추가됨`);
             }
         }
+        
+        console.log(`내 이미지 갤러리: ${addedCount}개 추가, ${excludedCount}개 제외`);
+    },
+
+    // 현재 앨범에 있는 이미지 ID들 가져오기
+    getCurrentAlbumImageIds() {
+        const albumGalleryCards = document.querySelectorAll('.album-detail-gallery .gallery-card');
+        const imageIds = [];
+        
+        albumGalleryCards.forEach(card => {
+            const imageId = card.dataset.imageId;
+            if (imageId) {
+                // 문자열로 통일
+                imageIds.push(String(imageId));
+            }
+        });
+        
+        console.log('앨범 갤러리 카드 수:', albumGalleryCards.length);
+        console.log('수집된 이미지 IDs:', imageIds);
+        
+        return imageIds;
     },
 
     // 갤러리 카드 생성
@@ -216,15 +282,13 @@ const UiUpdater = {
 
         galleryCard.innerHTML = `<img src="${blobUrl}" alt="${image.imageName}">`;
         
-        // 클릭 이벤트 추가 (이미지 편집 모드가 아닐 때만, 그리고 앨범 이미지만)
-        if (type === 'album') {
-            galleryCard.addEventListener('click', function() {
-                // 이미지 편집 모드에서는 메인 뷰 변경 비활성화
-                if (!State.isImageEditingMode) {
-                    ImageViewer.showImageInMainView(this);
-                }
-            });
-        }
+        // 클릭 이벤트 추가 (모든 이미지 타입에 대해)
+        galleryCard.addEventListener('click', function(e) {
+            // 체크박스 클릭이 아닐 때만 메인 뷰 업데이트
+            if (!e.target.closest('.image-checkbox')) {
+                ImageViewer.showImageInMainView(this);
+            }
+        });
 
         return galleryCard;
     },
@@ -514,10 +578,6 @@ const EditMode = {
         DOM.albumDetailDescription.contentEditable = false;
         DOM.albumDetailDescription.classList.remove('editing');
 
-        // 이벤트 리스너 제거
-        DOM.albumDetailTitle.removeEventListener('keydown', this.handleEditKeydown);
-        DOM.albumDetailDescription.removeEventListener('keydown', this.handleEditKeydown);
-
         // 편집 컨트롤 제거
         const editControls = document.querySelector('.edit-controls');
         if (editControls) {
@@ -599,7 +659,7 @@ const ImageEditMode = {
         if (!State.isImageEditingMode) {
             await this.startImageEditMode();
         } else {
-            this.endImageEditMode();
+            await this.endImageEditMode();
         }
     },
 
@@ -608,6 +668,8 @@ const ImageEditMode = {
         console.log("이미지 편집 모드 시작");
         State.isImageEditingMode = true;
         State.selectedImages.clear();
+        State.toAddImageIds = [];
+        State.toRemoveImageIds = [];
 
         // 버튼 텍스트 변경
         DOM.imageEditBtn.textContent = '편집 완료';
@@ -656,10 +718,43 @@ const ImageEditMode = {
     },
 
     // 이미지 편집 모드 종료
-    endImageEditMode() {
+    async endImageEditMode() {
         console.log("이미지 편집 모드 종료");
+        
+        try {
+            // 변경사항이 있는 경우에만 API 호출
+            if (State.toAddImageIds.length > 0 || State.toRemoveImageIds.length > 0) {
+                UiUpdater.showNotification('변경사항을 저장하는 중...', 'info');
+                
+                // 이미지 추가
+                if (State.toAddImageIds.length > 0) {
+                    console.log('추가할 이미지 IDs:', State.toAddImageIds);
+                    await ApiService.addAlbumImage(State.currentAlbumId, State.toAddImageIds);
+                }
+                
+                // TODO: 이미지 삭제 API도 필요한 경우 추가
+                if (State.toRemoveImageIds.length > 0) {
+                    console.log('삭제할 이미지 IDs:', State.toRemoveImageIds);
+                    // await ApiService.removeAlbumImage(State.currentAlbumId, State.toRemoveImageIds);
+                }
+                
+                UiUpdater.showNotification(`${State.toAddImageIds.length}개 이미지가 추가되었습니다.`, 'success');
+                
+                // 앨범 상세 정보 다시 로드하여 UI 업데이트
+                await EventHandlers.loadAlbumDetail(State.currentAlbumId);
+            } else {
+                UiUpdater.showNotification('변경사항이 없습니다.', 'info');
+            }
+        } catch (error) {
+            console.error('이미지 편집 저장 중 오류:', error);
+            UiUpdater.showNotification(`저장 실패: ${error.message}`, 'error');
+        }
+        
+        // 상태 초기화
         State.isImageEditingMode = false;
         State.selectedImages.clear();
+        State.toAddImageIds = [];
+        State.toRemoveImageIds = [];
 
         // 버튼 텍스트 변경
         DOM.imageEditBtn.textContent = '이미지 추가/삭제';
@@ -673,8 +768,6 @@ const ImageEditMode = {
             DOM.albumDetailEditMyImagesGallery.innerHTML = '';
         }
         GalleryToggle.hideMyImagesSection();
-
-        UiUpdater.showNotification('이미지 편집 모드가 종료되었습니다.', 'info');
     },
 
     // 모든 갤러리에 체크박스 추가
@@ -783,7 +876,7 @@ const ImageEditMode = {
 
         // 클릭 이벤트 추가
         checkboxContainer.addEventListener('click', (e) => {
-            e.stopPropagation(); // 갤러리 카드 클릭 이벤트 방지
+            // 체크박스 토글
             this.toggleImageSelection(galleryCard, checkboxContainer);
         });
 
@@ -797,6 +890,8 @@ const ImageEditMode = {
         const cardType = galleryCard.dataset.cardType || 'album';
         const isMyImage = cardType === 'myImages';
 
+        const targetArray = isMyImage ? State.toAddImageIds : State.toRemoveImageIds;
+
         if (State.selectedImages.has(imageId)) {
             // 선택 해제
             State.selectedImages.delete(imageId);
@@ -804,10 +899,19 @@ const ImageEditMode = {
             checkboxContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
             checkIcon.style.display = 'none';
             console.log(`이미지 ${imageId} 선택 해제 (${isMyImage ? '내 이미지' : '앨범 이미지'})`);
+
+            const index = targetArray.indexOf(imageId);
+            if (index > -1) {
+                targetArray.splice(index, 1);
+            }
         } else {
             // 선택
             State.selectedImages.add(imageId);
             galleryCard.classList.add('selected');
+
+            if (!targetArray.includes(imageId)) {
+                targetArray.push(imageId);
+            }
             
             // 타입에 따라 다른 배경색 설정
             if (isMyImage) {
@@ -821,6 +925,8 @@ const ImageEditMode = {
         }
 
         console.log(`현재 선택된 이미지 수: ${State.selectedImages.size}`);
+        console.log('추가할 이미지:', State.toAddImageIds);
+        console.log('제거할 이미지:', State.toRemoveImageIds);
     }
 };
 
