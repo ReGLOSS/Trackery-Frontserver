@@ -17,10 +17,14 @@ const DOM = {
     albumDetailImageCount: document.querySelector('.album-detail-image-count'),
     closeBtn: document.getElementById("album-detail-close-btn"),
     editBtn: document.getElementById("album-edit-btn"),
+    albumChangePublicBtn: document.getElementById("album-change-public-btn"),
+    albumDeleteBtn: document.getElementById("album-delete-btn"),
     imageEditBtn: document.getElementById("album-image-edit-btn"),
     navButtons: document.querySelectorAll('.nav-btn'),
     smallAlbumCreateBtn: document.querySelector('.small-album-create-btn'),
-    bigAlbumCreateBtn: document.querySelector('.big-album-create-btn')
+    bigAlbumCreateBtn: document.querySelector('.big-album-create-btn'),
+    noAlbumContainer: document.querySelector('.no-album-container'),
+    albumExistsContainer: document.querySelector('.album-exists-container'),
 };
 
 // 상태 관리
@@ -47,6 +51,14 @@ const CONSTANTS = {
 // API 서비스 모듈
 // ============================================================
 const ApiService = {
+    async responseErrorHandler(response) {
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            const errorMessage = errorData.message || `서버 오류 (${response.status})`;
+            throw new Error(errorMessage);
+        }
+    },
+
     // 내 앨범 목록 조회
     async fetchMyAlbums() {
         const response = await fetch("/api/albums/me", {
@@ -54,9 +66,7 @@ const ApiService = {
             credentials: "include"
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        await this.responseErrorHandler(response);
 
         return response.json();
     },
@@ -68,9 +78,7 @@ const ApiService = {
             credentials: "include"
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        await this.responseErrorHandler(response);
 
         return response.json();
     },
@@ -82,9 +90,7 @@ const ApiService = {
             credentials: "include"
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        await this.responseErrorHandler(response);
 
         return response.json();
     },
@@ -104,11 +110,25 @@ const ApiService = {
             })
         });
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            const errorMessage = errorData.message || `서버 오류 (${response.status})`;
-            throw new Error(errorMessage);
-        }
+        await this.responseErrorHandler(response);
+
+        return response.json();
+    },
+
+    async updateAlbumPublic(albumId, isPublic) {
+        const response = await fetch("/api/albums", {
+            method: "PATCH",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                albumId: albumId,
+                isPublic: isPublic
+            })
+        })
+
+        await this.responseErrorHandler(response);
 
         return response.json();
     },
@@ -128,11 +148,7 @@ const ApiService = {
             })
         });
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            const errorMessage = errorData.message || `서버 오류 (${response.status})`;
-            throw new Error(errorMessage);
-        }
+        await this.responseErrorHandler(response);
 
         return response.json();
     },
@@ -140,6 +156,9 @@ const ApiService = {
     // S3 URL을 Blob URL로 변환
     async convertS3UrlToBlobUrl(s3Url) {
         const response = await fetch(s3Url);
+
+        await this.responseErrorHandler(response);
+
         const blob = await response.blob();
         return URL.createObjectURL(blob);
     },
@@ -158,11 +177,7 @@ const ApiService = {
             })
         })
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            const errorMessage = errorData.message || `서버 오류 (${response.status})`;
-            throw new Error(errorMessage);
-        }
+        await this.responseErrorHandler(response);
 
         return response.json();
     },
@@ -181,11 +196,7 @@ const ApiService = {
             })
         })
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            const errorMessage = errorData.message || `서버 오류 (${response.status})`;
-            throw new Error(errorMessage);
-        }
+        await this.responseErrorHandler(response);
 
         return response.json();
     }
@@ -1124,10 +1135,14 @@ const EventHandlers = {
                 return;
             }
 
-            if (actualData.albumCount <= 0) {
+            // UI 업데이트 로직
+            if (actualData.albumCount === 0) {
+                DOM.noAlbumContainer.style.display = 'flex';
+                DOM.albumExistsContainer.style.display = 'none';
                 console.log("앨범 없음");
-                alert("앨범이 없습니다! 앨범을 만드세요!");
             } else {
+                DOM.noAlbumContainer.style.display = 'none';
+                DOM.albumExistsContainer.style.display = 'flex';
                 UiUpdater.renderAlbumGallery(actualData.albumList);
             }
         } catch (error) {
@@ -1277,6 +1292,45 @@ const EventHandlers = {
         
         // 모달 상태 초기화
         EventHandlers.resetModalState();
+    },
+
+    //앨범 공개 상태 편집
+    async changeAlbumPublicStatus() {
+        try {
+            if (!State.currentAlbumId) {
+                UiUpdater.showNotification('앨범 ID를 찾을 수 없습니다.', 'error');
+                return;
+            }
+
+            const currentAlbum = DOM.albumGallery.querySelector(`[data-album-id="${State.currentAlbumId}"]`);
+            if (!currentAlbum) {
+                UiUpdater.showNotification('앨범 정보를 찾을 수 없습니다.', 'error');
+                return;
+            }
+
+            const currentIsPublic = parseInt(currentAlbum.dataset.isPublic, 10);
+            const newIsPublic = currentIsPublic === 0 ? 1 : 0;
+
+            UiUpdater.showNotification('공개 상태를 변경하는 중...', 'info');
+
+            await ApiService.updateAlbumPublic(State.currentAlbumId, newIsPublic);
+
+            currentAlbum.dataset.isPublic = newIsPublic.toString();
+            DOM.albumDetailPublic.textContent = CONSTANTS.IS_PUBLIC[newIsPublic];
+
+            const statusText = newIsPublic === 1 ? '공개' : '비공개';
+            UiUpdater.showNotification(`앨범이 ${statusText}로 변경되었습니다.`, 'success');
+
+            const activeNavBtn = document.querySelector('.nav-btn.active');
+            if (activeNavBtn) {
+                const currentFilter = activeNavBtn.dataset.filter;
+                Navigation.filterAlbums(currentFilter);
+            }
+
+        } catch (error) {
+            console.error('앨범 공개 상태 변경 중 오류:', error);
+            UiUpdater.showNotification(`공개 상태 변경 실패: ${error.message}`, 'error');
+        }
     }
 };
 
@@ -1318,6 +1372,13 @@ function initialize() {
             e.preventDefault();
             EventHandlers.openAlbumCreateModal();
         });
+    }
+
+    if (DOM.albumChangePublicBtn) {
+        DOM.albumChangePublicBtn.addEventListener("click", function(e) {
+            e.preventDefault();
+            EventHandlers.changeAlbumPublicStatus()
+        })
     }
 
     // 갤러리 토글 기능 초기화

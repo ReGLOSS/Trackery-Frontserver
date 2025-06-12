@@ -14,8 +14,8 @@
     <div class="base-container">
         <!-- 아직 앨범이 없을 때 보일 화면-->
         <div class="no-album-container div-section">
-            <a>아직 앨범이 없습니다. Trackery에서 첫 앨범을 만들어보세요 ㅇㅇ;</a>
-            <br>
+            <p>아직 앨범이 없습니다.</p><br>
+            <p>Trackery에서 앨범을 만들어보세요!</p>
             <button class="btn btn-dark big-album-create-btn">앨범 만들기</button>
         </div>
 
@@ -73,8 +73,8 @@
                                 </span>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="#" id="album-edit-btn">편집</a></li>
-                                <li><a class="dropdown-item" href="#">삭제</a></li>
-                                <li><a class="dropdown-item" href="#">설정</a></li>
+                                <li><a class="dropdown-item" href="#" id="album-change-public-btn">공개 상태 변경</a></li>
+                                <li><a class="dropdown-item" href="#" id="album-delete-btn">삭제</a></li>
                             </ul>
                         </div>
 
@@ -85,6 +85,7 @@
                 <div class="album-detail-meta">
                     <p class="album-detail-image-count">사진 매수</p>
                     <span class="album-detail-is-public">공개 앨범</span>
+                    <hr>
                 </div>
             </div>
 

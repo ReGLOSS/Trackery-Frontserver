@@ -33,8 +33,22 @@
     border: 1px solid gray;
 }
 
+.no-album-container {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+}
+
+.big-album-create-btn {
+    height: 200px;
+    width: 400px;
+    align-items: center;
+}
+
 .album-exists-container {
-    display: flex;
+    display: none;
     flex-direction: column;
     height: 100%;
 }
