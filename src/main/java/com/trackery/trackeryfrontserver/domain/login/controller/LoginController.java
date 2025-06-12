@@ -29,5 +29,4 @@ public class LoginController {
 	public String getFindAccountModalHtml() {
 		return "login/find-account-modal";
 	}
-
 }
