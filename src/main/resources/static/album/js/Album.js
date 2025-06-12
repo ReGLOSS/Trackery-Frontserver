@@ -586,11 +586,11 @@ const ImageViewer = {
         const imageUrl = galleryCard.dataset.imageUrl;
         const imageName = galleryCard.dataset.imageName;
 
-        // 이전 선택 해제
-        const previousSelected = document.querySelector('.gallery-card.selected');
-        if (previousSelected) {
-            previousSelected.classList.remove('selected');
-        }
+        // 이전 선택 해제 (모든 갤러리에서)
+        const previousSelected = document.querySelectorAll('.gallery-card.selected, .my-image-card.selected');
+        previousSelected.forEach(card => {
+            card.classList.remove('selected');
+        });
 
         // 현재 카드 선택
         galleryCard.classList.add('selected');
@@ -995,31 +995,69 @@ const ImageEditMode = {
     // 이미지 편집 모드 시작
     async startImageEditMode() {
         console.log("이미지 편집 모드 시작");
+        
+        // 먼저 로딩 알림 표시
+        UiUpdater.showNotification('이미지 편집 모드를 준비하는 중...', 'info');
+        
         State.isImageEditingMode = true;
         State.selectedImages.clear();
         State.toAddImageIds = [];
         State.toRemoveImageIds = [];
 
-        // 버튼 텍스트 변경
-        DOM.imageEditBtn.textContent = '저장';
+        // 버튼 텍스트 변경 및 비활성화
+        DOM.imageEditBtn.textContent = '준비 중...';
+        DOM.imageEditBtn.disabled = true;
         DOM.imageEditBtn.classList.add('editing-active');
 
-        // 내 이미지 섹션 표시
+        // 내 이미지 섹션을 먼저 보여주되 내용은 숨김
         GalleryToggle.showMyImagesSection();
+        
+        // 갤러리들을 임시로 숨김 (로딩 중에는 보이지 않도록)
+        if (DOM.albumDetailEditMyImagesGallery) {
+            DOM.albumDetailEditMyImagesGallery.style.visibility = 'hidden';
+        }
+        if (DOM.albumDetailGallery) {
+            DOM.albumDetailGallery.style.visibility = 'hidden';
+        }
 
         try {
             // 내 이미지 목록 로드
-            UiUpdater.showNotification('내 이미지를 불러오는 중...', 'info');
             await this.loadMyImages();
             
-            // 모든 갤러리 카드에 체크박스 추가
+            // 모든 갤러리 카드에 체크박스 추가 (백그라운드에서)
             this.addCheckboxesToAllGalleries();
+            
+            // 모든 준비 완료 후 갤러리 다시 보이기
+            if (DOM.albumDetailEditMyImagesGallery) {
+                DOM.albumDetailEditMyImagesGallery.style.visibility = 'visible';
+            }
+            if (DOM.albumDetailGallery) {
+                DOM.albumDetailGallery.style.visibility = 'visible';
+            }
 
+            // 버튼 활성화 및 텍스트 변경
+            DOM.imageEditBtn.textContent = '저장';
+            DOM.imageEditBtn.disabled = false;
+
+            // 성공 알림
             UiUpdater.showNotification('이미지 편집 모드가 시작되었습니다.', 'success');
+            
         } catch (error) {
             console.error('내 이미지 로드 중 오류:', error);
             UiUpdater.showNotification('내 이미지를 불러오는 중 오류가 발생했습니다.', 'error');
-            // 오류 발생 시 편집 모드 종료
+            
+            // 오류 발생 시 갤러리 다시 보이기 및 편집 모드 종료
+            if (DOM.albumDetailEditMyImagesGallery) {
+                DOM.albumDetailEditMyImagesGallery.style.visibility = 'visible';
+            }
+            if (DOM.albumDetailGallery) {
+                DOM.albumDetailGallery.style.visibility = 'visible';
+            }
+            
+            // 버튼 상태 복원
+            DOM.imageEditBtn.textContent = '이미지 추가/삭제';
+            DOM.imageEditBtn.disabled = false;
+            
             this.endImageEditMode();
         }
     },
@@ -1169,8 +1207,8 @@ const ImageEditMode = {
                 checkbox.remove();
             }
             
-            // 카드에서 편집 모드 클래스 제거
-            card.classList.remove('edit-mode', 'selected');
+            // 카드에서 편집 모드 관련 클래스들 모두 제거
+            card.classList.remove('edit-mode', 'selected', 'checkbox-selected');
         });
     },
 
@@ -1252,7 +1290,7 @@ const ImageEditMode = {
         if (State.selectedImages.has(imageId)) {
             // 선택 해제
             State.selectedImages.delete(imageId);
-            galleryCard.classList.remove('selected');
+            galleryCard.classList.remove('checkbox-selected'); // 체크박스 선택 스타일 제거
             checkboxContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
             checkIcon.style.display = 'none';
             console.log(`이미지 ${imageId} 선택 해제 (${isMyImage ? '내 이미지' : '앨범 이미지'})`);
@@ -1264,7 +1302,7 @@ const ImageEditMode = {
         } else {
             // 선택
             State.selectedImages.add(imageId);
-            galleryCard.classList.add('selected');
+            galleryCard.classList.add('checkbox-selected'); // 체크박스 선택 스타일 추가
 
             if (!targetArray.includes(imageId)) {
                 targetArray.push(imageId);
