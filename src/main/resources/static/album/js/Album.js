@@ -51,6 +51,7 @@ const CONSTANTS = {
 // API 서비스 모듈
 // ============================================================
 const ApiService = {
+    //2XX 응답이 아니면 에러 발생하게 해주는 에러 핸들러
     async responseErrorHandler(response) {
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
@@ -67,7 +68,6 @@ const ApiService = {
         });
 
         await this.responseErrorHandler(response);
-
         return response.json();
     },
 
@@ -79,7 +79,6 @@ const ApiService = {
         });
 
         await this.responseErrorHandler(response);
-
         return response.json();
     },
 
@@ -91,7 +90,6 @@ const ApiService = {
         });
 
         await this.responseErrorHandler(response);
-
         return response.json();
     },
 
@@ -111,10 +109,10 @@ const ApiService = {
         });
 
         await this.responseErrorHandler(response);
-
         return response.json();
     },
 
+    // 앨범 공개 상태 변경
     async updateAlbumPublic(albumId, isPublic) {
         const response = await fetch("/api/albums", {
             method: "PATCH",
@@ -129,7 +127,6 @@ const ApiService = {
         })
 
         await this.responseErrorHandler(response);
-
         return response.json();
     },
 
@@ -149,7 +146,6 @@ const ApiService = {
         });
 
         await this.responseErrorHandler(response);
-
         return response.json();
     },
 
@@ -178,7 +174,6 @@ const ApiService = {
         })
 
         await this.responseErrorHandler(response);
-
         return response.json();
     },
 
@@ -198,6 +193,17 @@ const ApiService = {
 
         await this.responseErrorHandler(response);
 
+        return response.json();
+    },
+
+    //앨범 삭제
+    async deleteAlbum(albumId) {
+        const response = await fetch("/api/albums?albumId=" + albumId, {
+            method: "DELETE",
+            credentials: "include",
+        })
+
+        await this.responseErrorHandler(response);
         return response.json();
     }
 };
@@ -400,6 +406,163 @@ const UiUpdater = {
                 }, 300);
             }
         }, 3000);
+    },
+
+    // 확인 모달 표시
+    showConfirmModal(title, message, onConfirm, onCancel = null) {
+        return new Promise((resolve) => {
+            // 모달 오버레이 생성
+            const overlay = document.createElement('div');
+            overlay.className = 'confirm-modal-overlay';
+            overlay.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0, 0, 0, 0.7); z-index: 6000; display: flex;
+                align-items: center; justify-content: center; padding: 20px;
+                animation: fadeIn 0.3s ease;
+            `;
+
+            // 모달 컨테이너 생성
+            const modal = document.createElement('div');
+            modal.className = 'confirm-modal';
+            modal.style.cssText = `
+                background: white; border-radius: 12px; padding: 30px;
+                max-width: 480px; width: 100%; position: relative;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                animation: slideInModal 0.3s ease;
+            `;
+
+            // 제목 생성
+            const titleElement = document.createElement('h3');
+            titleElement.style.cssText = `
+                margin: 0 0 20px 0; color: #333; font-size: 1.4rem;
+                font-weight: 600; text-align: center;
+            `;
+            titleElement.textContent = title;
+
+            // 메시지 생성
+            const messageElement = document.createElement('p');
+            messageElement.style.cssText = `
+                margin: 0 0 30px 0; color: #666; font-size: 1rem;
+                line-height: 1.5; text-align: center; white-space: pre-line;
+            `;
+            messageElement.textContent = message;
+
+            // 버튼 컨테이너 생성
+            const buttonContainer = document.createElement('div');
+            buttonContainer.style.cssText = `
+                display: flex; gap: 12px; justify-content: center;
+            `;
+
+            // 취소 버튼
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = '아니오';
+            cancelButton.style.cssText = `
+                padding: 12px 24px; border: 2px solid #6c757d; background: white;
+                color: #6c757d; border-radius: 6px; font-size: 1rem; font-weight: 500;
+                cursor: pointer; transition: all 0.2s ease; min-width: 100px;
+            `;
+
+            // 확인 버튼
+            const confirmButton = document.createElement('button');
+            confirmButton.textContent = '예';
+            confirmButton.style.cssText = `
+                padding: 12px 24px; border: 2px solid #dc3545; background: #dc3545;
+                color: white; border-radius: 6px; font-size: 1rem; font-weight: 500;
+                cursor: pointer; transition: all 0.2s ease; min-width: 100px;
+            `;
+
+            // 버튼 호버 효과
+            cancelButton.addEventListener('mouseenter', () => {
+                cancelButton.style.backgroundColor = '#6c757d';
+                cancelButton.style.color = 'white';
+            });
+            cancelButton.addEventListener('mouseleave', () => {
+                cancelButton.style.backgroundColor = 'white';
+                cancelButton.style.color = '#6c757d';
+            });
+
+            confirmButton.addEventListener('mouseenter', () => {
+                confirmButton.style.backgroundColor = '#c82333';
+                confirmButton.style.borderColor = '#c82333';
+            });
+            confirmButton.addEventListener('mouseleave', () => {
+                confirmButton.style.backgroundColor = '#dc3545';
+                confirmButton.style.borderColor = '#dc3545';
+            });
+
+            // 모달 제거 함수
+            const removeModal = () => {
+                overlay.style.animation = 'fadeIn 0.3s ease reverse';
+                modal.style.animation = 'slideInModal 0.3s ease reverse';
+                setTimeout(() => {
+                    if (overlay.parentNode) {
+                        document.body.removeChild(overlay);
+                    }
+                }, 300);
+            };
+
+            // 이벤트 리스너
+            cancelButton.addEventListener('click', () => {
+                removeModal();
+                if (onCancel) onCancel();
+                resolve(false);
+            });
+
+            confirmButton.addEventListener('click', () => {
+                removeModal();
+                if (onConfirm) onConfirm();
+                resolve(true);
+            });
+
+            // ESC 키로 닫기
+            const handleKeydown = (e) => {
+                if (e.key === 'Escape') {
+                    removeModal();
+                    if (onCancel) onCancel();
+                    resolve(false);
+                    document.removeEventListener('keydown', handleKeydown);
+                }
+            };
+            document.addEventListener('keydown', handleKeydown);
+
+            // 오버레이 클릭으로 닫기
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    removeModal();
+                    if (onCancel) onCancel();
+                    resolve(false);
+                }
+            });
+
+            // 애니메이션 스타일 추가
+            if (!document.querySelector('#confirm-modal-styles')) {
+                const style = document.createElement('style');
+                style.id = 'confirm-modal-styles';
+                style.textContent = `
+                    @keyframes fadeIn {
+                        from { opacity: 0; }
+                        to { opacity: 1; }
+                    }
+                    @keyframes slideInModal {
+                        from { transform: translateY(-50px); opacity: 0; }
+                        to { transform: translateY(0); opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            // DOM에 추가
+            buttonContainer.appendChild(cancelButton);
+            buttonContainer.appendChild(confirmButton);
+            modal.appendChild(titleElement);
+            modal.appendChild(messageElement);
+            modal.appendChild(buttonContainer);
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            // 확인 버튼에 포커스
+            setTimeout(() => confirmButton.focus(), 100);
+        });
     }
 };
 // ============================================================
@@ -1331,6 +1494,50 @@ const EventHandlers = {
             console.error('앨범 공개 상태 변경 중 오류:', error);
             UiUpdater.showNotification(`공개 상태 변경 실패: ${error.message}`, 'error');
         }
+    },
+
+    // 앨범 삭제
+    async deleteAlbum() {
+        try {
+            if (!State.currentAlbumId) {
+                UiUpdater.showNotification('앨범 ID를 찾을 수 없습니다.', 'error');
+                return;
+            }
+
+            // 삭제 확인 모달 표시
+            const albumTitle = DOM.albumDetailTitle.textContent;
+            const title = '앨범 삭제 확인';
+            const message = `정말로 "${albumTitle}" 앨범을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`;
+            
+            const confirmed = await UiUpdater.showConfirmModal(
+                title,
+                message,
+                () => console.log('삭제 확인'),
+                () => console.log('삭제 취소')
+            );
+
+            if (!confirmed) {
+                UiUpdater.showNotification('앨범 삭제가 취소되었습니다.', 'info');
+                return;
+            }
+
+            // 삭제 진행
+            UiUpdater.showNotification('앨범을 삭제하는 중...', 'info');
+
+            await ApiService.deleteAlbum(State.currentAlbumId);
+
+            UiUpdater.showNotification('앨범이 성공적으로 삭제되었습니다.', 'success');
+
+            // 모달 닫기
+            this.closeModal();
+
+            // 앨범 목록 새로고침
+            await this.loadAlbumList();
+
+        } catch (error) {
+            console.error('앨범 삭제 중 오류:', error);
+            UiUpdater.showNotification(`앨범 삭제 실패: ${error.message}`, 'error');
+        }
     }
 };
 
@@ -1379,6 +1586,13 @@ function initialize() {
             e.preventDefault();
             EventHandlers.changeAlbumPublicStatus()
         })
+    }
+
+    if (DOM.albumDeleteBtn) {
+        DOM.albumDeleteBtn.addEventListener("click", function(e) {
+            e.preventDefault();
+            EventHandlers.deleteAlbum();
+        });
     }
 
     // 갤러리 토글 기능 초기화
