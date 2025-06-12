@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 25. 02. 06.        narilee       최초 생성
+ * 25. 06. 12.        narilee       /docs 주석 추가
  */
 @Configuration
 @EnableWebSecurity
@@ -32,7 +33,7 @@ public class SecurityConfig {
 
 	private static final String[] PUBLIC_URIS = {"/register/**", "/login/**", "/", "/resources/**", "/css/**", "/js/**",
 		"/images/**", "/error", "/api/**", "/icons/**", "/module/**", "/error", "/users/oauth/**", "/oauth/**",
-		"/oauth-account", "/oauth-redirect/**", "/maps/**"};
+		"/oauth-account", "/oauth-redirect/**", "/maps/**", "/docs/**"};
 
 	/**
 	 * Spring Security 필터 체인을 구성합니다.

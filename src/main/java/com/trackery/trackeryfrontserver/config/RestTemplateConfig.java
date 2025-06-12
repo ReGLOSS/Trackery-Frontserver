@@ -1,6 +1,8 @@
 package com.trackery.trackeryfrontserver.config;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Arrays;
 
 import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.config.RequestConfig;
@@ -11,6 +13,7 @@ import org.apache.hc.core5.util.Timeout;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
 import com.trackery.trackeryfrontserver.domain.proxy.HttpClientErrorExceptionHandler;
@@ -27,6 +30,7 @@ import com.trackery.trackeryfrontserver.domain.proxy.HttpClientErrorExceptionHan
  * -----------------------------------------------------------
  * 25. 02. 06.        narilee       최초 생성
  * 25. 02. 19.        narilee       주석 추가
+ * 25. 06. 12.        narilee       UTF-8 인코딩 설정 추가
  */
 @Configuration
 public class RestTemplateConfig {
@@ -56,6 +60,12 @@ public class RestTemplateConfig {
 
 		RestTemplate restTemplate = new RestTemplate(factory);
 		restTemplate.setErrorHandler(errorHandler);
+
+		// UTF-8 인코딩을 위한 StringHttpMessageConverter 설정
+		StringHttpMessageConverter stringConverter = new StringHttpMessageConverter(StandardCharsets.UTF_8);
+		stringConverter.setWriteAcceptCharset(false);
+		restTemplate.getMessageConverters().removeIf(converter -> converter instanceof StringHttpMessageConverter);
+		restTemplate.getMessageConverters().add(0, stringConverter);
 
 		return restTemplate;
 	}
