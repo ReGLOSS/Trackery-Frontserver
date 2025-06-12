@@ -253,6 +253,18 @@ const UiUpdater = {
         DOM.albumDetailImageCount.textContent = `사진 ${imageCount}장`;
     },
 
+    // 메인 갤러리의 앨범 카드 정보 업데이트
+    updateMainGalleryAlbumCard(albumId, newTitle) {
+        const albumCard = DOM.albumGallery.querySelector(`[data-album-id="${albumId}"]`);
+        if (albumCard) {
+            const titleElement = albumCard.querySelector('.card-album-title');
+            if (titleElement) {
+                titleElement.textContent = newTitle;
+                console.log(`메인 갤러리 앨범 카드 제목 업데이트: ${newTitle}`);
+            }
+        }
+    },
+
     // 앨범 상세 갤러리 렌더링
     async renderAlbumDetailGallery(imageList) {
         if (!DOM.albumDetailGallery) return;
@@ -722,10 +734,44 @@ const EditMode = {
         // 편집 가능하게 설정
         DOM.albumDetailTitle.contentEditable = true;
         DOM.albumDetailTitle.classList.add('editing');
-        DOM.albumDetailTitle.focus();
+        
+        // 필드 포커스/블러 처리 함수
+        const setupFieldBehavior = (element, defaultText) => {
+            const handleFocus = () => {
+                if (element.textContent === defaultText) {
+                    element.textContent = '';
+                }
+            };
+            
+            const handleBlur = () => {
+                if (element.textContent.trim() === '') {
+                    element.textContent = defaultText;
+                }
+            };
+            
+            // 기존 이벤트 리스너 제거 (중복 방지)
+            element.removeEventListener('focus', handleFocus);
+            element.removeEventListener('blur', handleBlur);
+            
+            // 새 이벤트 리스너 추가
+            element.addEventListener('focus', handleFocus);
+            element.addEventListener('blur', handleBlur);
+        };
+
+        // 기본 텍스트인 경우 포커스/블러 동작 설정
+        if (DOM.albumDetailTitle.textContent === '앨범 제목') {
+            setupFieldBehavior(DOM.albumDetailTitle, '앨범 제목');
+        }
+        
+        // 편집 모드 진입 시에는 자동 포커스 하지 않음 (사용자가 직접 클릭해야 함)
 
         DOM.albumDetailDescription.contentEditable = true;
         DOM.albumDetailDescription.classList.add('editing');
+        
+        // 설명 필드도 동일하게 설정
+        if (DOM.albumDetailDescription.textContent === '앨범 설명') {
+            setupFieldBehavior(DOM.albumDetailDescription, '앨범 설명');
+        }
 
         // 편집 컨트롤 추가
         this.addEditControls();
@@ -749,23 +795,40 @@ const EditMode = {
         editControls.appendChild(saveBtn);
         editControls.appendChild(cancelBtn);
 
-        // 기존 컨트롤 제거 후 추가
+        // 기존 컨트롤 제거
         const existingControls = document.querySelector('.edit-controls');
         if (existingControls) {
             existingControls.remove();
         }
 
         const albumDetailInfo = document.querySelector('.album-detail-info');
-        albumDetailInfo.appendChild(editControls);
+        
+        // hr 태그를 찾아서 그 앞에 버튼을 삽입
+        const hrElement = albumDetailInfo.querySelector('hr');
+        if (hrElement) {
+            // hr 태그 바로 앞에 삽입
+            albumDetailInfo.insertBefore(editControls, hrElement);
+        } else {
+            // hr 태그가 없으면 기존처럼 맨 아래에 추가
+            albumDetailInfo.appendChild(editControls);
+        }
     },
 
     // 편집 저장
     async saveEdit() {
-        const newTitle = DOM.albumDetailTitle.textContent.trim();
-        const newDescription = DOM.albumDetailDescription.textContent.trim();
+        let newTitle = DOM.albumDetailTitle.textContent.trim();
+        let newDescription = DOM.albumDetailDescription.textContent.trim();
+
+        // 기본 텍스트인 경우 빈 문자열로 처리
+        if (newTitle === '앨범 제목') {
+            newTitle = '';
+        }
+        if (newDescription === '앨범 설명') {
+            newDescription = '';
+        }
 
         if (!newTitle) {
-            alert('앨범 제목은 비워둘 수 없습니다.');
+            UiUpdater.showNotification('앨범 제목을 입력해주세요.', 'error');
             DOM.albumDetailTitle.focus();
             return;
         }
@@ -798,6 +861,10 @@ const EditMode = {
                 }
                 
                 await ApiService.updateAlbumInfo(State.currentAlbumId, newTitle, newDescription);
+                
+                // 메인 갤러리의 앨범 카드 정보 업데이트
+                UiUpdater.updateMainGalleryAlbumCard(State.currentAlbumId, newTitle);
+                
                 UiUpdater.showNotification('앨범 정보가 업데이트되었습니다.', 'success');
                 this.endEditMode();
             }
@@ -994,7 +1061,7 @@ const ImageEditMode = {
                     await ApiService.addAlbumImage(State.currentAlbumId, State.toAddImageIds);
                 }
                 
-                // TODO: 이미지 삭제 API도 필요한 경우 추가
+                // 이미지 삭제
                 if (State.toRemoveImageIds.length > 0) {
                     console.log('삭제할 이미지 IDs:', State.toRemoveImageIds);
                     await ApiService.removeAlbumImage(State.currentAlbumId, State.toRemoveImageIds);
@@ -1004,6 +1071,10 @@ const ImageEditMode = {
                 
                 // 앨범 상세 정보 다시 로드하여 UI 업데이트
                 await EventHandlers.loadAlbumDetail(State.currentAlbumId);
+                
+                // 메인 갤러리의 해당 앨범 카드 이미지 개수도 업데이트
+                await this.updateMainGalleryImageCount();
+                
             } else {
                 UiUpdater.showNotification('변경사항이 없습니다.', 'info');
             }
@@ -1030,6 +1101,30 @@ const ImageEditMode = {
             DOM.albumDetailEditMyImagesGallery.innerHTML = '';
         }
         GalleryToggle.hideMyImagesSection();
+    },
+
+    // 메인 갤러리의 이미지 개수 업데이트
+    async updateMainGalleryImageCount() {
+        if (!State.currentAlbumId) return;
+        
+        try {
+            // 현재 앨범 상세 정보를 다시 가져와서 정확한 이미지 개수 확인
+            const response = await ApiService.fetchAlbumDetail(State.currentAlbumId);
+            const actualData = response.data;
+            const newImageCount = actualData.imageCount;
+            
+            // 메인 갤러리의 해당 앨범 카드 찾기
+            const albumCard = DOM.albumGallery.querySelector(`[data-album-id="${State.currentAlbumId}"]`);
+            if (albumCard) {
+                const imageCountElement = albumCard.querySelector('.card-album-image-count');
+                if (imageCountElement) {
+                    imageCountElement.textContent = `항목 : ${newImageCount}장`;
+                    console.log(`메인 갤러리 앨범 카드 이미지 개수 업데이트: ${newImageCount}장`);
+                }
+            }
+        } catch (error) {
+            console.error('메인 갤러리 이미지 개수 업데이트 실패:', error);
+        }
     },
 
     // 모든 갤러리에 체크박스 추가
