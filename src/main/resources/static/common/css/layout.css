@@ -1,6 +1,28 @@
+* {
+    box-sizing: border-box;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #d8e0e6;
+}
+
+.layout-container {
+    display: flex;
+    flex-direction: row;
+}
+
+.layout-content {
+    padding: 0;
+    width: 100%;
+    margin-left: 20rem;
+}
 .base-container {
     height: 100vh;
-    background-color: #d8e0e6;
     overflow-y: auto;
     scrollbar-width: none;
 }
