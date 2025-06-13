@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="1200" height="1200" viewBox="0 0 1100 1200" xmlns="http://www.w3.org/2000/svg">
 <style>
-.region-path { stroke: #333; }
-.sido { stroke-width: 2; fill: #e0e0e0; }
+.region-path { stroke: #00000 }
+.sido { stroke-width: 2; fill: #cdcccc; }
 </style>
 <g transform="scale(1, 1.5)">
   <path
