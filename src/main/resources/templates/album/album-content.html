@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html
+        lang="ko"
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        layout:decorate="~{common/layout}">
+<head>
+    <title>Trackery - 앨범</title>
+    <link rel="stylesheet" href="/album/css/album.css">
+    <link rel="stylesheet" href="/album/css/album-detail.css">
+</head>
+<body>
+<section layout:fragment="content" class="album-container">
+    <!--  메인탭-->
+    <div class="base-container">
+        <!-- 아직 앨범이 없을 때 보일 화면-->
+        <div class="no-album-container">
+            <p>아직 앨범이 없습니다.</p><br>
+            <p>Trackery에서 앨범을 만들어보세요!</p>
+            <button class="btn btn-dark big-album-create-btn">앨범 만들기</button>
+        </div>
+
+        <!-- 앨범이 있을 때 보일 화면 -->
+        <div class="album-exists-container">
+
+            <!--            앨범 갤러리-->
+            <div class="album-navigation-bar">
+                <div class="nav-buttons">
+                    <button class="nav-btn active" data-filter="all">전체</button>
+                    <button class="nav-btn" data-filter="public">공개</button>
+                    <button class="nav-btn" data-filter="private">비공개</button>
+                </div>
+                
+                <button class="btn btn-dark small-album-create-btn">
+                    앨범 생성
+                </button>
+            </div>
+            
+            <div class="album-gallery">
+               <div class="album-card">
+                   <a>
+                       <img src="/images/default-image1.webp" alt="album-image">
+                   </a>
+                   <p class="card-album-title">
+                       광주 여행
+                   </p>
+
+                   <p class="text-muted card-album-image-count">
+                       항목 : 18장
+                   </p>
+               </div>
+            </div>
+        </div>
+    </div>
+    <!--  우측 사이드탭-->
+    <div class="detail-container">
+    </div>
+
+<!--    앨범 상세조회 모달-->
+    <div class="album-detail-container">
+<!--        이미지 보이는 곳-->
+        <div class="album-image-container">
+
+        </div>
+<!--        우측 사이드탭 컨테이너-->
+        <div class="album-modal-sidebar-container">
+            <div class="album-detail-info">
+                <div class="album-header">
+                    <p class="album-detail-title">앨범 제목</p>
+                    <div class="info-btn-group">
+                        <div class="dropdown">
+                                <span class="dropdown-btn" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <img id="three-dots" src="/icons/common/three-dots-vertical.svg" alt="three-dots-icon" class="three-dots-icon">
+                                </span>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" id="album-edit-btn">편집</a></li>
+                                <li><a class="dropdown-item" href="#" id="album-change-public-btn">공개 상태 변경</a></li>
+                                <li><a class="dropdown-item" href="#" id="album-delete-btn">삭제</a></li>
+                            </ul>
+                        </div>
+
+                        <button id="album-detail-close-btn" class="btn-close"></button>
+                    </div>
+                </div>
+                <p class="album-detail-description">앨범 설명</p>
+                <div class="album-detail-meta">
+                    <p class="album-detail-image-count">사진 매수</p>
+                    <span class="album-detail-is-public">공개 앨범</span>
+                </div>
+                <hr style="border: 1px solid black;">
+            </div>
+
+            <div class="album-detail-gallery-container">
+                <div class="album-detail-gallery-nav-container">
+<!--                    TODO 페이지네이션 구현 후 관련 버튼 추가 필요-->
+                    <button id="album-image-edit-btn" class="btn btn-dark">이미지 추가/삭제</button>
+                </div>
+
+                <!-- 내 이미지 섹션 -->
+                <div class="gallery-section my-images-section" style="display: none;">
+                    <div class="gallery-header">
+                        <h4 class="gallery-title">내 이미지</h4>
+                        <button class="gallery-toggle-btn" data-target="my-images">
+                            <span class="toggle-icon">−</span>
+                        </button>
+                    </div>
+                    <div class="album-detail-edit-image-my-images-gallery gallery-content"></div>
+                </div>
+
+                <!-- 앨범 이미지 섹션 -->
+                <div class="gallery-section album-images-section">
+                    <div class="gallery-header">
+                        <h4 class="gallery-title">앨범 이미지</h4>
+                        <button class="gallery-toggle-btn" data-target="album-images">
+                            <span class="toggle-icon">−</span>
+                        </button>
+                    </div>
+                    <div class="album-detail-gallery gallery-content"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+<div layout:fragment="scripts">
+    <script type="module" src="/album/js/Album.js"></script>
+</div>
+</body>
+</html>
