@@ -5,6 +5,7 @@
 <head>
     <link rel="stylesheet" href="/css/tabler.min.css">
     <link rel="stylesheet" href="/css/sidebar.css" type="text/css">
+    <link rel="stylesheet" href="/common/css/layout.css" type="text/css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap" rel="stylesheet">
@@ -40,7 +41,7 @@
     <div class="layout-sidebar">
         <section th:replace="~{common/sidebar :: sidebar}"></section>
     </div>
-    <div class="layout-content">
+    <div class="layout-content base-container">
         <section layout:fragment="content"></section>
     </div>
 </div>
