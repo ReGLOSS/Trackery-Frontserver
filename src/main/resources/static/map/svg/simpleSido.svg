@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+<svg width="1200" height="900" viewBox="0 0 1600 1200" xmlns="http://www.w3.org/2000/svg">
 <style>
 .region-path { stroke: #333; }
 .sido { stroke-width: 2; fill: #e0e0e0; }
 </style>
+<g transform="scale(1, 1.5)">
   <path
     id="11"
     data-region="서울특별시"
@@ -157,4 +158,5 @@
     stroke="#333"
     class="region-path sido"
   />
+</g>
 </svg>
