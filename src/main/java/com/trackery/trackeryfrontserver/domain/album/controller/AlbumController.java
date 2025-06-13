@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
  * fileName       : AlbumController
  * author         : durururuk
  * date           : 25. 5. 30.
- * description    : 
+ * description    : 앨범 페이지로 가는 컨트롤러입니다.
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
