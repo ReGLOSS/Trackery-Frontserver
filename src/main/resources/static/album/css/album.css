@@ -1,0 +1,169 @@
+.album-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.base-container {
+    height: 100vh;
+    width: 62.5%;
+    background-color: #d8e0e6;
+    padding: 5%;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.detail-container {
+    height: 100vh;
+    overflow-y: auto;
+    scrollbar-width: none;
+    width: 37.5%;
+    padding: 5%;
+    background-color: #d3d9e8;
+    display: flex;
+    flex-direction: column;
+    gap: 3%;
+}
+
+.div-section {
+    border: 1px solid gray;
+}
+
+.no-album-container {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+}
+
+.big-album-create-btn {
+    height: 12.5rem; /* 200px */
+    width: 25rem; /* 400px */
+    align-items: center;
+}
+
+.album-exists-container {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* 앨범 내비게이션 바 스타일 */
+.album-navigation-bar {
+    margin-bottom: 1.875rem; /* 30px */
+    margin-top: 1.25rem; /* 20px */
+    padding: 0 3%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-buttons {
+    display: flex;
+    gap: 0;
+    background-color: #ffffff;
+    border-radius: 0.5rem; /* 8px */
+    padding: 0.25rem; /* 4px */
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.1); /* 0 2px 8px */
+    border: 0.0625rem solid #e0e6ed; /* 1px */
+    width: fit-content;
+}
+
+.nav-btn {
+    padding: 0.625rem 1.25rem; /* 10px 20px */
+    border: none;
+    background-color: transparent;
+    color: #6c757d;
+    cursor: pointer;
+    border-radius: 0.375rem; /* 6px */
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    position: relative;
+}
+
+.nav-btn:hover {
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+.nav-btn.active {
+    background-color: #007bff;
+    color: white;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 123, 255, 0.3); /* 0 2px 4px */
+}
+
+.nav-btn.active:hover {
+    background-color: #0056b3;
+    color: white;
+}
+
+/* 앨범 생성 버튼 스타일 */
+.small-album-create-btn {
+    padding: 0.625rem 1.25rem; /* 10px 20px */
+    border-radius: 0.375rem; /* 6px */
+    font-size: 0.95rem;
+    font-weight: 500;
+    border: none;
+    transition: background-color 0.3s ease;
+    height: fit-content;
+}
+
+.small-album-create-btn:hover {
+    background-color: #343a40 !important;
+}
+
+.album-gallery {
+    flex: 2;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5%;
+    padding: 3%;
+    background-color: lightgray;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.album-card {
+    background: #ffffff;
+    border-radius: 0.125rem; /* 2px */
+    padding: 1.25rem 1.25rem 1.5625rem 1.25rem; /* 20px 20px 25px 20px */
+    transition: all 0.3s ease;
+    position: relative;
+    cursor: pointer;
+    max-width: 20rem; /* 320px */
+    aspect-ratio: 12/15;
+}
+
+.card-album-title {
+    text-align: center;
+    font-size: 1.2rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    font-weight: bold;
+}
+
+.card-album-image-count {
+    font-size: 0.8rem;
+    position: absolute;
+    right: 0.625rem; /* 10px */
+    bottom: 0rem; /* 0px */
+}
+
+/* 앨범 카드 애니메이션 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(0.625rem); /* 10px */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
