@@ -5,6 +5,7 @@ class MapManager {
         this.currentSigunguId = null;
         this.sidoData = null;
         this.sigunguData = null;
+        this.userStats = null;
         this.navigationHistory = []; // 뒤로가기 버튼을 위한 탐색 기록 추적
 
         this.init();
@@ -12,6 +13,7 @@ class MapManager {
 
     async init() {
         this.bindEvents();
+        await this.loadUserStats();
         await this.loadSidoView();
     }
 
@@ -37,6 +39,7 @@ class MapManager {
             this.updateBackButton();
             this.clearMapTitle();
             this.updateDetailContainerClass();
+            this.updateStatsDisplay();
 
             // 시도 클릭 이벤트 바인딩
             this.bindSidoClickEvents();
@@ -94,6 +97,7 @@ class MapManager {
             this.updateMapTitle(sidoName);
             this.updateBackButton();
             this.updateDetailContainerClass();
+            this.updateStatsDisplay();
 
             // 시군구 클릭 이벤트 바인딩
             this.bindSigunguClickEvents();
@@ -123,6 +127,46 @@ class MapManager {
         // sigunguData가 배열인지 확인
         this.sigunguData = Array.isArray(data) ? data : (data.data || []);
 
+    }
+
+    async loadUserStats() {
+        try {
+            const response = await fetch('/api/location/home/stats', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            });
+            
+            if (response.status === 401) {
+                console.log('User not authenticated, stats will not be displayed');
+                this.userStats = null;
+                return;
+            }
+            
+            if (!response.ok) {
+                console.warn(`Failed to fetch user stats: ${response.status} ${response.statusText}`);
+                this.userStats = null;
+                return;
+            }
+            
+            const responseData = await response.json();
+            console.log('User stats response:', responseData);
+            
+            // API 응답이 { code: 200, message: "Ok", data: { stats: {...} } } 형태인 경우 처리
+            if (responseData.data && responseData.data.stats) {
+                this.userStats = responseData.data.stats;
+            } else if (responseData.data) {
+                this.userStats = responseData.data;
+            } else {
+                this.userStats = responseData;
+            }
+            console.log('User stats loaded:', this.userStats);
+        } catch (error) {
+            console.error('Error loading user stats:', error);
+            this.userStats = null;
+        }
     }
 
     async fetchSigunguDetail(sigunguId) {
@@ -308,6 +352,7 @@ class MapManager {
             this.updateMapTitle(sidoName);
             this.updateBackButton();
             this.updateDetailContainerClass();
+            this.updateStatsDisplay();
 
             // 시군구 클릭 이벤트 바인딩
             this.bindSigunguClickEvents();
@@ -355,6 +400,58 @@ class MapManager {
                 detailContainer.classList.remove('sigungu-view');
             }
         }
+    }
+
+    updateStatsDisplay() {
+        const detailContainer = document.querySelector('.detail-container');
+        if (!detailContainer) return;
+
+        // 전국지도(sido)일 때만 통계 표시
+        if (this.currentView === 'sido') {
+            this.renderUserStats(detailContainer);
+        } else {
+            // 시도지도나 상세보기일 때는 통계 숨김
+            detailContainer.innerHTML = '';
+        }
+    }
+
+    renderUserStats(container) {
+        console.log('renderUserStats called with userStats:', this.userStats);
+        
+        if (!this.userStats) {
+            // 로그인하지 않은 사용자에게는 로그인 안내 메시지 표시
+            container.innerHTML = `
+                <div class="user-stats-simple">
+                    <div class="stats-text">
+                        <a href="/login" class="login-link">로그인하여 통계 보기</a>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        // 디버깅을 위한 로그
+        console.log('albumCount:', this.userStats.albumCount);
+        console.log('imageCount:', this.userStats.imageCount);
+        console.log('sigunguCount:', this.userStats.sigunguCount);
+
+        const albumCount = this.userStats.albumCount || 0;
+        const imageCount = this.userStats.imageCount || 0;
+        const sigunguCount = this.userStats.sigunguCount || this.userStats.visitedRegionCount || 0;
+
+        const statsHtml = `
+            <div class="user-stats-simple">
+                <div class="stats-text">
+                    <span class="number">${imageCount}</span><span class="label">Picture</span><br>
+                    <span class="number">${sigunguCount}</span><span class="label">Place</span><br>
+                    <span class="number">${albumCount}</span><span class="label">Album</span>
+                </div>
+</div>
+            </div>
+        `;
+
+        console.log('Generated HTML:', statsHtml);
+        container.innerHTML = statsHtml;
     }
 
     // 객체 속성을 재귀적으로 검사하는 헬퍼 함수
