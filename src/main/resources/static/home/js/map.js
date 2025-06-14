@@ -257,18 +257,15 @@ class MapManager {
     }
 
     goBack() {
-        if (this.navigationHistory.length === 0) {
-            // 기록이 없으면 시도 뷰로 이동
+        if (this.currentView === 'detail') {
+            // 상세 뷰에서 시군구 뷰로 돌아가기
+            this.loadSigunguViewWithoutHistory(this.currentSidoId);
+        } else if (this.currentView === 'sigungu') {
+            // 시군구 뷰에서 시도 뷰로 돌아가기
             this.loadSidoView();
-            return;
-        }
-
-        const previousState = this.navigationHistory.pop();
-
-        if (previousState.view === 'sido') {
+        } else if (this.currentView === 'sido') {
+            // 시도 뷰에서는 뒤로가기 버튼이 숨겨져야 함
             this.loadSidoView();
-        } else if (previousState.view === 'sigungu') {
-            this.loadSigunguViewWithoutHistory(previousState.sidoId);
         }
     }
 
