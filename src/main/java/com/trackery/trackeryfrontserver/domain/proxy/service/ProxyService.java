@@ -70,6 +70,7 @@ public class ProxyService {
 
 			log.info("응답 상태 코드: {}", response.getStatusCode());
 			log.debug("응답 헤더: {}", response.getHeaders());
+			//log.info("응답 본문: {}", response.getBody());
 
 			HttpHeaders proxyHeaders = new HttpHeaders();
 			proxyHeaders.putAll(response.getHeaders());
