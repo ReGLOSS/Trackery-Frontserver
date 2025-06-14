@@ -12,7 +12,7 @@
     height: 100vh;
     width: 62.5%;
     background-color: #d8e0e6;
-    padding: 5%;
+    padding: 2%;
     overflow-y: auto;
     scrollbar-width: none;
 }
