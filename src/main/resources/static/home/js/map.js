@@ -209,9 +209,12 @@ class MapManager {
                     const sidoInfo = this.sidoData?.find(sido => String(sido.sd_id) === String(sidoId));
                     const sidoName = sidoInfo ? (sidoInfo.sd_name || sidoInfo.name || sidoInfo.sidoName || '지역') : '지역';
 
-                            // 시도 이름만 표시하고 시군구 지도로 이동
+                    // 시도 이름만 표시하고 시군구 지도로 이동
                     this.updateMapTitle(sidoName);
                     this.loadSigunguView(sidoId);
+                    
+                    // 시도 클릭 시 해당 시도의 이미지들 로드
+                    this.loadSidoImages(sidoId);
                 }
             });
         });
@@ -227,6 +230,52 @@ class MapManager {
                 }
             });
         });
+        
+        // 이미지가 있는 시군구를 초록색으로 표시
+        this.styleDistrictsWithImages();
+    }
+
+    async styleDistrictsWithImages() {
+        if (!this.sigunguData) return;
+        
+        const paths = document.querySelectorAll('#map-display path');
+        
+        for (const sigungu of this.sigunguData) {
+            const sigunguId = sigungu.sigunguId;
+            const pathElement = document.getElementById(sigunguId);
+            
+            if (pathElement) {
+                // 해당 시군구의 이미지 개수 확인
+                const hasImages = await this.checkSigunguHasImages(sigunguId);
+                
+                if (hasImages) {
+                    pathElement.style.fill = '#28a745'; // 초록색
+                    pathElement.classList.add('has-images');
+                }
+            }
+        }
+    }
+
+    async checkSigunguHasImages(sigunguId) {
+        try {
+            const response = await fetch(`/api/location/sigungu/${sigunguId}/images`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            });
+
+            if (response.ok) {
+                const responseData = await response.json();
+                const images = responseData.data || [];
+                return images.length > 0;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error checking sigungu images:', error);
+            return false;
+        }
     }
 
     async handleSigunguClick(sigunguId) {
@@ -261,6 +310,9 @@ class MapManager {
 
         // 뒤로가기 버튼 가시성 업데이트
         this.updateBackButton();
+
+        // 시군구 클릭 시 해당 시군구의 이미지들 로드
+        this.loadSigunguImages(sigunguId);
 
         // 백엔드에서 상세 시군구 데이터 가져오기
         try {
@@ -501,6 +553,132 @@ class MapManager {
         return path.split('.').reduce((current, key) => {
             return (current && current[key] !== undefined) ? current[key] : null;
         }, obj);
+    }
+
+    // 시도별 이미지 로드
+    async loadSidoImages(sidoId) {
+        try {
+            const response = await fetch(`/api/location/sido/${sidoId}/images`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                console.error('Failed to fetch sido images:', response.status);
+                return;
+            }
+
+            const responseData = await response.json();
+            console.log('Sido images response:', responseData);
+            const images = responseData.data || [];
+            
+            this.displayImages(images, 'sido');
+        } catch (error) {
+            console.error('Error loading sido images:', error);
+        }
+    }
+
+    // 시군구별 이미지 로드
+    async loadSigunguImages(sigunguId) {
+        try {
+            const response = await fetch(`/api/location/sigungu/${sigunguId}/images`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                console.error('Failed to fetch sigungu images:', response.status);
+                return;
+            }
+
+            const responseData = await response.json();
+            console.log('Sigungu images response:', responseData);
+            const images = responseData.data || [];
+            
+            this.displayImages(images, 'sigungu');
+        } catch (error) {
+            console.error('Error loading sigungu images:', error);
+        }
+    }
+
+    // 이미지 표시
+    displayImages(images, type) {
+        const detailContainer = document.querySelector('.detail-container');
+        
+        if (!images || images.length === 0) {
+            detailContainer.innerHTML = `
+                <div class="no-images">
+                    <p>해당 지역에 등록된 이미지가 없습니다.</p>
+                </div>
+            `;
+            return;
+        }
+
+        const imageGridHtml = `
+            <div class="region-image-gallery">
+                <div class="gallery-section">
+                    <div class="gallery-content region-gallery-grid">
+                        ${images.map(image => `
+                            <div class="gallery-card region-image-card" data-image-id="${image.imageId}">
+                                <img src="${image.imageUrl}" alt="${image.imageContent || image.imageName}" 
+                                     loading="lazy" onerror="this.src='/images/placeholder.jpg'">
+                                <div class="image-overlay">
+                                    <div class="image-info-text">
+                                        <div class="image-location">${image.sggName || image.sdName}</div>
+                                        <div class="image-date">${this.formatDate(image.imageDate)}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        detailContainer.innerHTML = imageGridHtml;
+        
+        // 이미지 클릭 이벤트 바인딩
+        this.bindImageClickEvents();
+    }
+
+    // 이미지 클릭 이벤트 바인딩
+    bindImageClickEvents() {
+        const imageCards = document.querySelectorAll('.region-image-card');
+        imageCards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                const imageId = card.dataset.imageId;
+                this.showImageDetail(imageId);
+            });
+        });
+    }
+
+    // 이미지 상세 보기
+    showImageDetail(imageId) {
+        // 이미지 상세 모달 또는 페이지로 이동하는 로직
+        console.log('Show image detail for:', imageId);
+        // 추후 구현 필요
+    }
+
+    // 날짜 포맷 함수
+    formatDate(dateString) {
+        if (!dateString) return '';
+        
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        } catch (error) {
+            return dateString;
+        }
     }
 
 }
