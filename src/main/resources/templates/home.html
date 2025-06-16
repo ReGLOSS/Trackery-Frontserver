@@ -1,18 +1,31 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html
+        lang="ko"
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        layout:decorate="~{common/layout}">
 <head>
-    <meta charset="UTF-8">
-    <title>Home</title>
-    <link rel="stylesheet" href="/css/tabler.min.css" type="text/css">
-    <link rel="stylesheet" href="/css/landing.css" type="text/css">
-    <link rel="stylesheet" href="/css/sidebar.css" type="text/css">
+    <title>Trackery - Home</title>
+    <link rel="stylesheet" href="/home/css/home.css" type="text/css">
 </head>
 <body>
-<div th:replace="~{common/sidebar :: sidebar}"></div>
-<h1>콘페코</h1>
-<div th:if="${message}" th:text="${message}"></div>
-<div th:if="${error}" th:text="${error}" style="color: red;"></div>
-<script src="/js/tabler.min.js"></script>
-<script src="/js/landing.js"></script>
+<section layout:fragment="content" class="home-container">
+    <div class="base-container">
+        <div class="map-container">
+            <div class="map-header">
+                <h2 id="map-title" style="font-size: 72px"></h2>
+                <img id="back-btn" src="/icons/common/up.svg" alt="돌아가기"
+                style="display: none; width: 100px; height: 100px; cursor: pointer;">
+            </div>
+            <div id="map-display" class="map-display">
+                <!-- SVG maps will be loaded here -->
+            </div>
+        </div>
+    </div>
+    <div class="detail-container">
+</div>
+</section>
+<div layout:fragment="scripts">
+    <script src="/home/js/map.js"></script>
+</div>
 </body>
 </html>
