@@ -408,6 +408,9 @@ class MapManager {
 
             // 시군구 클릭 이벤트 바인딩
             this.bindSigunguClickEvents();
+            
+            // 시도 이미지 로드 (뒤로가기 시)
+            this.loadSidoImages(sidoId);
 
         } catch (error) {
             console.error('Error loading sigungu view:', error);
