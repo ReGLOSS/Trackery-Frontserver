@@ -20,6 +20,7 @@
 .detail-container {
     height: 100vh;
     overflow-y: auto;
+    overflow-x: visible;
     scrollbar-width: none;
     width: 37.5%;
     padding: 5%;
@@ -32,6 +33,27 @@
 
 .detail-container.sigungu-view {
     background-color: #d3d9e8;
+}
+
+.stat-line {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: visible;
+    width: 100%;
+    gap: 30px;
+}
+
+.number {
+
+}
+
+.label {
+    flex: 0 0 auto;
+    overflow: visible;
+    white-space: nowrap;
+    font-size: 80px;
 }
 
 .map-container {
@@ -130,6 +152,7 @@
     padding: 16px;
     margin-bottom: 20px;
     animation: fadeIn 0.3s ease-in-out;
+    overflow: visible;
 }
 
 .stats-text {
@@ -137,16 +160,22 @@
     font-weight: 500;
     color: #343a40;
     letter-spacing: 1px;
+    overflow: visible;
 }
 
 .number {
     margin-right: 4px;
     font-size: 120px;
     line-height: 100px;
+    text-align: right;
+    flex: 0 0 auto;
+    overflow: visible;
+    white-space: nowrap;
 }
 
 .label {
     font-size: 80px;
+    text-align: left;
 }
 
 .stats-loading {

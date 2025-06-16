@@ -442,9 +442,15 @@ class MapManager {
         const statsHtml = `
             <div class="user-stats-simple">
                 <div class="stats-text">
-                    <span class="number">${imageCount}</span><span class="label">Picture</span><br>
-                    <span class="number">${sigunguCount}</span><span class="label">Place</span><br>
+                    <div class="stat-line indent-0">
+                        <span class="number">${imageCount}</span><span class="label">Picture</span>
+                    </div>
+                <div class="stat-line indent-1">
+                    <span class="number">${sigunguCount}</span><span class="label">Place</span>
+                 </div>
+                     <div class="stat-line indent-2">
                     <span class="number">${albumCount}</span><span class="label">Album</span>
+             </div>
                 </div>
 </div>
             </div>
