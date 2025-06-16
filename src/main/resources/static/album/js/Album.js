@@ -73,7 +73,7 @@ const ApiService = {
 
     // 앨범 상세 정보 조회
     async fetchAlbumDetail(albumId) {
-        const response = await fetch(`/api/albums?albumId=${albumId}`, {
+        const response = await fetch(`/api/albums/${albumId}`, {
             method: "GET",
             credentials: "include"
         });
@@ -95,14 +95,13 @@ const ApiService = {
 
     // 앨범 정보 업데이트
     async updateAlbumInfo(albumId, albumTitle, albumDescription) {
-        const response = await fetch("/api/albums", {
+        const response = await fetch(`/api/albums/${albumId}`, {
             method: "PATCH",
             credentials: "include",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                albumId: albumId,
                 albumTitle: albumTitle,
                 albumDescription: albumDescription
             })
@@ -114,14 +113,13 @@ const ApiService = {
 
     // 앨범 공개 상태 변경
     async updateAlbumPublic(albumId, isPublic) {
-        const response = await fetch("/api/albums", {
+        const response = await fetch(`/api/albums/${albumId}`, {
             method: "PATCH",
             credentials: "include",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                albumId: albumId,
                 isPublic: isPublic
             })
         })
@@ -161,14 +159,13 @@ const ApiService = {
 
     // 앨범에 이미지 추가
     async addAlbumImage(albumId, imageIdList) {
-        const response = await fetch("/api/albums/images", {
+        const response = await fetch(`/api/albums/${albumId}/images`, {
             method: "POST",
             credentials: "include",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                albumId: albumId,
                 imageIdList: imageIdList
             })
         })
@@ -179,14 +176,13 @@ const ApiService = {
 
     //앨범에서 이미지 삭제
     async removeAlbumImage(albumId, imageIdList) {
-        const response = await fetch("/api/albums/images", {
+        const response = await fetch(`/api/albums/${albumId}/images`, {
             method: "DELETE",
             credentials: "include",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                albumId: albumId,
                 imageIdList: imageIdList
             })
         })
@@ -198,7 +194,7 @@ const ApiService = {
 
     //앨범 삭제
     async deleteAlbum(albumId) {
-        const response = await fetch("/api/albums?albumId=" + albumId, {
+        const response = await fetch(`/api/albums/${albumId}`, {
             method: "DELETE",
             credentials: "include",
         })
