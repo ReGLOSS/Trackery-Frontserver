@@ -90,7 +90,7 @@
 }
 
 .region-path.selected {
-    fill: #28a745 !important;
+    fill: #dc3545 !important;
     stroke-width: 3px;
 }
 
@@ -100,6 +100,11 @@
 
 .region-path.has-images:hover {
     fill: #007bff !important;
+    stroke-width: 3px;
+}
+
+.region-path.has-images.selected {
+    fill: #dc3545 !important;
     stroke-width: 3px;
 }
 
