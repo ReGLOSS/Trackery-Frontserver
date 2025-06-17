@@ -1,5 +1,7 @@
 package com.trackery.trackeryfrontserver.config;
 
+import java.util.Arrays;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -8,6 +10,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.trackery.trackeryfrontserver.domain.proxy.service.ProxyService;
 
@@ -24,6 +27,7 @@ import lombok.RequiredArgsConstructor;
  * -----------------------------------------------------------
  * 25. 02. 06.        narilee       최초 생성
  * 25. 06. 12.        narilee       /docs 주석 추가
+ * 25. 06. 17.        durururuk     정적 파일은 시큐리티 인증을 거치지 않도록 설정
  */
 @Configuration
 @EnableWebSecurity
@@ -46,11 +50,35 @@ public class SecurityConfig {
 	@Order(1)
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http
-			.securityMatcher(PUBLIC_URIS)
+			.securityMatcher(request -> {
+				String uri = request.getRequestURI();
+
+				boolean isPublic = Arrays.stream(PUBLIC_URIS)
+					.filter(pattern -> !pattern.contains("**/"))
+					.anyMatch(pattern -> new AntPathRequestMatcher(pattern).matches(request));
+
+				boolean isStaticResource =
+					uri.contains("/css/")
+						|| uri.contains("/js/")
+						|| uri.contains("/images/")
+						|| uri.contains("/icons/")
+						|| uri.endsWith(".ico")
+						|| uri.endsWith(".png")
+						|| uri.endsWith(".jpg")
+						|| uri.endsWith(".jpeg")
+						|| uri.endsWith(".gif")
+						|| uri.endsWith(".webp")
+						|| uri.endsWith(".svg")
+						|| uri.endsWith(".woff")
+						|| uri.endsWith(".woff2")
+						|| uri.endsWith(".ttf");
+
+				return isPublic || isStaticResource;
+			})
 			.csrf(AbstractHttpConfigurer::disable)
-			.authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+			.httpBasic(AbstractHttpConfigurer::disable)
 			.formLogin(AbstractHttpConfigurer::disable)
-			.httpBasic(AbstractHttpConfigurer::disable);
+			.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
 
 		return http.build();
 	}
