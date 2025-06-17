@@ -38,14 +38,12 @@ public class CustomErrorController implements ErrorController {
             // 401 Unauthorized 에러인 경우
             if (statusCode == HttpStatus.UNAUTHORIZED.value()) {
                 log.info("401 에러 처리 시작");
-                // AJAX 요청 확인
-                String requestedWith = request.getHeader("X-Requested-With");
-                String acceptHeader = request.getHeader("Accept");
-                boolean isAjaxRequest = "XMLHttpRequest".equals(requestedWith) || 
-                                       (acceptHeader != null && acceptHeader.contains("application/json"));
+                // AJAX 요청 확인 - API 경로로 판별
+                String requestUri = request.getRequestURI();
+                boolean isAjaxRequest = requestUri != null && requestUri.startsWith("/api/");
                 
-                log.info("요청 타입 판별 - X-Requested-With: {}, Accept: {}, isAjax: {}", 
-                        requestedWith, acceptHeader, isAjaxRequest);
+                log.info("요청 타입 판별 - URI: {}, isAjax: {}", 
+                        requestUri, isAjaxRequest);
                 
                 if (isAjaxRequest) {
                     log.info("AJAX 요청으로 판별 - 스크립트 응답 전송");

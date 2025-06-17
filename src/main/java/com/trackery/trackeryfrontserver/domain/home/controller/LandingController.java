@@ -27,7 +27,13 @@ public class LandingController {
 	 * @return 액세스 토큰이 없다면 랜딩페이지로, 있다면 /home으로 리다이렉트합니다.
 	 */
 	@GetMapping("/")
-	public String landing(@CookieValue(value = "accessToken", required = false) String accessToken) {
+	public String landing(@CookieValue(value = "accessToken", required = false) String accessToken,
+						  jakarta.servlet.http.HttpServletRequest request) {
+		// 에러 처리 중인 요청은 LandingController가 처리하지 않음
+		if (request.getAttribute("jakarta.servlet.error.status_code") != null) {
+			return "forward:/error";
+		}
+		
 		if (accessToken != null) {
 			return "redirect:/home";
 		}
