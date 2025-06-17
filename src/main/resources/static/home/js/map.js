@@ -377,6 +377,11 @@ class MapManager {
             this.currentSidoId = sidoId;
             this.currentSigunguId = null;
 
+            // 이전 선택 상태 초기화
+            document.querySelectorAll('.region-path.selected').forEach(el => {
+                el.classList.remove('selected');
+            });
+
             // 시군구 데이터에 시도 정보가 포함되어 있으므로 여기서 시도 이름 가져오기
             let sidoName = '지역';
 
