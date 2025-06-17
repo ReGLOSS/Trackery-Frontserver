@@ -43,6 +43,9 @@ class MapManager {
 
             // 시도 클릭 이벤트 바인딩
             this.bindSidoClickEvents();
+            
+            // 이미지가 있는 시도를 초록색으로 표시
+            this.styleSidosWithImages();
 
         } catch (error) {
             console.error('Error loading sido view:', error);
@@ -681,6 +684,63 @@ class MapManager {
             });
         } catch (error) {
             return dateString;
+        }
+    }
+
+    // 이미지가 있는 시도를 초록색으로 표시
+    async styleSidosWithImages() {
+        if (!this.sidoData) return;
+        
+        const paths = document.querySelectorAll('#map-display path');
+        
+        for (const sido of this.sidoData) {
+            const sidoId = sido.sd_id || sido.id || sido.sidoId;
+            const pathElement = document.getElementById(sidoId);
+            
+            if (pathElement) {
+                // 해당 시도의 이미지 개수 확인
+                const hasImages = await this.checkSidoHasImages(sidoId);
+                
+                if (hasImages) {
+                    pathElement.style.fill = '#28a745'; // 초록색
+                    pathElement.classList.add('has-images');
+                }
+            }
+        }
+    }
+
+    // 시도의 모든 시군구에 이미지가 있는지 확인
+    async checkSidoHasImages(sidoId) {
+        try {
+            // 먼저 해당 시도의 시군구 목록을 가져옴
+            const sigunguResponse = await fetch(`/api/location/sido/${sidoId}/sigungu`);
+            if (!sigunguResponse.ok) {
+                return false;
+            }
+            
+            const sigunguData = await sigunguResponse.json();
+            const sigunguList = Array.isArray(sigunguData) ? sigunguData : (sigunguData.data || []);
+            
+            if (sigunguList.length === 0) {
+                return false;
+            }
+            
+            // 모든 시군구에 이미지가 있는지 확인
+            for (const sigungu of sigunguList) {
+                const sigunguId = sigungu.sigunguId;
+                const hasImages = await this.checkSigunguHasImages(sigunguId);
+                
+                // 하나라도 이미지가 없으면 false 반환
+                if (!hasImages) {
+                    return false;
+                }
+            }
+            
+            // 모든 시군구에 이미지가 있는 경우에만 true 반환
+            return true;
+        } catch (error) {
+            console.error('Error checking sido images:', error);
+            return false;
         }
     }
 
