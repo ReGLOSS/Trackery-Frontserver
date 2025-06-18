@@ -636,7 +636,18 @@ class MapManager {
                 <div class="gallery-section">
                     <div class="gallery-content region-gallery-grid">
                         ${images.map(image => `
-                            <div class="gallery-card region-image-card" data-image-id="${image.imageId}">
+                            <div class="gallery-card region-image-card" 
+                                 data-image-id="${image.imageId}"
+                                 data-image-name="${image.imageName || ''}"
+                                 data-image-content="${image.imageContent || ''}"
+                                 data-image-url="${image.imageUrl || ''}"
+                                 data-sd-name="${image.sdName || ''}"
+                                 data-sgg-name="${image.sggName || ''}"
+                                 data-image-date="${image.imageDate || ''}"
+                                 data-is-public="${image.isPublic || false}"
+                                 data-latitude="${image.latitude || ''}"
+                                 data-longitude="${image.longitude || ''}"
+                                 data-tags="${image.tags ? JSON.stringify(image.tags) : '[]'}">
                                 <img src="${image.imageUrl}" alt="${image.imageContent || image.imageName}" 
                                      loading="lazy" onerror="this.src='/images/placeholder.jpg'">
                                 <div class="image-overlay">
@@ -671,9 +682,159 @@ class MapManager {
 
     // 이미지 상세 보기
     showImageDetail(imageId) {
-        // 이미지 상세 모달 또는 페이지로 이동하는 로직
-        console.log('Show image detail for:', imageId);
-        // 추후 구현 필요
+        console.log('Showing image detail for ID:', imageId);
+        
+        // 현재 표시된 이미지 카드에서 데이터 찾기
+        const imageCard = document.querySelector(`.region-image-card[data-image-id="${imageId}"]`);
+        
+        if (!imageCard) {
+            console.error('Image card not found for ID:', imageId);
+            return;
+        }
+        
+        // dataset에서 데이터 추출
+        const dataset = imageCard.dataset;
+        
+        // 태그 파싱
+        let tags = [];
+        try {
+            tags = JSON.parse(dataset.tags || '[]');
+        } catch (e) {
+            console.warn('Error parsing tags:', e);
+            tags = [];
+        }
+        
+        const imageData = {
+            imageId: dataset.imageId,
+            imageUrl: dataset.imageUrl || '/images/default-image4.webp',
+            imageName: dataset.imageName || '이미지',
+            imageContent: dataset.imageContent || '',
+            sggName: dataset.sggName || '',
+            sdName: dataset.sdName || '',
+            locationName: dataset.sggName || dataset.sdName || '',
+            imageDate: dataset.imageDate || '',
+            tags: tags,
+            isPublic: dataset.isPublic === 'true',
+            latitude: dataset.latitude || '',
+            longitude: dataset.longitude || ''
+        };
+        
+        console.log('Image data extracted from dataset:', imageData);
+        
+        // 모달에 데이터 채우기
+        this.populateImageModal(imageData);
+        
+        // 모달 표시
+        this.showModal();
+    }
+
+    // 모달에 이미지 데이터 채우기
+    populateImageModal(imageData) {
+        // 이미지
+        const modalImage = document.getElementById('modalImage');
+        modalImage.src = imageData.imageUrl || '/images/default-image4.webp';
+        modalImage.alt = imageData.imageName || '이미지';
+
+        // 설명 - imageContent가 있으면 사용, 없으면 빈 문자열
+        const modalDescription = document.getElementById('modalDescription');
+        modalDescription.value = imageData.imageContent || '';
+
+        // 태그
+        const modalTagBox = document.getElementById('modalTagBox');
+        modalTagBox.innerHTML = '';
+        
+        if (imageData.tags && imageData.tags.length > 0) {
+            imageData.tags.forEach(tag => {
+                const tagElement = document.createElement('span');
+                tagElement.className = 'tag';
+                tagElement.textContent = typeof tag === 'object' ? (tag.tagName || tag.name || tag) : tag;
+                modalTagBox.appendChild(tagElement);
+            });
+        }
+
+        // 위치 - 시도와 시군구를 모두 표시
+        const modalLocationBox = document.getElementById('modalLocationBox');
+        let locationText = '';
+        if (imageData.sdName && imageData.sggName) {
+            locationText = `${imageData.sdName} ${imageData.sggName}`;
+        } else if (imageData.sggName) {
+            locationText = imageData.sggName;
+        } else if (imageData.sdName) {
+            locationText = imageData.sdName;
+        } else {
+            locationText = imageData.locationName || '';
+        }
+        modalLocationBox.value = locationText;
+
+        // 날짜 - 원본 날짜 문자열을 직접 포맷팅
+        const modalDateBox = document.getElementById('modalDateBox');
+        let dateText = '';
+        if (imageData.imageDate) {
+            // ISO 날짜 문자열인 경우 포맷팅
+            if (imageData.imageDate.includes('T') || imageData.imageDate.includes('-')) {
+                dateText = this.formatDate(imageData.imageDate);
+            } else {
+                // 이미 포맷된 문자열인 경우 그대로 사용
+                dateText = imageData.imageDate;
+            }
+        }
+        modalDateBox.value = dateText;
+
+        // 공개 여부
+        const modalPublic = document.getElementById('modalPublic');
+        modalPublic.checked = imageData.isPublic || false;
+
+        // 모달 버튼에 imageId 저장
+        const modalEditBtn = document.getElementById('modalEditBtn');
+        modalEditBtn.dataset.imageId = imageData.imageId;
+    }
+
+    // 모달 표시
+    showModal() {
+        const modal = document.getElementById('imageDetailModal');
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
+        
+        // 모달 이벤트 바인딩
+        this.bindModalEvents();
+    }
+
+    // 모달 숨기기
+    hideModal() {
+        const modal = document.getElementById('imageDetailModal');
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto'; // 배경 스크롤 복원
+    }
+
+    // 모달 이벤트 바인딩
+    bindModalEvents() {
+        const modal = document.getElementById('imageDetailModal');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalClose = document.getElementById('modalClose');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+        // 모달 닫기 이벤트들
+        const closeEvents = [modalOverlay, modalClose, modalCloseBtn];
+        closeEvents.forEach(element => {
+            if (element) {
+                element.addEventListener('click', () => this.hideModal());
+            }
+        });
+
+        // ESC 키로 모달 닫기
+        const escKeyHandler = (e) => {
+            if (e.key === 'Escape') {
+                this.hideModal();
+                document.removeEventListener('keydown', escKeyHandler);
+            }
+        };
+        document.addEventListener('keydown', escKeyHandler);
+
+        // 모달 내부 클릭 시 이벤트 전파 방지
+        const modalContent = modal.querySelector('.modal-content');
+        modalContent.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
     }
 
     // 날짜 포맷 함수

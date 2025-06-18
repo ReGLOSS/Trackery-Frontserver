@@ -22,7 +22,60 @@
         </div>
     </div>
     <div class="detail-container">
-</div>
+    </div>
+    
+    <!-- 이미지 상세 보기 모달 -->
+    <div class="image-detail-modal" id="imageDetailModal" style="display: none;">
+        <div class="modal-overlay" id="modalOverlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="image-selected">
+                    <img src="/images/default-image4.webp" class="image-detail" alt="선택된 이미지" id="modalImage">
+
+                    <div class="description-area">
+                        <label for="modalDescription">설명</label>
+                        <textarea id="modalDescription" class="form-control" rows="5" placeholder="여기에 설명을 입력하세요..."
+                                  style="resize:none;" readonly></textarea>
+                    </div>
+
+                    <div class="tag-area">
+                        <label>태그</label>
+                        <div class="tag-box" id="modalTagBox">
+                            <!-- 태그들이 동적으로 추가됩니다 -->
+                        </div>
+                    </div>
+
+                    <div class="location-area">
+                        <label for="modalLocationBox">위치</label>
+                        <div class="location-box">
+                            <input id="modalLocationBox" class="form-control" type="text" value="" readonly/>
+                        </div>
+                    </div>
+
+                    <div class="date-area">
+                        <label for="modalDateBox">날짜</label>
+                        <div class="date-box">
+                            <input id="modalDateBox" class="form-control" type="text" value="" readonly/>
+                        </div>
+                    </div>
+
+                    <div class="checkbox-area">
+                        <label for="modalPublic">
+                            공개 사진
+                            <input type="checkbox" id="modalPublic" disabled/>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modalCancelBtn">취소</button>
+                <button class="btn btn-primary" id="modalEditBtn">수정</button>
+            </div>
+        </div>
+    </div>
 </section>
 <div layout:fragment="scripts">
     <script src="/home/js/map.js"></script>
