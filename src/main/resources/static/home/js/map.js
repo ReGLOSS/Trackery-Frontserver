@@ -7,6 +7,17 @@ class MapManager {
         this.sigunguData = null;
         this.userStats = null;
         this.navigationHistory = []; // 뒤로가기 버튼을 위한 탐색 기록 추적
+        
+        // 로딩 상태 관리
+        this.isLoading = false;
+        this.pendingRequests = new Set();
+        
+        // API 응답 캐싱
+        this.cachedSigunguData = new Map();
+        this.cachedImageData = new Map();
+        
+        // 디바운싱을 위한 타이머
+        this.debounceTimers = new Map();
 
         this.init();
     }
@@ -19,11 +30,14 @@ class MapManager {
 
     bindEvents() {
         const backBtn = document.getElementById('back-btn');
-        backBtn.addEventListener('click', () => this.goBack());
+        backBtn.addEventListener('click', () => this.debouncedGoBack());
     }
 
     async loadSidoView() {
+        if (this.isLoading) return;
+        
         try {
+            this.setLoadingState(true);
             this.showLoading();
             this.currentView = 'sido';
             this.currentSidoId = null;
@@ -50,11 +64,16 @@ class MapManager {
         } catch (error) {
             console.error('Error loading sido view:', error);
             this.showError('지도를 불러오는 중 오류가 발생했습니다.');
+        } finally {
+            this.setLoadingState(false);
         }
     }
 
     async loadSigunguView(sidoId) {
+        if (this.isLoading) return;
+        
         try {
+            this.setLoadingState(true);
             this.showLoading();
 
             // 탐색 기록에 추가
@@ -81,8 +100,8 @@ class MapManager {
 
             console.log('Loading sigungu for:', sidoId, 'Found sido info:', sidoInfo, 'Name:', sidoName);
 
-            // API에서 시군구 데이터 로드
-            await this.fetchSigunguData(sidoId);
+            // API에서 시군구 데이터 로드 (캐싱된 데이터 사용)
+            await this.fetchSigunguDataCached(sidoId);
 
             // 여전히 시도 이름이 없다면 시군구 데이터에서 가져오기
             if (sidoName === '지역' && this.sigunguData && this.sigunguData.length > 0) {
@@ -108,6 +127,8 @@ class MapManager {
         } catch (error) {
             console.error('Error loading sigungu view:', error);
             this.showError('시군구 지도를 불러오는 중 오류가 발생했습니다.');
+        } finally {
+            this.setLoadingState(false);
         }
     }
 
@@ -206,6 +227,8 @@ class MapManager {
         const paths = document.querySelectorAll('#map-display path');
         paths.forEach(path => {
             path.addEventListener('click', (e) => {
+                if (this.isLoading) return;
+                
                 const sidoId = e.target.id;
                 if (sidoId) {
                     // 시도 정보를 찾아서 이름만 표시
@@ -227,6 +250,8 @@ class MapManager {
         const paths = document.querySelectorAll('#map-display path');
         paths.forEach(path => {
             path.addEventListener('click', (e) => {
+                if (this.isLoading) return;
+                
                 const sigunguId = e.target.id;
                 if (sigunguId) {
                     this.handleSigunguClick(sigunguId);
@@ -282,6 +307,8 @@ class MapManager {
     }
 
     async handleSigunguClick(sigunguId) {
+        if (this.isLoading) return;
+        
         // 상세 뷰로 전환하기 전에 탐색 기록에 추가
         this.navigationHistory.push({
             view: 'sigungu',
@@ -356,6 +383,8 @@ class MapManager {
     }
 
     goBack() {
+        if (this.isLoading) return;
+        
         if (this.currentView === 'detail') {
             // 상세 뷰에서 시군구 뷰로 돌아가기
             this.loadSigunguViewWithoutHistory(this.currentSidoId);
@@ -367,10 +396,50 @@ class MapManager {
             this.loadSidoView();
         }
     }
+    
+    // 디바운싱된 뒤로가기 함수
+    debouncedGoBack() {
+        this.debounce('goBack', () => this.goBack(), 300);
+    }
+    
+    // 디바운싱 유틸리티
+    debounce(key, func, wait) {
+        if (this.debounceTimers.has(key)) {
+            clearTimeout(this.debounceTimers.get(key));
+        }
+        
+        const timeout = setTimeout(() => {
+            func();
+            this.debounceTimers.delete(key);
+        }, wait);
+        
+        this.debounceTimers.set(key, timeout);
+    }
+    
+    // 로딩 상태 관리
+    setLoadingState(isLoading) {
+        this.isLoading = isLoading;
+    }
+    
+    // 캐싱된 시군구 데이터 가져오기
+    async fetchSigunguDataCached(sidoId) {
+        const cacheKey = `sigungu_${sidoId}`;
+        
+        if (this.cachedSigunguData.has(cacheKey)) {
+            this.sigunguData = this.cachedSigunguData.get(cacheKey);
+            return;
+        }
+        
+        await this.fetchSigunguData(sidoId);
+        this.cachedSigunguData.set(cacheKey, this.sigunguData);
+    }
 
     async loadSigunguViewWithoutHistory(sidoId) {
         // loadSigunguView와 동일하지만 기록에 추가하지 않음
+        if (this.isLoading) return;
+        
         try {
+            this.setLoadingState(true);
             this.showLoading();
 
             this.currentView = 'sigungu';
@@ -393,8 +462,8 @@ class MapManager {
                 sidoName = sidoInfo.sd_name || sidoInfo.name || sidoInfo.sidoName || '지역';
             }
 
-            // API에서 시군구 데이터 로드
-            await this.fetchSigunguData(sidoId);
+            // API에서 시군구 데이터 로드 (캐싱된 데이터 사용)
+            await this.fetchSigunguDataCached(sidoId);
 
             // 여전히 시도 이름이 없다면 시군구 데이터에서 가져오기
             if (sidoName === '지역' && this.sigunguData && this.sigunguData.length > 0) {
@@ -423,6 +492,8 @@ class MapManager {
         } catch (error) {
             console.error('Error loading sigungu view:', error);
             this.showError('시군구 지도를 불러오는 중 오류가 발생했습니다.');
+        } finally {
+            this.setLoadingState(false);
         }
     }
 
@@ -566,8 +637,16 @@ class MapManager {
         }, obj);
     }
 
-    // 시도별 이미지 로드
+    // 시도별 이미지 로드 (캐싱 적용)
     async loadSidoImages(sidoId) {
+        const cacheKey = `sido_images_${sidoId}`;
+        
+        if (this.cachedImageData.has(cacheKey)) {
+            const cachedImages = this.cachedImageData.get(cacheKey);
+            this.displayImages(cachedImages, 'sido');
+            return;
+        }
+        
         try {
             const response = await fetch(`/api/location/sido/${sidoId}/images`, {
                 method: 'GET',
@@ -586,14 +665,23 @@ class MapManager {
             console.log('Sido images response:', responseData);
             const images = responseData.data || [];
             
+            this.cachedImageData.set(cacheKey, images);
             this.displayImages(images, 'sido');
         } catch (error) {
             console.error('Error loading sido images:', error);
         }
     }
 
-    // 시군구별 이미지 로드
+    // 시군구별 이미지 로드 (캐싱 적용)
     async loadSigunguImages(sigunguId) {
+        const cacheKey = `sigungu_images_${sigunguId}`;
+        
+        if (this.cachedImageData.has(cacheKey)) {
+            const cachedImages = this.cachedImageData.get(cacheKey);
+            this.displayImages(cachedImages, 'sigungu');
+            return;
+        }
+        
         try {
             const response = await fetch(`/api/location/sigungu/${sigunguId}/images`, {
                 method: 'GET',
@@ -612,6 +700,7 @@ class MapManager {
             console.log('Sigungu images response:', responseData);
             const images = responseData.data || [];
             
+            this.cachedImageData.set(cacheKey, images);
             this.displayImages(images, 'sigungu');
         } catch (error) {
             console.error('Error loading sigungu images:', error);
