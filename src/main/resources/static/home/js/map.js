@@ -12,9 +12,8 @@ class MapManager {
         this.isLoading = false;
         this.pendingRequests = new Set();
         
-        // API 응답 캐싱
+        // API 응답 캐싱 (시군구 데이터만)
         this.cachedSigunguData = new Map();
-        this.cachedImageData = new Map();
         
         // 디바운싱을 위한 타이머
         this.debounceTimers = new Map();
@@ -647,16 +646,8 @@ class MapManager {
         }, obj);
     }
 
-    // 시도별 이미지 로드 (캐싱 적용)
+    // 시도별 이미지 로드 (캐싱 없이 직접 로드)
     async loadSidoImages(sidoId) {
-        const cacheKey = `sido_images_${sidoId}`;
-        
-        if (this.cachedImageData.has(cacheKey)) {
-            const cachedImages = this.cachedImageData.get(cacheKey);
-            this.displayImages(cachedImages, 'sido');
-            return;
-        }
-        
         try {
             const response = await fetch(`/api/location/sido/${sidoId}/images`, {
                 method: 'GET',
@@ -675,23 +666,14 @@ class MapManager {
             console.log('Sido images response:', responseData);
             const images = responseData.data || [];
             
-            this.cachedImageData.set(cacheKey, images);
             this.displayImages(images, 'sido');
         } catch (error) {
             console.error('Error loading sido images:', error);
         }
     }
 
-    // 시군구별 이미지 로드 (캐싱 적용)
+    // 시군구별 이미지 로드 (캐싱 없이 직접 로드)
     async loadSigunguImages(sigunguId) {
-        const cacheKey = `sigungu_images_${sigunguId}`;
-        
-        if (this.cachedImageData.has(cacheKey)) {
-            const cachedImages = this.cachedImageData.get(cacheKey);
-            this.displayImages(cachedImages, 'sigungu');
-            return;
-        }
-        
         try {
             const response = await fetch(`/api/location/sigungu/${sigunguId}/images`, {
                 method: 'GET',
@@ -710,7 +692,6 @@ class MapManager {
             console.log('Sigungu images response:', responseData);
             const images = responseData.data || [];
             
-            this.cachedImageData.set(cacheKey, images);
             this.displayImages(images, 'sigungu');
         } catch (error) {
             console.error('Error loading sigungu images:', error);
@@ -781,7 +762,8 @@ class MapManager {
 
     // 이미지 상세 보기
     showImageDetail(imageId) {
-        console.log('Showing image detail for ID:', imageId);
+        console.log('=== SHOWING IMAGE DETAIL ===');
+        console.log('Image ID:', imageId);
         
         // 현재 표시된 이미지 카드에서 데이터 찾기
         const imageCard = document.querySelector(`.region-image-card[data-image-id="${imageId}"]`);
@@ -793,6 +775,16 @@ class MapManager {
         
         // dataset에서 데이터 추출
         const dataset = imageCard.dataset;
+        
+        // 디버깅: dataset의 모든 속성 출력
+        console.log('Raw dataset from image card:', {
+            imageId: dataset.imageId,
+            imageDate: dataset.imageDate,
+            imageContent: dataset.imageContent,
+            isPublic: dataset.isPublic,
+            latitude: dataset.latitude,
+            longitude: dataset.longitude
+        });
         
         // 태그 파싱
         let tags = [];
@@ -818,7 +810,8 @@ class MapManager {
             longitude: dataset.longitude || ''
         };
         
-        console.log('Image data extracted from dataset:', imageData);
+        console.log('Final imageData object passed to modal:', imageData);
+        console.log('=== END SHOWING IMAGE DETAIL ===');
         
         // 모달에 데이터 채우기
         this.populateImageModal(imageData);
@@ -865,19 +858,31 @@ class MapManager {
         }
         modalLocationBox.value = locationText;
 
-        // 날짜 - 원본 날짜 문자열을 직접 포맷팅
+        // 날짜 - flatpickr 형식에 맞게 포맷팅
         const modalDateBox = document.getElementById('modalDateBox');
         let dateText = '';
+        console.log('=== PROCESSING DATE FOR MODAL ===');
+        console.log('Original imageData.imageDate:', imageData.imageDate);
+        
         if (imageData.imageDate) {
-            // ISO 날짜 문자열인 경우 포맷팅
+            // ISO 날짜 문자열인 경우 flatpickr 형식으로 포맷팅
             if (imageData.imageDate.includes('T') || imageData.imageDate.includes('-')) {
-                dateText = this.formatDate(imageData.imageDate);
+                console.log('Detected ISO date format, converting to flatpickr format');
+                dateText = this.formatDateForFlatpickr(imageData.imageDate);
+                console.log('formatDateForFlatpickr() result:', dateText);
             } else {
                 // 이미 포맷된 문자열인 경우 그대로 사용
+                console.log('Using pre-formatted date string');
                 dateText = imageData.imageDate;
             }
+        } else {
+            console.log('No imageDate provided');
         }
+        
+        console.log('Final dateText to be set:', dateText);
         modalDateBox.value = dateText;
+        console.log('Actual modalDateBox.value after setting:', modalDateBox.value);
+        console.log('=== END PROCESSING DATE FOR MODAL ===');
 
         // 공개 여부 - 읽기 모드에서는 텍스트로 표시 (1=공개, 0=비공개)
         const modalPublicStatus = document.getElementById('modalPublicStatus');
@@ -895,7 +900,9 @@ class MapManager {
         this.originalModalData = {
             imageContent: imageData.imageContent || '',
             tags: imageData.tags || [],
-            isPublic: imageData.isPublic || false
+            isPublic: imageData.isPublic || false,
+            imageDate: imageData.imageDate || '',
+            locationName: locationText
         };
         
         // 편집 모드 초기화
@@ -985,7 +992,7 @@ class MapManager {
         });
     }
 
-    // 날짜 포맷 함수
+    // 날짜 포맷 함수 (한국어 형식)
     formatDate(dateString) {
         if (!dateString) return '';
         
@@ -997,6 +1004,22 @@ class MapManager {
                 day: 'numeric'
             });
         } catch (error) {
+            return dateString;
+        }
+    }
+
+    // flatpickr용 날짜 포맷팅 (Y / m / d 형식)
+    formatDateForFlatpickr(dateString) {
+        if (!dateString) return '';
+        
+        try {
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1; // 0-based이므로 +1
+            const day = date.getDate();
+            return `${year} / ${month} / ${day}`;
+        } catch (error) {
+            console.error('Error formatting date for flatpickr:', error);
             return dateString;
         }
     }
@@ -1073,6 +1096,12 @@ class MapManager {
         modalPublicStatus.style.display = 'none';
         modalPublicCheckboxArea.style.display = 'block';
         
+        // 날짜 피커 편집 모드 활성화
+        if (this.modalDatePicker) {
+            this.modalDatePicker.set('clickOpens', true);
+            this.modalDatePicker.set('allowInput', true);
+        }
+        
         // 버튼 가시성 업데이트
         this.updateModalButtonsVisibility();
         this.updateLocationDateEditButtons();
@@ -1087,10 +1116,20 @@ class MapManager {
             const modalDescription = document.getElementById('modalDescription');
             const modalPublic = document.getElementById('modalPublic');
             const modalPublicStatus = document.getElementById('modalPublicStatus');
+            const modalDateBox = document.getElementById('modalDateBox');
+            const modalLocationBox = document.getElementById('modalLocationBox');
             
             modalDescription.value = this.originalModalData.imageContent;
             modalPublic.checked = this.originalModalData.isPublic;
             modalPublicStatus.textContent = this.originalModalData.isPublic ? '공개' : '비공개';
+            
+            // 날짜와 위치도 원본으로 복원
+            if (this.originalModalData.imageDate) {
+                modalDateBox.value = this.formatDate(this.originalModalData.imageDate);
+            }
+            if (this.originalModalData.locationName) {
+                modalLocationBox.value = this.originalModalData.locationName;
+            }
         }
         
         // 입력 필드들을 읽기 전용으로 변경
@@ -1103,6 +1142,12 @@ class MapManager {
         
         modalPublicStatus.style.display = 'block';
         modalPublicCheckboxArea.style.display = 'none';
+        
+        // 날짜 피커 읽기 모드 비활성화
+        if (this.modalDatePicker) {
+            this.modalDatePicker.set('clickOpens', false);
+            this.modalDatePicker.set('allowInput', false);
+        }
         
         // 버튼 가시성 업데이트
         this.updateModalButtonsVisibility();
@@ -1163,7 +1208,7 @@ class MapManager {
         
         try {
             const response = await fetch(`/api/images/${imageId}`, {
-                method: 'PUT',
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
@@ -1182,6 +1227,49 @@ class MapManager {
             // 원본 데이터 업데이트
             this.originalModalData.imageContent = updateData.imageContent;
             this.originalModalData.isPublic = updateData.isPublic;
+            if (updateData.imageDate) {
+                this.originalModalData.imageDate = updateData.imageDate;
+            }
+            
+            // 이미지 카드의 dataset도 업데이트
+            if (imageCard) {
+                console.log('=== UPDATING IMAGE CARD DATASET ===');
+                console.log('Before update - dataset.imageDate:', imageCard.dataset.imageDate);
+                console.log('Update data imageDate:', updateData.imageDate);
+                
+                imageCard.dataset.imageContent = updateData.imageContent;
+                imageCard.dataset.isPublic = updateData.isPublic;
+                if (updateData.longitude !== null) {
+                    imageCard.dataset.latitude = updateData.longitude; // 실제로는 latitude 값
+                }
+                if (updateData.latitude !== null) {
+                    imageCard.dataset.longitude = updateData.latitude; // 실제로는 longitude 값
+                }
+                if (updateData.imageDate) {
+                    imageCard.dataset.imageDate = updateData.imageDate;
+                    console.log('After update - dataset.imageDate:', imageCard.dataset.imageDate);
+                } else {
+                    console.log('No imageDate provided in updateData, dataset not updated');
+                }
+                
+                console.log('=== END UPDATING IMAGE CARD DATASET ===');
+            }
+            
+            // 이미지 캐싱 제거로 인해 캐시 업데이트 불필요
+            
+            // 이미지 카드의 날짜 표시도 즉시 업데이트
+            if (updateData.imageDate && imageCard) {
+                const imageOverlay = imageCard.querySelector('.image-date');
+                if (imageOverlay) {
+                    imageOverlay.textContent = this.formatDate(updateData.imageDate);
+                }
+            }
+            
+            // 모달 데이터도 즉시 업데이트 (flatpickr 형식으로 포맷팅)
+            if (updateData.imageDate) {
+                const modalDateBox = document.getElementById('modalDateBox');
+                modalDateBox.value = this.formatDateForFlatpickr(updateData.imageDate);
+            }
             
             // 공개 상태 텍스트 업데이트
             const modalPublicStatus = document.getElementById('modalPublicStatus');
@@ -1189,9 +1277,6 @@ class MapManager {
             
             // 편집 모드 해제
             this.cancelEditMode();
-            
-            // 이미지 목록 새로고침
-            this.refreshCurrentImageList();
             
         } catch (error) {
             console.error('Error updating image:', error);
@@ -1244,9 +1329,6 @@ class MapManager {
 
     // 현재 보고 있는 이미지 목록 새로고침
     refreshCurrentImageList() {
-        // 캐시 클리어
-        this.cachedImageData.clear();
-        
         if (this.currentView === 'detail' && this.currentSigunguId) {
             // 시군구 상세 뷰인 경우
             this.loadSigunguImages(this.currentSigunguId);
@@ -1274,6 +1356,8 @@ class MapManager {
             dateFormat: "Y / m / d",
             maxDate: "today",
             locale: "ko",
+            clickOpens: false, // 클릭으로는 열리지 않도록 설정
+            allowInput: false, // 직접 입력 불가
             onClose: (selectedDates, dateStr) => {
                 if (dateStr && this.isEditMode) {
                     console.log('Date selected:', dateStr);
@@ -1406,6 +1490,7 @@ class MapManager {
             modalEditDateBtn.style.display = this.isEditMode ? 'inline' : 'none';
         }
     }
+
 
 }
 
