@@ -18,6 +18,16 @@ class MapManager {
         
         // 디바운싱을 위한 타이머
         this.debounceTimers = new Map();
+        
+        // 모달 편집 상태 관리
+        this.isEditMode = false;
+        this.originalModalData = null;
+        
+        // 날짜 픽커 인스턴스
+        this.modalDatePicker = null;
+        
+        // 모달 맵 픽커 데이터
+        this.modalFoundLocationData = {longitude: 0, latitude: 0, locationName: ""};
 
         this.init();
     }
@@ -803,7 +813,7 @@ class MapManager {
             locationName: dataset.sggName || dataset.sdName || '',
             imageDate: dataset.imageDate || '',
             tags: tags,
-            isPublic: dataset.isPublic === 'true',
+            isPublic: dataset.isPublic === 'true' || dataset.isPublic === '1' || dataset.isPublic === 1,
             latitude: dataset.latitude || '',
             longitude: dataset.longitude || ''
         };
@@ -869,13 +879,34 @@ class MapManager {
         }
         modalDateBox.value = dateText;
 
-        // 공개 여부
+        // 공개 여부 - 읽기 모드에서는 텍스트로 표시 (1=공개, 0=비공개)
+        const modalPublicStatus = document.getElementById('modalPublicStatus');
         const modalPublic = document.getElementById('modalPublic');
-        modalPublic.checked = imageData.isPublic || false;
+        
+        const isPublic = imageData.isPublic === 1 || imageData.isPublic === '1' || imageData.isPublic === true;
+        modalPublicStatus.textContent = isPublic ? '공개' : '비공개';
+        modalPublic.checked = isPublic;
 
         // 모달 버튼에 imageId 저장
         const modalEditBtn = document.getElementById('modalEditBtn');
         modalEditBtn.dataset.imageId = imageData.imageId;
+        
+        // 원본 데이터 저장
+        this.originalModalData = {
+            imageContent: imageData.imageContent || '',
+            tags: imageData.tags || [],
+            isPublic: imageData.isPublic || false
+        };
+        
+        // 편집 모드 초기화
+        this.isEditMode = false;
+        this.updateModalButtonsVisibility();
+        
+        // 날짜 피커 초기화
+        this.initModalDatePicker();
+        
+        // 모달 맵 픽커 초기화
+        this.initModalMapPicker();
     }
 
     // 모달 표시
@@ -900,20 +931,48 @@ class MapManager {
         const modal = document.getElementById('imageDetailModal');
         const modalOverlay = document.getElementById('modalOverlay');
         const modalClose = document.getElementById('modalClose');
-        const modalCloseBtn = document.getElementById('modalCloseBtn');
+        const modalCancelBtn = document.getElementById('modalCancelBtn');
+        const modalEditBtn = document.getElementById('modalEditBtn');
+        const modalDeleteBtn = document.getElementById('modalDeleteBtn');
+        const modalCancelEditBtn = document.getElementById('modalCancelEditBtn');
+        const modalSaveBtn = document.getElementById('modalSaveBtn');
 
         // 모달 닫기 이벤트들
-        const closeEvents = [modalOverlay, modalClose, modalCloseBtn];
+        const closeEvents = [modalOverlay, modalClose];
         closeEvents.forEach(element => {
             if (element) {
                 element.addEventListener('click', () => this.hideModal());
             }
         });
 
+        // 수정 버튼 클릭
+        if (modalEditBtn) {
+            modalEditBtn.addEventListener('click', () => this.enterEditMode());
+        }
+
+        // 삭제 버튼 클릭
+        if (modalDeleteBtn) {
+            modalDeleteBtn.addEventListener('click', () => this.deleteImage());
+        }
+
+        // 수정 취소 버튼 클릭
+        if (modalCancelEditBtn) {
+            modalCancelEditBtn.addEventListener('click', () => this.cancelEditMode());
+        }
+
+        // 저장 버튼 클릭
+        if (modalSaveBtn) {
+            modalSaveBtn.addEventListener('click', () => this.saveImageChanges());
+        }
+
         // ESC 키로 모달 닫기
         const escKeyHandler = (e) => {
             if (e.key === 'Escape') {
-                this.hideModal();
+                if (this.isEditMode) {
+                    this.cancelEditMode();
+                } else {
+                    this.hideModal();
+                }
                 document.removeEventListener('keydown', escKeyHandler);
             }
         };
@@ -996,6 +1055,355 @@ class MapManager {
         } catch (error) {
             console.error('Error checking sido images:', error);
             return false;
+        }
+    }
+
+    // 편집 모드 진입
+    enterEditMode() {
+        this.isEditMode = true;
+        
+        // 입력 필드들을 편집 가능하게 변경
+        const modalDescription = document.getElementById('modalDescription');
+        modalDescription.readOnly = false;
+        
+        // 공개 설정 UI 변경
+        const modalPublicStatus = document.getElementById('modalPublicStatus');
+        const modalPublicCheckboxArea = document.getElementById('modalPublicCheckboxArea');
+        
+        modalPublicStatus.style.display = 'none';
+        modalPublicCheckboxArea.style.display = 'block';
+        
+        // 버튼 가시성 업데이트
+        this.updateModalButtonsVisibility();
+        this.updateLocationDateEditButtons();
+    }
+
+    // 편집 모드 취소
+    cancelEditMode() {
+        this.isEditMode = false;
+        
+        // 원본 데이터로 복원
+        if (this.originalModalData) {
+            const modalDescription = document.getElementById('modalDescription');
+            const modalPublic = document.getElementById('modalPublic');
+            const modalPublicStatus = document.getElementById('modalPublicStatus');
+            
+            modalDescription.value = this.originalModalData.imageContent;
+            modalPublic.checked = this.originalModalData.isPublic;
+            modalPublicStatus.textContent = this.originalModalData.isPublic ? '공개' : '비공개';
+        }
+        
+        // 입력 필드들을 읽기 전용으로 변경
+        const modalDescription = document.getElementById('modalDescription');
+        modalDescription.readOnly = true;
+        
+        // 공개 설정 UI 변경
+        const modalPublicStatus = document.getElementById('modalPublicStatus');
+        const modalPublicCheckboxArea = document.getElementById('modalPublicCheckboxArea');
+        
+        modalPublicStatus.style.display = 'block';
+        modalPublicCheckboxArea.style.display = 'none';
+        
+        // 버튼 가시성 업데이트
+        this.updateModalButtonsVisibility();
+        this.updateLocationDateEditButtons();
+    }
+
+    // 모달 버튼 가시성 업데이트
+    updateModalButtonsVisibility() {
+        const modalEditBtn = document.getElementById('modalEditBtn');
+        const modalDeleteBtn = document.getElementById('modalDeleteBtn');
+        const modalCancelEditBtn = document.getElementById('modalCancelEditBtn');
+        const modalSaveBtn = document.getElementById('modalSaveBtn');
+        
+        if (this.isEditMode) {
+            // 편집 모드: 삭제, 수정 취소, 저장 버튼 표시
+            modalEditBtn.style.display = 'none';
+            modalDeleteBtn.style.display = 'inline-block';
+            modalCancelEditBtn.style.display = 'inline-block';
+            modalSaveBtn.style.display = 'inline-block';
+        } else {
+            // 읽기 모드: 수정 버튼만 표시
+            modalEditBtn.style.display = 'inline-block';
+            modalDeleteBtn.style.display = 'none';
+            modalCancelEditBtn.style.display = 'none';
+            modalSaveBtn.style.display = 'none';
+        }
+    }
+
+    // 이미지 변경사항 저장
+    async saveImageChanges() {
+        const modalEditBtn = document.getElementById('modalEditBtn');
+        const imageId = modalEditBtn.dataset.imageId;
+        
+        if (!imageId) {
+            console.error('Image ID not found');
+            return;
+        }
+        
+        // 현재 모달 데이터 수집
+        const modalDescription = document.getElementById('modalDescription');
+        const modalPublic = document.getElementById('modalPublic');
+        const modalLocationBox = document.getElementById('modalLocationBox');
+        const modalDateBox = document.getElementById('modalDateBox');
+        
+        // 현재 이미지 데이터에서 기존 정보 가져오기
+        const imageCard = document.querySelector(`.region-image-card[data-image-id="${imageId}"]`);
+        const dataset = imageCard?.dataset || {};
+        
+        const updateData = {
+            imageContent: modalDescription.value,
+            isPublic: modalPublic.checked ? 1 : 0, // 백엔드에서 Integer로 처리 (1=공개, 0=비공개)
+            // 위치 정보 - 맵에서 새로 선택되었다면 해당 좌표 사용, 아니면 기존 좌표 (longitude와 latitude 순서 수정)
+            longitude: this.modalFoundLocationData.latitude || parseFloat(dataset.latitude) || null,
+            latitude: this.modalFoundLocationData.longitude || parseFloat(dataset.longitude) || null,
+            // 날짜 정보 - 새로 선택되었다면 해당 날짜 사용, 아니면 현재 표시된 날짜
+            imageDate: modalDateBox.value ? this.formatDateForAPI(modalDateBox.value) : dataset.imageDate
+        };
+        
+        try {
+            const response = await fetch(`/api/images/${imageId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(updateData)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Failed to update image: ${response.status}`);
+            }
+            
+            // 성공적으로 업데이트됨
+            console.log('Image updated successfully');
+            
+            // 원본 데이터 업데이트
+            this.originalModalData.imageContent = updateData.imageContent;
+            this.originalModalData.isPublic = updateData.isPublic;
+            
+            // 공개 상태 텍스트 업데이트
+            const modalPublicStatus = document.getElementById('modalPublicStatus');
+            modalPublicStatus.textContent = updateData.isPublic ? '공개' : '비공개';
+            
+            // 편집 모드 해제
+            this.cancelEditMode();
+            
+            // 이미지 목록 새로고침
+            this.refreshCurrentImageList();
+            
+        } catch (error) {
+            console.error('Error updating image:', error);
+            alert('이미지 업데이트 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 이미지 삭제
+    async deleteImage() {
+        const modalEditBtn = document.getElementById('modalEditBtn');
+        const imageId = modalEditBtn.dataset.imageId;
+        
+        if (!imageId) {
+            console.error('Image ID not found');
+            return;
+        }
+        
+        // 삭제 확인
+        if (!confirm('정말로 이 이미지를 삭제하시겠습니까?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/images/${imageId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json'
+                },
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Failed to delete image: ${response.status}`);
+            }
+            
+            // 성공적으로 삭제됨
+            console.log('Image deleted successfully');
+            
+            // 모달 닫기
+            this.hideModal();
+            
+            // 이미지 목록 새로고침
+            this.refreshCurrentImageList();
+            
+        } catch (error) {
+            console.error('Error deleting image:', error);
+            alert('이미지 삭제 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 현재 보고 있는 이미지 목록 새로고침
+    refreshCurrentImageList() {
+        // 캐시 클리어
+        this.cachedImageData.clear();
+        
+        if (this.currentView === 'detail' && this.currentSigunguId) {
+            // 시군구 상세 뷰인 경우
+            this.loadSigunguImages(this.currentSigunguId);
+        } else if (this.currentView === 'sigungu' && this.currentSidoId) {
+            // 시도 뷰인 경우
+            this.loadSidoImages(this.currentSidoId);
+        }
+    }
+
+    // 날짜 피커 초기화
+    initModalDatePicker() {
+        if (typeof flatpickr === 'undefined') {
+            console.warn('Flatpickr not loaded');
+            return;
+        }
+
+        const modalDateBox = document.getElementById('modalDateBox');
+        
+        // 기존 인스턴스가 있다면 제거
+        if (this.modalDatePicker) {
+            this.modalDatePicker.destroy();
+        }
+
+        this.modalDatePicker = flatpickr(modalDateBox, {
+            dateFormat: "Y / m / d",
+            maxDate: "today",
+            locale: "ko",
+            onClose: (selectedDates, dateStr) => {
+                if (dateStr && this.isEditMode) {
+                    console.log('Date selected:', dateStr);
+                    // 날짜가 변경되었을 때 처리
+                }
+            }
+        });
+
+        // 편집 날짜 버튼 클릭 이벤트
+        const modalEditDateBtn = document.getElementById('modalEditDateBtn');
+        if (modalEditDateBtn) {
+            modalEditDateBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (this.isEditMode && this.modalDatePicker) {
+                    this.modalDatePicker.open();
+                }
+            });
+        }
+    }
+
+    // 모달 맵 픽커 초기화
+    initModalMapPicker() {
+        const modalMapPickerModal = document.getElementById('modalMapPickerModal');
+        const modalEditLocationBtn = document.getElementById('modalEditLocationBtn');
+        const modalMapPickSubmitBtn = modalMapPickerModal?.querySelector('#mapPickSubmitBtn');
+        const modalCancelMapPickBtn = modalMapPickerModal?.querySelector('#cancelMapPickBtn');
+        const modalMapPickResultForm = modalMapPickerModal?.querySelector('#mapPickResultForm');
+
+        if (!modalMapPickerModal || !modalEditLocationBtn) {
+            console.warn('Modal map picker elements not found');
+            return;
+        }
+
+        // 위치 편집 버튼 클릭
+        modalEditLocationBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (this.isEditMode) {
+                this.showModalMapPicker();
+            }
+        });
+
+        // 맵 픽커 확인 버튼
+        if (modalMapPickSubmitBtn) {
+            modalMapPickSubmitBtn.addEventListener('click', () => {
+                const modalLocationBox = document.getElementById('modalLocationBox');
+                if (this.modalFoundLocationData.locationName) {
+                    modalLocationBox.value = this.modalFoundLocationData.locationName;
+                    this.hideModalMapPicker();
+                }
+            });
+        }
+
+        // 맵 픽커 취소 버튼
+        if (modalCancelMapPickBtn) {
+            modalCancelMapPickBtn.addEventListener('click', () => {
+                this.hideModalMapPicker();
+            });
+        }
+    }
+
+    // 모달 맵 픽커 표시
+    showModalMapPicker() {
+        const modalMapPickerModal = document.getElementById('modalMapPickerModal');
+        if (modalMapPickerModal) {
+            modalMapPickerModal.classList.add('show');
+            
+            // 맵 크기 조정
+            setTimeout(() => {
+                if (window.map) {
+                    window.dispatchEvent(new Event('resize'));
+                }
+            }, 100);
+        }
+    }
+
+    // 모달 맵 픽커 숨기기
+    hideModalMapPicker() {
+        const modalMapPickerModal = document.getElementById('modalMapPickerModal');
+        if (modalMapPickerModal) {
+            modalMapPickerModal.classList.remove('show');
+            this.resetModalMapPickerVariations();
+        }
+    }
+
+    // 모달 맵 픽커 변수 초기화
+    resetModalMapPickerVariations() {
+        this.modalFoundLocationData = {longitude: 0, latitude: 0, locationName: ""};
+        const modalMapPickResultForm = document.querySelector('#modalMapPickerModal #mapPickResultForm');
+        const modalMapPickSubmitBtn = document.querySelector('#modalMapPickerModal #mapPickSubmitBtn');
+        
+        if (modalMapPickResultForm) {
+            modalMapPickResultForm.value = "";
+            modalMapPickResultForm.classList.remove("valid", "invalid");
+        }
+        if (modalMapPickSubmitBtn) {
+            modalMapPickSubmitBtn.disabled = true;
+        }
+    }
+
+    // API용 날짜 포맷팅 (flatpickr의 "Y / m / d" 형식을 LocalDateTime 형식으로 변환)
+    formatDateForAPI(dateString) {
+        if (!dateString) return null;
+        
+        try {
+            // "YYYY / M / D" 형식을 "YYYY-MM-DDTHH:mm:ss" 형식으로 변환 (LocalDateTime 형식)
+            const parts = dateString.split(' / ');
+            if (parts.length === 3) {
+                const year = parts[0];
+                const month = parts[1].padStart(2, '0');
+                const day = parts[2].padStart(2, '0');
+                // LocalDateTime 형식으로 변환 (시간은 12:00:00으로 설정)
+                return `${year}-${month}-${day}T12:00:00`;
+            }
+            return dateString;
+        } catch (error) {
+            console.error('Error formatting date for API:', error);
+            return dateString;
+        }
+    }
+
+    // 편집 모드에서 위치/날짜 편집 버튼 표시/숨김
+    updateLocationDateEditButtons() {
+        const modalEditLocationBtn = document.getElementById('modalEditLocationBtn');
+        const modalEditDateBtn = document.getElementById('modalEditDateBtn');
+        
+        if (modalEditLocationBtn) {
+            modalEditLocationBtn.style.display = this.isEditMode ? 'inline' : 'none';
+        }
+        if (modalEditDateBtn) {
+            modalEditDateBtn.style.display = this.isEditMode ? 'inline' : 'none';
         }
     }
 

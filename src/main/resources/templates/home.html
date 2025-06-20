@@ -6,6 +6,12 @@
 <head>
     <title>Trackery - Home</title>
     <link rel="stylesheet" href="/home/css/home.css" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/l10n/ko.min.js"></script>
+    <link th:replace="~{map/map-picker-modal :: mapPickerModalCss}">
+    <script th:replace="~{map/map-picker-modal :: proj4jsLib}"></script>
+    <script th:replace="~{map/map-picker-modal :: kostatMapScript}"></script>
 </head>
 <body>
 <section layout:fragment="content" class="home-container">
@@ -51,6 +57,7 @@
                     <div class="location-area">
                         <label for="modalLocationBox">위치</label>
                         <div class="location-box">
+                            <a href="#" class="text-muted" id="modalEditLocationBtn" style="display: none;">여기가 아닌가요?</a>
                             <input id="modalLocationBox" class="form-control" type="text" value="" readonly/>
                         </div>
                     </div>
@@ -58,26 +65,37 @@
                     <div class="date-area">
                         <label for="modalDateBox">날짜</label>
                         <div class="date-box">
+                            <a href="#" class="text-muted" id="modalEditDateBtn" style="display: none;">다른 날 다녀오셨나요?</a>
                             <input id="modalDateBox" class="form-control" type="text" value="" readonly/>
                         </div>
                     </div>
 
-                    <div class="checkbox-area">
-                        <label for="modalPublic">
-                            공개 사진
-                            <input type="checkbox" id="modalPublic" disabled/>
-                        </label>
+                    <div class="public-area">
+                        <label>공개 설정</label>
+                        <div class="public-status" id="modalPublicStatus">비공개</div>
+                        <div class="checkbox-area" id="modalPublicCheckboxArea" style="display: none;">
+                            <label for="modalPublic">
+                                공개 사진
+                                <input type="checkbox" id="modalPublic"/>
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" id="modalCancelBtn">취소</button>
                 <button class="btn btn-primary" id="modalEditBtn">수정</button>
+                <button class="btn btn-danger" id="modalDeleteBtn" style="display: none;">삭제</button>
+                <button class="btn btn-secondary" id="modalCancelEditBtn" style="display: none;">취소</button>
+                <button class="btn btn-success" id="modalSaveBtn" style="display: none;">저장</button>
             </div>
         </div>
     </div>
+    
+    <!-- Map Picker Modal -->
+    <div th:replace="~{map/map-picker-modal :: mapPickerModal('위치 선택', 'modalMapPickerModal')}"></div>
 </section>
 <div layout:fragment="scripts">
+    <script th:replace="~{map/map-picker-modal :: mapPickerModalJs}"></script>
     <script src="/home/js/map.js"></script>
 </div>
 </body>

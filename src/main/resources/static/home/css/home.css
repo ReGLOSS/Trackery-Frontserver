@@ -376,7 +376,8 @@
     width: 90%;
     max-width: 500px;
     max-height: 90vh;
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     animation: modalSlideIn 0.3s ease;
 }
 
@@ -415,6 +416,9 @@
 
 .modal-body {
     padding: 0 20px 20px;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
 }
 
 .modal-body .image-selected {
