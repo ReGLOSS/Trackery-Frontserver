@@ -1,5 +1,6 @@
 import {debounce, togglePasswordVisibility, validatePassword} from "/module/landing/utils.js"
 import {sendRequestVerificationEmail, authNumberVerification} from "/module/landing/email-verification.js"
+import {refreshSidebarProfile, updateSidebarField} from "/common/js/sidebar-utils.js"
 
 //모달 닫기 버튼
 document.getElementsByClassName("update-user-info-modal-close")[0]
@@ -46,7 +47,16 @@ document.getElementById("updatePasswordSubmitBtn").addEventListener("click", fun
     }).then(response => {
         if (response.status === 200) {
             alert("비밀번호가 변경되었습니다.");
-            location.reload();
+            // 비밀번호 변경은 사이드바에 영향을 주지 않으므로 모달만 닫기
+            const modal = document.getElementsByClassName("update-user-info-modal-container")[0];
+            const modalContent = modal.getElementsByClassName("modal-content")[0];
+            modalContent.style.transform = "translateX(100%)";
+            modalContent.addEventListener("transitionend", function handler() {
+                modal.classList.remove("active");
+                localStorage.removeItem("updateUserInfoModal");
+                modalContent.style.transform = "";
+                modalContent.removeEventListener("transitionend", handler);
+            });
         } else {
             response.json().then(data => {
                 alert(data.message);
@@ -110,7 +120,18 @@ updateUserNameSubmitBtn.addEventListener("click", function () {
             })
         } else {
             alert("유저명이 변경되었습니다.");
-            location.reload();
+            // 사이드바 유저명 업데이트
+            updateSidebarField('userName', updateUserNameInputForm.value);
+            // 모달 닫기
+            const modal = document.getElementsByClassName("update-user-info-modal-container")[0];
+            const modalContent = modal.getElementsByClassName("modal-content")[0];
+            modalContent.style.transform = "translateX(100%)";
+            modalContent.addEventListener("transitionend", function handler() {
+                modal.classList.remove("active");
+                localStorage.removeItem("updateUserInfoModal");
+                modalContent.style.transform = "";
+                modalContent.removeEventListener("transitionend", handler);
+            });
         }
     })
 })
@@ -148,7 +169,18 @@ updateNicknameSubmitBtn.addEventListener("click", function () {
             response.json().then(data => {
                 if (response.status === 200) {
                     alert("닉네임이 변경되었습니다.");
-                    location.reload();
+                    // 사이드바 닉네임 업데이트
+                    updateSidebarField('nickname', updateNicknameInputForm.value);
+                    // 모달 닫기
+                    const modal = document.getElementsByClassName("update-user-info-modal-container")[0];
+                    const modalContent = modal.getElementsByClassName("modal-content")[0];
+                    modalContent.style.transform = "translateX(100%)";
+                    modalContent.addEventListener("transitionend", function handler() {
+                        modal.classList.remove("active");
+                        localStorage.removeItem("updateUserInfoModal");
+                        modalContent.style.transform = "";
+                        modalContent.removeEventListener("transitionend", handler);
+                    });
                 } else {
                     alert(data?.message);
                 }
@@ -281,16 +313,19 @@ updateEmailSubmitBtn.addEventListener("click", function () {
             if (response.status === 200) {
                 console.log("이메일 변경 확인.");
                 alert("이메일이 변경되었습니다.");
-                location.reload();
+                // 이메일 변경은 사이드바에 영향을 주지 않으므로 모달만 닫기
+                const modal = document.getElementsByClassName("update-user-info-modal-container")[0];
+                const modalContent = modal.getElementsByClassName("modal-content")[0];
+                modalContent.style.transform = "translateX(100%)";
+                modalContent.addEventListener("transitionend", function handler() {
+                    modal.classList.remove("active");
+                    localStorage.removeItem("updateUserInfoModal");
+                    modalContent.style.transform = "";
+                    modalContent.removeEventListener("transitionend", handler);
+                });
             } else {
                 alert(data?.message);
             }
         })
     })
 })
-
-
-
-
-
-
