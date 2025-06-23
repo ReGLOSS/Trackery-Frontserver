@@ -1,45 +1,105 @@
-const mapPickerModal = document.querySelector('#mapPickerModal');
-const modalToggleButton = document.querySelector('#editLocationBtn');
-const mapPickSubmitBtn = document.querySelector('#mapPickSubmitBtn');
-const cancelMapPickBtn = document.querySelector('#cancelMapPickBtn');
-const resultForm = document.querySelector('#mapPickResultForm');
+// 홈 페이지와 업로드 페이지 모두 지원하도록 동적으로 선택
+const mapPickerModal = document.querySelector('#mapPickerModal') || document.querySelector('#modalMapPickerModal');
+const modalToggleButton = document.querySelector('#editLocationBtn') || document.querySelector('#modalEditLocationBtn');
+const mapPickSubmitBtn = mapPickerModal?.querySelector('#mapPickSubmitBtn');
+const cancelMapPickBtn = mapPickerModal?.querySelector('#cancelMapPickBtn');
+const resultForm = mapPickerModal?.querySelector('#mapPickResultForm');
 
-modalToggleButton.addEventListener('click', () => {
-    if (mapPickerModal.classList.contains('show') !== true) {
-        mapPickerModal.classList.toggle('show');
+// 업로드 페이지용 기본 이벤트 리스너 (modalEditLocationBtn이 아닌 경우에만)
+if (modalToggleButton && modalToggleButton.id === 'editLocationBtn') {
+    modalToggleButton.addEventListener('click', () => {
+        if (mapPickerModal && !mapPickerModal.classList.contains('show')) {
+            mapPickerModal.classList.toggle('show');
 
-        window.scrollTo({
-            top: document.querySelector('.detail-container').scrollHeight,
-            behavior: 'smooth'
-        });
+            window.scrollTo({
+                top: document.querySelector('.detail-container')?.scrollHeight || 0,
+                behavior: 'smooth'
+            });
 
-        window.dispatchEvent(new Event('resize'));
-    }
-});
+            window.dispatchEvent(new Event('resize'));
+        }
+    });
+}
 
 let currentMarker = null;
 let utmkcoor = null;
 
-map.on("click", function (e) {
-    setTimeout(function () {
-        let x_coor = e.utmk.x;
-        let y_coor = e.utmk.y;
-        utmkcoor = {x: x_coor, y: y_coor};
-        console.log(" 지도클릭 좌표 x :" + utmkcoor.x + " , y :" + utmkcoor.y);
-
-        if (currentMarker) {
-            map.removeLayer(currentMarker);
+// 지도 인스턴스 동적 찾기 (modalMapPickerModal 내부의 지도 또는 기본 map)
+function getMapInstance() {
+    if (mapPickerModal && mapPickerModal.id === 'modalMapPickerModal') {
+        // 홈 페이지의 modalMapPickerModal 내부의 지도 찾기
+        const mapElement = mapPickerModal.querySelector('#map');
+        if (mapElement && window.sop) {
+            // 이미 생성된 지도가 있는지 확인
+            if (!window.modalMap) {
+                window.modalMap = sop.map(mapElement, {
+                    zoomSliderControl: false,
+                    measureControl: false,
+                    attributionControl: false
+                });
+                window.modalMap.setView(sop.utmk(953820, 1953437), 9);
+            }
+            return window.modalMap;
         }
+    }
+    // 기본 map 인스턴스 반환 (업로드 페이지)
+    return window.map;
+}
 
-        let marker = sop.marker(utmkcoor);
-        marker.addTo(map);
+// 지도 클릭 이벤트는 지도 인스턴스가 초기화된 후에 바인딩
+function bindMapClickEvent() {
+    const mapInstance = getMapInstance();
+    if (mapInstance) {
+        mapInstance.on("click", function (e) {
+            setTimeout(function () {
+                let x_coor = e.utmk.x;
+                let y_coor = e.utmk.y;
+                utmkcoor = {x: x_coor, y: y_coor};
+                console.log(" 지도클릭 좌표 x :" + utmkcoor.x + " , y :" + utmkcoor.y);
 
-        fetchLocationName(utmkcoor);
+                if (currentMarker) {
+                    mapInstance.removeLayer(currentMarker);
+                }
 
-        currentMarker = marker;
+                let marker = sop.marker(utmkcoor);
+                marker.addTo(mapInstance);
 
-    }, 200);
-});
+                fetchLocationName(utmkcoor);
+
+                currentMarker = marker;
+
+            }, 200);
+        });
+    }
+}
+
+// 홈 페이지의 modalEditLocationBtn은 map.js에서 처리됩니다.
+// bindMapClickEvent 함수를 전역으로 노출 (map.js에서 사용)
+window.bindMapClickEvent = bindMapClickEvent;
+
+// 기존 map 변수가 있는 경우 (업로드 페이지) 즉시 바인딩
+if (typeof map !== 'undefined') {
+    map.on("click", function (e) {
+        setTimeout(function () {
+            let x_coor = e.utmk.x;
+            let y_coor = e.utmk.y;
+            utmkcoor = {x: x_coor, y: y_coor};
+            console.log(" 지도클릭 좌표 x :" + utmkcoor.x + " , y :" + utmkcoor.y);
+
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+            }
+
+            let marker = sop.marker(utmkcoor);
+            marker.addTo(map);
+
+            fetchLocationName(utmkcoor);
+
+            currentMarker = marker;
+
+        }, 200);
+    });
+}
 
 function convertUTMKtoWGS84(x, y) {
     const proj4 = window.proj4;
@@ -53,20 +113,36 @@ function convertUTMKtoWGS84(x, y) {
     // WGS84 좌표계 정의 (EPSG:4326)
     const wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
 
-    // 변환 실행
+    // 변환 실행 - proj4 result[0] = longitude, result[1] = latitude
     const result = proj4(utmk, wgs84, [x, y]);
 
+    console.log('UTMK to WGS84 conversion:');
+    console.log('Input UTMK:', {x, y});
+    console.log('Output WGS84 array:', result);
+    console.log('Parsed as longitude:', result[0], 'latitude:', result[1]);
+
     return {
-        longitude: result[0],
-        latitude: result[1]
+        longitude: result[0],  // result[0] is longitude (East-West, 124-132 for Korea)
+        latitude: result[1]    // result[1] is latitude (North-South, 33-43 for Korea)
     }
 }
 
 let foundLocationData = {longitude: 0, latitude: 0, locationName: ""}
 
+// 전역 변수로 내보내기 (map.js에서 사용)
+window.foundLocationData = foundLocationData;
+
 function fetchLocationName(utmkcoor) {
     const utmk = utmkcoor;
     const wgs84 = convertUTMKtoWGS84(utmk.x, utmk.y);
+
+    console.log('=== FETCH LOCATION NAME DEBUG ===');
+    console.log('UTMK coordinates:', utmk);
+    console.log('Converted WGS84:', wgs84);
+    console.log('Sending to API - longitude:', wgs84.longitude, 'latitude:', wgs84.latitude);
+    console.log('Korean territory check:');
+    console.log('  Latitude (33-43):', wgs84.latitude >= 33 && wgs84.latitude <= 43);
+    console.log('  Latitude (124-132):', wgs84.longitude >= 124 && wgs84.longitude <= 132);
 
     resultForm.classList.remove("valid", "invalid");
     mapPickSubmitBtn.disabled = true;
@@ -84,6 +160,9 @@ function fetchLocationName(utmkcoor) {
         })
     }).then(response => {
         response.json().then(data => {
+            console.log('API Response status:', response.status);
+            console.log('API Response data:', data);
+            
             if (response.status === 404) {
                 resultForm.value = "위치를 찾을 수 없습니다. 다른 곳으로 시도해주세요.";
                 toggleValidationClass(resultForm, false);
@@ -94,11 +173,21 @@ function fetchLocationName(utmkcoor) {
                 toggleValidationClass(resultForm, true);
                 mapPickSubmitBtn.disabled = false;
                 foundLocationData = {longitude: wgs84.longitude, latitude: wgs84.latitude, locationName: data.data};
+                window.foundLocationData = foundLocationData;
+                console.log('Final foundLocationData:', foundLocationData);
             } else {
+                console.error('API Error - Status:', response.status, 'Data:', data);
                 alert(data.message);
-                console.error(data.message);
             }
+            console.log('=== END FETCH LOCATION NAME DEBUG ===');
+        }).catch(error => {
+            console.error('JSON parsing error:', error);
+            console.log('Raw response:', response);
         })
+    }).catch(error => {
+        console.error('Fetch error:', error);
+        resultForm.value = "네트워크 오류가 발생했습니다.";
+        toggleValidationClass(resultForm, false);
     })
 }
 
@@ -133,15 +222,22 @@ cancelMapPickBtn.addEventListener('click', function () {
 });
 
 function resetVariations() {
-    if (currentMarker) {
-        map.removeLayer(currentMarker);
+    const mapInstance = getMapInstance();
+    if (currentMarker && mapInstance) {
+        mapInstance.removeLayer(currentMarker);
     }
-    map.setView(sop.utmk(953820, 1953437), 7);
+    if (mapInstance) {
+        mapInstance.setView(sop.utmk(953820, 1953437), 7);
+    }
     currentMarker = null;
     utmkcoor = null;
     foundLocationData = {longitude: 0, latitude: 0, locationName: ""}
-    resultForm.value = "";
-    resultForm.classList.remove("valid", "invalid");
-    mapPickSubmitBtn.disabled = true;
+    window.foundLocationData = foundLocationData;
+    if (resultForm) {
+        resultForm.value = "";
+        resultForm.classList.remove("valid", "invalid");
+    }
+    if (mapPickSubmitBtn) {
+        mapPickSubmitBtn.disabled = true;
+    }
 }
-
