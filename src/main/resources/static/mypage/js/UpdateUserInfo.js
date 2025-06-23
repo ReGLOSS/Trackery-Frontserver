@@ -329,3 +329,55 @@ updateEmailSubmitBtn.addEventListener("click", function () {
         })
     })
 })
+
+// OAuth 연동 기능
+const oauthProviders = ['google', 'kakao', 'naver', 'github'];
+
+oauthProviders.forEach(provider => {
+    const oauthButton = document.getElementById(provider + '-login');
+    if (oauthButton) {
+        oauthButton.addEventListener('click', function() {
+            linkOAuthAccount(provider);
+        });
+    }
+});
+
+function linkOAuthAccount(provider) {
+    // 기존 회원 OAuth 연동을 위해 폼 제출
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/oauth/link/${provider}`;
+    form.target = 'oauth-link-popup';
+    
+    // 팝업 창으로 OAuth 인증 시작
+    const popup = window.open('', 'oauth-link-popup', 'width=500,height=600,scrollbars=yes,resizable=yes');
+    
+    // 폼 제출
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+    
+    // 팝업 모니터링
+    const checkPopup = setInterval(function() {
+        if (popup.closed) {
+            clearInterval(checkPopup);
+            // 연동 완료 후 처리
+            setTimeout(() => {
+                // 성공 메시지 표시
+                alert(`${getProviderDisplayName(provider)} 계정 연동이 완료되었습니다.`);
+                // 사이드바 새로고침
+                refreshSidebarProfile();
+            }, 500);
+        }
+    }, 1000);
+}
+
+function getProviderDisplayName(provider) {
+    const providerNames = {
+        'google': '구글',
+        'kakao': '카카오',
+        'naver': '네이버',
+        'github': '깃허브'
+    };
+    return providerNames[provider] || provider;
+}
