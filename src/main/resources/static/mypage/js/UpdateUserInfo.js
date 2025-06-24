@@ -337,6 +337,10 @@ oauthProviders.forEach(provider => {
     const oauthButton = document.getElementById(provider + '-login');
     if (oauthButton) {
         oauthButton.addEventListener('click', function() {
+            // active 상태면 클릭 방지
+            if (oauthButton.classList.contains('active')) {
+                return;
+            }
             linkOAuthAccount(provider);
         });
     }
@@ -379,6 +383,12 @@ function linkOAuthAccount(provider) {
                     if (event.data.success) {
                         console.log(`${provider} OAuth 연동 성공`);
                         alert(`${getProviderDisplayName(provider)} 연동이 완료되었습니다.`);
+                        
+                        // OAuth 아이콘을 active 상태로 변경
+                        const oauthIcon = document.getElementById(provider + '-login');
+                        if (oauthIcon) {
+                            oauthIcon.classList.add('active');
+                        }
                     } else {
                         console.log(`${provider} OAuth 연동 실패:`, event.data.error);
                         alert(`${getProviderDisplayName(provider)} 연동에 실패했습니다: ${event.data.error || '알 수 없는 오류'}`);
@@ -405,6 +415,8 @@ function linkOAuthAccount(provider) {
                     setTimeout(() => {
                         console.log(`${provider} OAuth 팝업이 닫혔습니다. 사이드바를 새로고침합니다.`);
                         refreshSidebarProfile();
+                        // 연동 상태 재확인을 위해 유저 정보 다시 불러오기
+                        updateOAuthIconsStatus();
                     }, 500);
                 }
             }, 1000);
@@ -539,4 +551,36 @@ function getProviderDisplayName(provider) {
         'github': '깃허브'
     };
     return providerNames[provider] || provider;
+}
+
+// OAuth 아이콘 상태 업데이트 함수
+function updateOAuthIconsStatus() {
+    fetch("/api/users/details", {
+        method: "GET",
+        credentials: "include"
+    })
+    .then(response => response.json())
+    .then(data => {
+        const userData = data.data;
+        const activatedOAuthProviders = userData.OAuthList.map(oauth => oauth.provider.toLowerCase());
+        
+        // 모든 OAuth 아이콘을 일단 비활성화 상태로 초기화
+        oauthProviders.forEach(provider => {
+            const iconElement = document.getElementById(`${provider}-login`);
+            if (iconElement) {
+                iconElement.classList.remove("active");
+            }
+        });
+        
+        // 연동된 OAuth 제공업체만 활성화
+        activatedOAuthProviders.forEach(provider => {
+            const iconElement = document.getElementById(`${provider}-login`);
+            if (iconElement) {
+                iconElement.classList.add("active");
+            }
+        });
+    })
+    .catch(error => {
+        console.error("OAuth 상태 업데이트 실패:", error);
+    });
 }
