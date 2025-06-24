@@ -237,7 +237,9 @@ public class OAuthController {
 				apiUrl.append("&state=").append(state);
 			}
 			
+			// 링크 토큰이 있으면 파라미터로 전달
 			if (linkToken != null && !linkToken.trim().isEmpty()) {
+				apiUrl.append("&linkToken=").append(linkToken);
 				log.info("기존 회원 연동 API 호출: {}", apiUrl.toString());
 			} else {
 				log.info("신규 가입/로그인 API 호출: {}", apiUrl.toString());
