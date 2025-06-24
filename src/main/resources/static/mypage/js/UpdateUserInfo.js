@@ -343,33 +343,192 @@ oauthProviders.forEach(provider => {
 });
 
 function linkOAuthAccount(provider) {
-    // 기존 회원 OAuth 연동을 위해 폼 제출
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = `/oauth/link/${provider}`;
-    form.target = 'oauth-link-popup';
+    console.log('=== OAuth 연동 시작 ===');
+    console.log(`${provider} OAuth 연동을 시작합니다.`);
     
-    // 팝업 창으로 OAuth 인증 시작
-    const popup = window.open('', 'oauth-link-popup', 'width=500,height=600,scrollbars=yes,resizable=yes');
-    
-    // 폼 제출
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-    
-    // 팝업 모니터링
-    const checkPopup = setInterval(function() {
-        if (popup.closed) {
-            clearInterval(checkPopup);
-            // 연동 완료 후 처리
-            setTimeout(() => {
-                // 성공 메시지 표시
-                alert(`${getProviderDisplayName(provider)} 계정 연동이 완료되었습니다.`);
-                // 사이드바 새로고침
-                refreshSidebarProfile();
-            }, 500);
+    // 1단계: POST /api/users/oauth/link/{provider}/url로 OAuth URL 요청
+    fetch(`/api/users/oauth/link/${provider}/url`, {
+        method: 'POST',
+        credentials: 'include',  // JWT 쿠키 포함
+        headers: {
+            'Content-Type': 'application/json'
         }
-    }, 1000);
+    })
+    .then(response => {
+        console.log(`${provider} OAuth URL 생성 응답 상태:`, response.status);
+        if (response.ok) {
+            return response.json();
+        } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+    })
+    .then(data => {
+        console.log(`${provider} OAuth URL 응답:`, data);
+        if ((data.success || data.code === 200) && data.data && data.data.authUrl) {
+            const authUrl = data.data.authUrl;
+            
+            console.log(`${provider} OAuth URL:`, authUrl);
+            
+            // 팝업 메시지 리스너 설정
+            const messageListener = function(event) {
+                console.log('팝업에서 메시지 수신:', event.data);
+                
+                if (event.data && event.data.type === 'oauth-link-result') {
+                    window.removeEventListener('message', messageListener);
+                    
+                    if (event.data.success) {
+                        console.log(`${provider} OAuth 연동 성공`);
+                        alert(`${getProviderDisplayName(provider)} 연동이 완료되었습니다.`);
+                    } else {
+                        console.log(`${provider} OAuth 연동 실패:`, event.data.error);
+                        alert(`${getProviderDisplayName(provider)} 연동에 실패했습니다: ${event.data.error || '알 수 없는 오류'}`);
+                    }
+                    
+                    // 사이드바 새로고침 (연동 상태 확인)
+                    refreshSidebarProfile();
+                }
+            };
+            
+            window.addEventListener('message', messageListener);
+            
+            // 2단계: OAuth 인증 URL을 팝업으로 열기
+            const popup = window.open(authUrl, 'oauth-link-popup', 'width=500,height=600,scrollbars=yes,resizable=yes');
+            
+            // 팝업 모니터링 (메시지가 안 올 경우 대비)
+            const checkPopup = setInterval(function() {
+                if (popup.closed) {
+                    clearInterval(checkPopup);
+                    // 메시지 리스너 정리
+                    window.removeEventListener('message', messageListener);
+                    
+                    // 팝업이 닫혔을 때만 사이드바 새로고침 (메시지로 처리되지 않은 경우)
+                    setTimeout(() => {
+                        console.log(`${provider} OAuth 팝업이 닫혔습니다. 사이드바를 새로고침합니다.`);
+                        refreshSidebarProfile();
+                    }, 500);
+                }
+            }, 1000);
+        } else {
+            alert(data.message || 'OAuth URL 생성에 실패했습니다.');
+        }
+    })
+    .catch(error => {
+        console.error('OAuth 연동 오류:', error);
+        if (error.message.includes('401')) {
+            alert('로그인이 필요합니다. 페이지를 새로고침하고 다시 로그인해주세요.');
+        } else {
+            alert('OAuth 연동 중 오류가 발생했습니다.');
+        }
+    });
+}
+
+
+//로그인 시 간편로그인 기능 (로그인 페이지용)
+function startOAuthLogin(provider) {
+    console.log(`${provider} 간편로그인을 시작합니다.`);
+    
+    // OAuth 로그인 URL로 리다이렉트
+    window.location.href = `/oauth/${provider}`;
+}
+
+// 이메일 중복 시 계정 연동 확인 모달
+function showAccountLinkConfirmModal(provider, email, linkToken) {
+    const modal = document.createElement('div');
+    modal.className = 'account-link-modal';
+    modal.innerHTML = `
+        <div class="modal-backdrop">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">계정 연동</h5>
+                    </div>
+                    <div class="modal-body">
+                        <p>이미 가입된 이메일 계정이 있습니다:</p>
+                        <p><strong>${email}</strong></p>
+                        <p>${getProviderDisplayName(provider)} 계정과 연동하시겠습니까?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="cancelLinkBtn">취소</button>
+                        <button type="button" class="btn btn-primary" id="confirmLinkBtn">연동하기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 모달 스타일 추가
+    const style = document.createElement('style');
+    style.textContent = `
+        .account-link-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+        }
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.5);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-dialog {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 400px;
+            width: 90%;
+        }
+        .modal-header h5 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+        }
+        .modal-body {
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    document.body.appendChild(modal);
+    
+    // 취소 버튼 클릭
+    document.getElementById('cancelLinkBtn').addEventListener('click', function() {
+        document.body.removeChild(modal);
+        document.head.removeChild(style);
+        // 로그인 페이지로 이동
+        window.location.href = '/login';
+    });
+    
+    // 연동하기 버튼 클릭
+    document.getElementById('confirmLinkBtn').addEventListener('click', function() {
+        document.body.removeChild(modal);
+        document.head.removeChild(style);
+        // 링크 토큰과 함께 OAuth 인증 다시 시작
+        window.location.href = `/oauth/${provider}?link_token=${linkToken}`;
+    });
 }
 
 function getProviderDisplayName(provider) {
