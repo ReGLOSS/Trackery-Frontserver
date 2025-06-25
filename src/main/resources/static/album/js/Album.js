@@ -82,6 +82,17 @@ const ApiService = {
         return response.json();
     },
 
+    // 앨범 이미지 조회
+    async fetchAlbumImages(albumId) {
+        const response = await fetch(`/api/albums/${albumId}/images`, {
+            method: "GET",
+            credentials: "include"
+        })
+
+        await this.responseErrorHandler(response);
+        return response.json();
+    },
+
     // 내 이미지 목록 조회
     async fetchMyImages() {
         const response = await fetch("/api/images/me", {
@@ -1062,7 +1073,7 @@ const ImageEditMode = {
     async loadMyImages() {
         try {
             const response = await ApiService.fetchMyImages();
-            const imageList = response.data;
+            const imageList = response.data.list;
 
             if (imageList && imageList.length > 0) {
                 await UiUpdater.renderMyImagesGallery(imageList);
@@ -1485,8 +1496,7 @@ const EventHandlers = {
                 albumTitle: actualData.albumTitle,
                 albumDescription: actualData.albumDescription,
                 isPublic: actualData.isPublic,
-                imageCount: actualData.imageCount,
-                imageList: actualData.imageList
+                imageCount: actualData.imageCount
             };
 
             console.log(parsedData);
@@ -1499,7 +1509,10 @@ const EventHandlers = {
             );
 
             if (parsedData.imageCount > 0) {
-                await UiUpdater.renderAlbumDetailGallery(parsedData.imageList);
+                const imageApiResponse = await ApiService.fetchAlbumImages(albumId);
+                console.log(imageApiResponse);
+                const imageList = imageApiResponse.data.list;
+                await UiUpdater.renderAlbumDetailGallery(imageList);
             }
         } catch (error) {
             console.error("앨범 상세 정보 조회 실패:", error);
