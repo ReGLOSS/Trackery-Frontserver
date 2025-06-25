@@ -110,8 +110,8 @@ function setupOAuthButtons() {
                 // 메시지 이벤트 리스너 등록
                 window.addEventListener('message', function (event) {
                     if (event.data && event.data.oauthComplete) {
-                        // 인증 완료 시 temporal-main 페이지로 이동
-                        window.location.href = '/home';
+                        // 인증 완료 시 페이지 새로고침하여 사이드바도 함께 새로고침
+                        window.location.reload();
                     }
                 });
             });

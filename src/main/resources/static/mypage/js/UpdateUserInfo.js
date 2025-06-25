@@ -1,5 +1,6 @@
 import {debounce, togglePasswordVisibility, validatePassword} from "/module/landing/utils.js"
 import {sendRequestVerificationEmail, authNumberVerification} from "/module/landing/email-verification.js"
+import {refreshSidebarProfile, updateSidebarField} from "/common/js/sidebar-utils.js"
 
 //모달 닫기 버튼
 document.getElementsByClassName("update-user-info-modal-close")[0]
@@ -46,7 +47,16 @@ document.getElementById("updatePasswordSubmitBtn").addEventListener("click", fun
     }).then(response => {
         if (response.status === 200) {
             alert("비밀번호가 변경되었습니다.");
-            location.reload();
+            // 비밀번호 변경은 사이드바에 영향을 주지 않으므로 모달만 닫기
+            const modal = document.getElementsByClassName("update-user-info-modal-container")[0];
+            const modalContent = modal.getElementsByClassName("modal-content")[0];
+            modalContent.style.transform = "translateX(100%)";
+            modalContent.addEventListener("transitionend", function handler() {
+                modal.classList.remove("active");
+                localStorage.removeItem("updateUserInfoModal");
+                modalContent.style.transform = "";
+                modalContent.removeEventListener("transitionend", handler);
+            });
         } else {
             response.json().then(data => {
                 alert(data.message);
@@ -110,7 +120,18 @@ updateUserNameSubmitBtn.addEventListener("click", function () {
             })
         } else {
             alert("유저명이 변경되었습니다.");
-            location.reload();
+            // 사이드바 유저명 업데이트
+            updateSidebarField('userName', updateUserNameInputForm.value);
+            // 모달 닫기
+            const modal = document.getElementsByClassName("update-user-info-modal-container")[0];
+            const modalContent = modal.getElementsByClassName("modal-content")[0];
+            modalContent.style.transform = "translateX(100%)";
+            modalContent.addEventListener("transitionend", function handler() {
+                modal.classList.remove("active");
+                localStorage.removeItem("updateUserInfoModal");
+                modalContent.style.transform = "";
+                modalContent.removeEventListener("transitionend", handler);
+            });
         }
     })
 })
@@ -148,7 +169,18 @@ updateNicknameSubmitBtn.addEventListener("click", function () {
             response.json().then(data => {
                 if (response.status === 200) {
                     alert("닉네임이 변경되었습니다.");
-                    location.reload();
+                    // 사이드바 닉네임 업데이트
+                    updateSidebarField('nickname', updateNicknameInputForm.value);
+                    // 모달 닫기
+                    const modal = document.getElementsByClassName("update-user-info-modal-container")[0];
+                    const modalContent = modal.getElementsByClassName("modal-content")[0];
+                    modalContent.style.transform = "translateX(100%)";
+                    modalContent.addEventListener("transitionend", function handler() {
+                        modal.classList.remove("active");
+                        localStorage.removeItem("updateUserInfoModal");
+                        modalContent.style.transform = "";
+                        modalContent.removeEventListener("transitionend", handler);
+                    });
                 } else {
                     alert(data?.message);
                 }
@@ -281,7 +313,16 @@ updateEmailSubmitBtn.addEventListener("click", function () {
             if (response.status === 200) {
                 console.log("이메일 변경 확인.");
                 alert("이메일이 변경되었습니다.");
-                location.reload();
+                // 이메일 변경은 사이드바에 영향을 주지 않으므로 모달만 닫기
+                const modal = document.getElementsByClassName("update-user-info-modal-container")[0];
+                const modalContent = modal.getElementsByClassName("modal-content")[0];
+                modalContent.style.transform = "translateX(100%)";
+                modalContent.addEventListener("transitionend", function handler() {
+                    modal.classList.remove("active");
+                    localStorage.removeItem("updateUserInfoModal");
+                    modalContent.style.transform = "";
+                    modalContent.removeEventListener("transitionend", handler);
+                });
             } else {
                 alert(data?.message);
             }
@@ -289,8 +330,257 @@ updateEmailSubmitBtn.addEventListener("click", function () {
     })
 })
 
+// OAuth 연동 기능
+const oauthProviders = ['google', 'kakao', 'naver', 'github'];
+
+oauthProviders.forEach(provider => {
+    const oauthButton = document.getElementById(provider + '-login');
+    if (oauthButton) {
+        oauthButton.addEventListener('click', function() {
+            // active 상태면 클릭 방지
+            if (oauthButton.classList.contains('active')) {
+                return;
+            }
+            linkOAuthAccount(provider);
+        });
+    }
+});
+
+function linkOAuthAccount(provider) {
+    console.log('=== OAuth 연동 시작 ===');
+    console.log(`${provider} OAuth 연동을 시작합니다.`);
+    
+    // 1단계: POST /api/users/oauth/link/{provider}/url로 OAuth URL 요청
+    fetch(`/api/users/oauth/link/${provider}/url`, {
+        method: 'POST',
+        credentials: 'include',  // JWT 쿠키 포함
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        console.log(`${provider} OAuth URL 생성 응답 상태:`, response.status);
+        if (response.ok) {
+            return response.json();
+        } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+    })
+    .then(data => {
+        console.log(`${provider} OAuth URL 응답:`, data);
+        if ((data.success || data.code === 200) && data.data && data.data.authUrl) {
+            const authUrl = data.data.authUrl;
+            
+            console.log(`${provider} OAuth URL:`, authUrl);
+            
+            // 팝업 메시지 리스너 설정
+            const messageListener = function(event) {
+                console.log('팝업에서 메시지 수신:', event.data);
+                
+                if (event.data && event.data.type === 'oauth-link-result') {
+                    window.removeEventListener('message', messageListener);
+                    
+                    if (event.data.success) {
+                        console.log(`${provider} OAuth 연동 성공`);
+                        alert(`${getProviderDisplayName(provider)} 연동이 완료되었습니다.`);
+                        
+                        // OAuth 아이콘을 active 상태로 변경
+                        const oauthIcon = document.getElementById(provider + '-login');
+                        if (oauthIcon) {
+                            oauthIcon.classList.add('active');
+                        }
+                    } else {
+                        console.log(`${provider} OAuth 연동 실패:`, event.data.error);
+                        alert(`${getProviderDisplayName(provider)} 연동에 실패했습니다: ${event.data.error || '알 수 없는 오류'}`);
+                    }
+                    
+                    // 사이드바 새로고침 (연동 상태 확인)
+                    refreshSidebarProfile();
+                }
+            };
+            
+            window.addEventListener('message', messageListener);
+            
+            // 2단계: OAuth 인증 URL을 팝업으로 열기
+            const popup = window.open(authUrl, 'oauth-link-popup', 'width=500,height=600,scrollbars=yes,resizable=yes');
+            
+            // 팝업 모니터링 (메시지가 안 올 경우 대비)
+            const checkPopup = setInterval(function() {
+                if (popup.closed) {
+                    clearInterval(checkPopup);
+                    // 메시지 리스너 정리
+                    window.removeEventListener('message', messageListener);
+                    
+                    // 팝업이 닫혔을 때만 사이드바 새로고침 (메시지로 처리되지 않은 경우)
+                    setTimeout(() => {
+                        console.log(`${provider} OAuth 팝업이 닫혔습니다. 사이드바를 새로고침합니다.`);
+                        refreshSidebarProfile();
+                        // 연동 상태 재확인을 위해 유저 정보 다시 불러오기
+                        updateOAuthIconsStatus();
+                    }, 500);
+                }
+            }, 1000);
+        } else {
+            alert(data.message || 'OAuth URL 생성에 실패했습니다.');
+        }
+    })
+    .catch(error => {
+        console.error('OAuth 연동 오류:', error);
+        if (error.message.includes('401')) {
+            alert('로그인이 필요합니다. 페이지를 새로고침하고 다시 로그인해주세요.');
+        } else {
+            alert('OAuth 연동 중 오류가 발생했습니다.');
+        }
+    });
+}
 
 
+//로그인 시 간편로그인 기능 (로그인 페이지용)
+function startOAuthLogin(provider) {
+    console.log(`${provider} 간편로그인을 시작합니다.`);
+    
+    // OAuth 로그인 URL로 리다이렉트
+    window.location.href = `/oauth/${provider}`;
+}
 
+// 이메일 중복 시 계정 연동 확인 모달
+function showAccountLinkConfirmModal(provider, email, linkToken) {
+    const modal = document.createElement('div');
+    modal.className = 'account-link-modal';
+    modal.innerHTML = `
+        <div class="modal-backdrop">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">계정 연동</h5>
+                    </div>
+                    <div class="modal-body">
+                        <p>이미 가입된 이메일 계정이 있습니다:</p>
+                        <p><strong>${email}</strong></p>
+                        <p>${getProviderDisplayName(provider)} 계정과 연동하시겠습니까?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="cancelLinkBtn">취소</button>
+                        <button type="button" class="btn btn-primary" id="confirmLinkBtn">연동하기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 모달 스타일 추가
+    const style = document.createElement('style');
+    style.textContent = `
+        .account-link-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+        }
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.5);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-dialog {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 400px;
+            width: 90%;
+        }
+        .modal-header h5 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+        }
+        .modal-body {
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    document.body.appendChild(modal);
+    
+    // 취소 버튼 클릭
+    document.getElementById('cancelLinkBtn').addEventListener('click', function() {
+        document.body.removeChild(modal);
+        document.head.removeChild(style);
+        // 로그인 페이지로 이동
+        window.location.href = '/login';
+    });
+    
+    // 연동하기 버튼 클릭
+    document.getElementById('confirmLinkBtn').addEventListener('click', function() {
+        document.body.removeChild(modal);
+        document.head.removeChild(style);
+        // 링크 토큰과 함께 OAuth 인증 다시 시작
+        window.location.href = `/oauth/${provider}?link_token=${linkToken}`;
+    });
+}
 
+function getProviderDisplayName(provider) {
+    const providerNames = {
+        'google': '구글',
+        'kakao': '카카오',
+        'naver': '네이버',
+        'github': '깃허브'
+    };
+    return providerNames[provider] || provider;
+}
 
+// OAuth 아이콘 상태 업데이트 함수
+function updateOAuthIconsStatus() {
+    fetch("/api/users/details", {
+        method: "GET",
+        credentials: "include"
+    })
+    .then(response => response.json())
+    .then(data => {
+        const userData = data.data;
+        const activatedOAuthProviders = userData.OAuthList.map(oauth => oauth.provider.toLowerCase());
+        
+        // 모든 OAuth 아이콘을 일단 비활성화 상태로 초기화
+        oauthProviders.forEach(provider => {
+            const iconElement = document.getElementById(`${provider}-login`);
+            if (iconElement) {
+                iconElement.classList.remove("active");
+            }
+        });
+        
+        // 연동된 OAuth 제공업체만 활성화
+        activatedOAuthProviders.forEach(provider => {
+            const iconElement = document.getElementById(`${provider}-login`);
+            if (iconElement) {
+                iconElement.classList.add("active");
+            }
+        });
+    })
+    .catch(error => {
+        console.error("OAuth 상태 업데이트 실패:", error);
+    });
+}
