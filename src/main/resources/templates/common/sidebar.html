@@ -47,12 +47,14 @@
             <!-- 사용자 프로필 -->
             <div class="user-profile text-center">
                 <div class="mx-auto mb-2">
-                    <img
-                            th:src="${userProfile != null && userProfile.userProfile != null ?
-                      userProfile.userProfile : '/images/profile.jpg'}"
-                            class="rounded-circle user-avatar"
-                            alt="사용자 아바타"
-                            onerror="this.src='/images/profile.jpg'">
+                    <a href="mypage">
+                        <img
+                                th:src="${userProfile != null && userProfile.userProfile != null ?
+                          userProfile.userProfile : '/images/profile.jpg'}"
+                                class="rounded-circle user-avatar"
+                                alt="사용자 아바타"
+                                onerror="this.src='/images/profile.jpg'">
+                    </a>
                 </div>
                 <div class="user-info">
                     <p class="m-0 fw-bold text-white" th:text="${userProfile != null ? userProfile.nickname : '유저명'}">
