@@ -584,3 +584,80 @@ function updateOAuthIconsStatus() {
         console.error("OAuth 상태 업데이트 실패:", error);
     });
 }
+
+// 회원 탈퇴 기능 - 모달 로드 후 실행되도록 수정
+function initDeleteAccountButton() {
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+    
+    if (deleteAccountBtn) {
+        deleteAccountBtn.addEventListener('click', function() {
+            // 확인 모달 생성
+            const modal = document.createElement('div');
+            modal.id = 'deleteAccountConfirmModal';
+            modal.style.cssText = `
+                display: block;
+                position: fixed;
+                z-index: 10000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.4);
+            `;
+            
+            modal.innerHTML = `
+                <div style="background-color: #fefefe; margin: 15% auto; padding: 20px; border: none; border-radius: 8px; width: 400px; max-width: 90%; text-align: center; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <div style="color: #dc3545; font-size: 48px; margin-bottom: 20px;">⚠️</div>
+                    <div style="font-size: 24px; font-weight: bold; color: #dc3545; margin-bottom: 15px;">회원 탈퇴</div>
+                    <div style="font-size: 16px; color: #6c757d; margin-bottom: 30px; line-height: 1.5;">
+                        정말로 회원 탈퇴를 진행하시겠습니까?<br>
+                        <strong>탈퇴시 모든 연동된 간편 로그인은 해제되며,<br>
+                        다시 복구할 수 없습니다.</strong>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button id="cancelDeleteBtn" style="background-color: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px;">취소</button>
+                        <button id="confirmDeleteBtn" style="background-color: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px;">탈퇴하기</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // 취소 버튼
+            document.getElementById('cancelDeleteBtn').addEventListener('click', function() {
+                document.body.removeChild(modal);
+            });
+            
+            // 탈퇴하기 버튼
+            document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
+                try {
+                    const response = await fetch('/api/users/delete', {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+
+                    if (response.ok) {
+                        alert('회원 탈퇴가 완료되었습니다.');
+                        window.location.href = '/';
+                    } else {
+                        alert('회원 탈퇴 중 오류가 발생했습니다.');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('회원 탈퇴 중 오류가 발생했습니다.');
+                }
+                document.body.removeChild(modal);
+            });
+            
+            // 모달 외부 클릭시 닫기
+            modal.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    document.body.removeChild(modal);
+                }
+            });
+        });
+    }
+}
+
+// 함수 호출
+initDeleteAccountButton();
