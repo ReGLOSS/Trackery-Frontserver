@@ -47,6 +47,8 @@ document.getElementById("updatePasswordSubmitBtn").addEventListener("click", fun
     }).then(response => {
         if (response.status === 200) {
             alert("비밀번호가 변경되었습니다.");
+            // 폼 리셋
+            resetPasswordForm();
             // 비밀번호 변경은 사이드바에 영향을 주지 않으므로 모달만 닫기
             const modal = document.getElementsByClassName("update-user-info-modal-container")[0];
             const modalContent = modal.getElementsByClassName("modal-content")[0];
@@ -103,7 +105,7 @@ updateUserNameVerifyBtn.addEventListener("click", function () {
     })
 })
 
-updateUserNameSubmitBtn.addEventListener("click", function () {
+updateUserNameSubmitBtn.addEventListener("click", async function () {
     fetch("/api/users/me/username", {
         method: "PATCH",
         credentials: "include",
@@ -120,8 +122,17 @@ updateUserNameSubmitBtn.addEventListener("click", function () {
             })
         } else {
             alert("유저명이 변경되었습니다.");
-            // 사이드바 유저명 업데이트
-            updateSidebarField('userName', updateUserNameInputForm.value);
+            // 사이드바 유저명 업데이트 (서버에서 최신 데이터 가져오기)
+            refreshSidebarProfile().then(() => {
+                console.log('사이드바 새로고침 완료');
+            });
+            // 세션 새로고침
+            refreshUserSession();
+            // 메인 페이지 유저명 업데이트
+            document.getElementById("userName").textContent = "@" + updateUserNameInputForm.value;
+            document.getElementById("presentUserNameInputForm").value = updateUserNameInputForm.value;
+            // 폼 리셋
+            resetUsernameForm();
             // 모달 닫기
             const modal = document.getElementsByClassName("update-user-info-modal-container")[0];
             const modalContent = modal.getElementsByClassName("modal-content")[0];
@@ -152,7 +163,7 @@ updateNicknameInputForm.addEventListener("input", debounce(
 
 const updateNicknameRequiredInputs = [updateNicknameInputForm];
 
-updateNicknameSubmitBtn.addEventListener("click", function () {
+updateNicknameSubmitBtn.addEventListener("click", async function () {
     console.log(updateNicknameInputForm.value);
     fetch("/api/users/me/nickname",
         {
@@ -169,8 +180,17 @@ updateNicknameSubmitBtn.addEventListener("click", function () {
             response.json().then(data => {
                 if (response.status === 200) {
                     alert("닉네임이 변경되었습니다.");
-                    // 사이드바 닉네임 업데이트
-                    updateSidebarField('nickname', updateNicknameInputForm.value);
+                    // 사이드바 닉네임 업데이트 (서버에서 최신 데이터 가져오기)
+                    refreshSidebarProfile().then(() => {
+                        console.log('사이드바 새로고침 완료');
+                    });
+                    // 세션 새로고침
+                    refreshUserSession();
+                    // 메인 페이지 닉네임 업데이트
+                    document.getElementById("nickname").textContent = updateNicknameInputForm.value;
+                    document.getElementById("presentNicknameInputForm").value = updateNicknameInputForm.value;
+                    // 폼 리셋
+                    resetNicknameForm();
                     // 모달 닫기
                     const modal = document.getElementsByClassName("update-user-info-modal-container")[0];
                     const modalContent = modal.getElementsByClassName("modal-content")[0];
@@ -313,6 +333,10 @@ updateEmailSubmitBtn.addEventListener("click", function () {
             if (response.status === 200) {
                 console.log("이메일 변경 확인.");
                 alert("이메일이 변경되었습니다.");
+                // 메인 페이지 이메일 업데이트
+                document.getElementById("presentEmailInputForm").value = updateEmailInputForm.value;
+                // 폼 리셋
+                resetEmailForm();
                 // 이메일 변경은 사이드바에 영향을 주지 않으므로 모달만 닫기
                 const modal = document.getElementsByClassName("update-user-info-modal-container")[0];
                 const modalContent = modal.getElementsByClassName("modal-content")[0];
@@ -584,3 +608,143 @@ function updateOAuthIconsStatus() {
         console.error("OAuth 상태 업데이트 실패:", error);
     });
 }
+
+// 회원 탈퇴 기능 - 모달 로드 후 실행되도록 수정
+function initDeleteAccountButton() {
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+    
+    if (deleteAccountBtn) {
+        deleteAccountBtn.addEventListener('click', function() {
+            // 확인 모달 생성
+            const modal = document.createElement('div');
+            modal.id = 'deleteAccountConfirmModal';
+            modal.style.cssText = `
+                display: block;
+                position: fixed;
+                z-index: 10000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.4);
+            `;
+            
+            modal.innerHTML = `
+                <div style="background-color: #fefefe; margin: 15% auto; padding: 20px; border: none; border-radius: 8px; width: 400px; max-width: 90%; text-align: center; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <div style="color: #dc3545; font-size: 48px; margin-bottom: 20px;">⚠️</div>
+                    <div style="font-size: 24px; font-weight: bold; color: #dc3545; margin-bottom: 15px;">회원 탈퇴</div>
+                    <div style="font-size: 16px; color: #6c757d; margin-bottom: 30px; line-height: 1.5;">
+                        정말로 회원 탈퇴를 진행하시겠습니까?<br>
+                        <strong>탈퇴시 모든 연동된 간편 로그인은 해제되며,<br>
+                        다시 복구할 수 없습니다.</strong>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button id="cancelDeleteBtn" style="background-color: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px;">취소</button>
+                        <button id="confirmDeleteBtn" style="background-color: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px;">탈퇴하기</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // 취소 버튼
+            document.getElementById('cancelDeleteBtn').addEventListener('click', function() {
+                document.body.removeChild(modal);
+            });
+            
+            // 탈퇴하기 버튼
+            document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
+                try {
+                    const response = await fetch('/api/users/delete', {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+
+                    if (response.ok) {
+                        alert('회원 탈퇴가 완료되었습니다.');
+                        window.location.href = '/';
+                    } else {
+                        alert('회원 탈퇴 중 오류가 발생했습니다.');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('회원 탈퇴 중 오류가 발생했습니다.');
+                }
+                document.body.removeChild(modal);
+            });
+            
+            // 모달 외부 클릭시 닫기
+            modal.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    document.body.removeChild(modal);
+                }
+            });
+        });
+    }
+}
+
+// 폼 리셋 함수들
+function resetUsernameForm() {
+    updateUserNameInputForm.value = "";
+    updateUserNameInputForm.disabled = false;
+    updateUserNameInputForm.classList.remove("is-valid", "is-invalid");
+    updateUserNameVerifyBtn.textContent = "중복 확인";
+    updateUserNameVerifyBtn.disabled = true;
+    updateUserNameSubmitBtn.disabled = true;
+    document.getElementsByClassName("update-username-block")[0].style.display = "none";
+}
+
+function resetNicknameForm() {
+    updateNicknameInputForm.value = "";
+    updateNicknameInputForm.classList.remove("is-valid", "is-invalid");
+    updateNicknameSubmitBtn.disabled = true;
+    document.getElementsByClassName("update-nickname-block")[0].style.display = "none";
+}
+
+function resetEmailForm() {
+    updateEmailInputForm.value = "";
+    updateEmailInputForm.readOnly = false;
+    emailAuthNumberInputForm.value = "";
+    requestEmailVerificationBtn.disabled = true;
+    verifyAuthNumberBtn.disabled = true;
+    updateEmailSubmitBtn.disabled = true;
+    document.getElementsByClassName("update-email-block")[0].style.display = "none";
+}
+
+function resetPasswordForm() {
+    presentPasswordInputForm.value = "";
+    updateNewPasswordInputForm.value = "";
+    updateNewPasswordConfirmInputForm.value = "";
+    
+    presentPasswordInputForm.closest(".input-group").classList.remove("is-valid", "is-invalid");
+    updateNewPasswordInputForm.closest(".input-group").classList.remove("is-valid", "is-invalid");
+    updateNewPasswordConfirmInputForm.closest(".input-group").classList.remove("is-valid", "is-invalid");
+    
+    updatePasswordSubmitBtn.disabled = true;
+    document.getElementsByClassName("update-password-block")[0].style.display = "none";
+}
+
+// 세션 새로고침 함수
+function refreshUserSession() {
+    fetch('/mypage/refresh-session', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('세션 새로고침 완료:', data.message);
+        } else {
+            console.warn('세션 새로고침 실패:', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('세션 새로고침 중 오류:', error);
+    });
+}
+
+// 함수 호출
+initDeleteAccountButton();
