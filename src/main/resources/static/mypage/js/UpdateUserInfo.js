@@ -386,6 +386,8 @@ function linkOAuthAccount(provider) {
         console.log(`${provider} OAuth URL 생성 응답 상태:`, response.status);
         if (response.ok) {
             return response.json();
+        } else if (response.status === 409) {
+            throw new Error('409');
         } else {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
@@ -415,7 +417,14 @@ function linkOAuthAccount(provider) {
                         }
                     } else {
                         console.log(`${provider} OAuth 연동 실패:`, event.data.error);
-                        alert(`${getProviderDisplayName(provider)} 연동에 실패했습니다: ${event.data.error || '알 수 없는 오류'}`);
+                        // 409 에러인 경우 특별한 메시지 표시
+                        if (event.data.error && event.data.error.includes('409')) {
+                            alert('이미 다른 계정에 연동된 소셜 계정입니다.');
+                        } else if (event.data.error && event.data.error.includes('이미 다른 계정에 연동된')) {
+                            alert('이미 다른 계정에 연동된 소셜 계정입니다.');
+                        } else {
+                            alert(`${getProviderDisplayName(provider)} 연동에 실패했습니다: ${event.data.error || '알 수 없는 오류'}`);
+                        }
                     }
                     
                     // 사이드바 새로고침 (연동 상태 확인)
@@ -452,6 +461,8 @@ function linkOAuthAccount(provider) {
         console.error('OAuth 연동 오류:', error);
         if (error.message.includes('401')) {
             alert('로그인이 필요합니다. 페이지를 새로고침하고 다시 로그인해주세요.');
+        } else if (error.message.includes('409')) {
+            alert('이미 다른 계정에 연동된 소셜 계정입니다.');
         } else {
             alert('OAuth 연동 중 오류가 발생했습니다.');
         }
