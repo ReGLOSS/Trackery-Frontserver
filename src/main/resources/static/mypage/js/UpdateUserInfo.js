@@ -387,7 +387,14 @@ function linkOAuthAccount(provider) {
         if (response.ok) {
             return response.json();
         } else {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            // 409 에러도 포함해서 백엔드 에러 메시지를 파싱
+            return response.json().then(errorData => {
+                const errorMessage = errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+                throw new Error(errorMessage);
+            }).catch(() => {
+                // JSON 파싱 실패 시 기본 에러 메시지
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            });
         }
     })
     .then(data => {
@@ -415,7 +422,8 @@ function linkOAuthAccount(provider) {
                         }
                     } else {
                         console.log(`${provider} OAuth 연동 실패:`, event.data.error);
-                        alert(`${getProviderDisplayName(provider)} 연동에 실패했습니다: ${event.data.error || '알 수 없는 오류'}`);
+                        // 팝업에서 이미 오류 메시지가 표시되므로 alert 제거
+                        // 콘솔에만 에러 기록
                     }
                     
                     // 사이드바 새로고침 (연동 상태 확인)
@@ -453,7 +461,8 @@ function linkOAuthAccount(provider) {
         if (error.message.includes('401')) {
             alert('로그인이 필요합니다. 페이지를 새로고침하고 다시 로그인해주세요.');
         } else {
-            alert('OAuth 연동 중 오류가 발생했습니다.');
+            // 409 에러 포함 모든 에러는 백엔드 메시지를 그대로 표시
+            alert(`OAuth 연동 중 오류가 발생했습니다: ${error.message}`);
         }
     });
 }

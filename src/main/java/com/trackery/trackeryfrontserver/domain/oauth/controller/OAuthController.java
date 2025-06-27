@@ -40,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
  * 25. 3. 26.        inari       OAuthAccountController 통합
  * 25. 3. 26.        inari       OAuthRedirectController 통합
  * 25. 6. 23.        inari       기존 회원 연동 기능 추가
+ * 25. 6. 27.        inari       기존 회원이 연동한 간편로그인 타유저 접근금지 처리
  */
 @Slf4j
 @Controller
@@ -311,9 +312,29 @@ public class OAuthController {
 				log.info("OAuth 로그인/회원가입 성공: provider={}", provider);
 				return "oauth/close-popup";
 			} else {
+				String errorMessage = "로그인에 실패했습니다";
+				
+				// 백엔드에서 받은 에러 메시지 파싱
+				try {
+					if (responseBody != null) {
+						JsonNode errorResponse = objectMapper.readTree(responseBody);
+						if (errorResponse.has("message")) {
+							errorMessage = errorResponse.get("message").asText();
+						}
+					}
+				} catch (Exception e) {
+					log.warn("백엔드 에러 메시지 파싱 실패: {}", e.getMessage());
+				}
+				
+				// HTTP 상태 코드별 특별 처리
+				if (apiResponse.getStatusCode().value() == 409) {
+					// 409 에러는 백엔드에서 받은 메시지를 그대로 사용
+					log.info("409 에러 감지, 백엔드 메시지 사용: {}", errorMessage);
+				}
+				
 				log.error("OAuth 로그인/회원가입 실패: {} - {}", apiResponse.getStatusCode(), responseBody);
 				return "redirect:/oauth/close-popup?error=auth_failed&error_description=" + 
-					URLEncoder.encode("로그인에 실패했습니다", StandardCharsets.UTF_8);
+					URLEncoder.encode(errorMessage, StandardCharsets.UTF_8);
 			}
 
 		} catch (Exception e) {
@@ -462,8 +483,26 @@ public class OAuthController {
 				return "redirect:/oauth/close-popup?success=true";
 			} else {
 				String errorMessage = "OAuth 연동에 실패했습니다";
+				
+				// 백엔드에서 받은 에러 메시지 파싱
+				try {
+					String responseBody = apiResponse.getBody();
+					if (responseBody != null) {
+						JsonNode jsonResponse = objectMapper.readTree(responseBody);
+						if (jsonResponse.has("message")) {
+							errorMessage = jsonResponse.get("message").asText();
+						}
+					}
+				} catch (Exception e) {
+					log.warn("백엔드 에러 메시지 파싱 실패: {}", e.getMessage());
+				}
+				
+				// HTTP 상태 코드별 특별 처리
 				if (apiResponse.getStatusCode().value() == 401) {
 					errorMessage = "인증이 필요합니다. 로그인을 다시 시도해주세요";
+				} else if (apiResponse.getStatusCode().value() == 409) {
+					// 409 에러는 백엔드에서 받은 메시지를 그대로 사용
+					log.info("409 에러 감지, 백엔드 메시지 사용: {}", errorMessage);
 				}
 				
 				log.error("기존 사용자 OAuth 연동 실패: {} - {}", apiResponse.getStatusCode(), apiResponse.getBody());
