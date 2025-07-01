@@ -56,6 +56,17 @@ export const ApiService = {
         return response.json();
     },
 
+    // 이미지 상세 조회
+    async fetchImageDetail(imageId) {
+        const response = await fetch(`/api/images?imageId=${imageId}`, {
+            method: "GET",
+            credentials: "include"
+        });
+
+        await this.responseErrorHandler(response);
+        return response.json();
+    },
+
     // 앨범 정보 업데이트
     async updateAlbumInfo(albumId, albumTitle, albumDescription) {
         const response = await fetch(`/api/albums/${albumId}`, {
