@@ -121,6 +121,9 @@ function setupOAuthButtons() {
                             // 연동 실패 시 에러 메시지 표시
                             alert('연동 실패: ' + (event.data.error || '알 수 없는 오류가 발생했습니다.'));
                         }
+                    } else if (event.data && event.data.type === 'oauth-register-required') {
+                        // 신규 사용자 회원가입 확인
+                        console.log('신규 사용자 감지, 회원가입 확인 페이지 표시됨:', event.data.email);
                     } else if (event.data && event.data.type === 'oauth-link-required') {
                         // 기존 이메일 감지 시 - 알림 제거 (팝업에서 이미 표시되므로)
                         console.log('기존 이메일 감지, 연동 페이지 표시됨:', event.data.email);
