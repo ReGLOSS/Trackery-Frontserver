@@ -26,13 +26,22 @@
 </head>
 <body>
 <div class="message" th:class="${success} ? 'message success' : 'message error'">
-    <h2 th:if="${success}">연동 성공!</h2>
-    <h2 th:if="${error}">연동 실패</h2>
+    <div th:if="${success}">
+        <h2>연동 성공!</h2>
+        <p th:if="${provider}" th:text="|${#strings.defaultString(#maps.containsKey({'google':'구글', 'kakao':'카카오', 'naver':'네이버', 'github':'깃허브'}, provider) ? #maps.get({'google':'구글', 'kakao':'카카오', 'naver':'네이버', 'github':'깃허브'}, provider) : provider, provider)} 연동이 완료되었습니다.|">OAuth 계정 연동이 완료되었습니다.</p>
+        <p th:unless="${provider}">OAuth 계정 연동이 완료되었습니다.</p>
+        <p>창을 닫습니다...</p>
+    </div>
     
-    <p th:if="${success}">OAuth 계정 연동이 완료되었습니다.</p>
-    <p th:if="${error}" th:text="${errorDescription}">연동 중 오류가 발생했습니다.</p>
+    <div th:if="${error}">
+        <h2>연동 실패</h2>
+        <p th:text="${errorDescription}">연동 중 오류가 발생했습니다.</p>
+        <p>창을 닫습니다...</p>
+    </div>
     
-    <p>창을 닫습니다...</p>
+    <div th:if="${!success && !error}">
+        <p>창을 닫습니다...</p>
+    </div>
 </div>
 
 <script type="text/javascript" th:inline="javascript">

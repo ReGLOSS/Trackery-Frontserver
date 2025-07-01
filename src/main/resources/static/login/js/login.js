@@ -112,6 +112,21 @@ function setupOAuthButtons() {
                     if (event.data && event.data.oauthComplete) {
                         // 인증 완료 시 페이지 새로고침하여 사이드바도 함께 새로고침
                         window.location.reload();
+                    } else if (event.data && event.data.type === 'oauth-link-result') {
+                        // OAuth 연동 결과 처리
+                        if (event.data.success) {
+                            // 연동 성공 시 페이지 새로고침
+                            window.location.reload();
+                        } else {
+                            // 연동 실패 시 에러 메시지 표시
+                            alert('연동 실패: ' + (event.data.error || '알 수 없는 오류가 발생했습니다.'));
+                        }
+                    } else if (event.data && event.data.type === 'oauth-link-required') {
+                        // 기존 이메일 감지 시 - 알림 제거 (팝업에서 이미 표시되므로)
+                        console.log('기존 이메일 감지, 연동 페이지 표시됨:', event.data.email);
+                    } else if (event.data && event.data.oauthCancelled) {
+                        // 사용자가 연동을 취소한 경우
+                        console.log('OAuth 연동이 취소되었습니다.');
                     }
                 });
             });
