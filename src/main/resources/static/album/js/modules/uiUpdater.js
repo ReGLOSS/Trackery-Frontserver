@@ -59,7 +59,7 @@ export const UiUpdater = {
         DOM.albumDetailGallery.innerHTML = '';
 
         for (const image of imageList) {
-            const blobUrl = await ApiService.convertS3UrlToBlobUrl(image.imageUrl);
+            const blobUrl = await ApiService.convertS3UrlToBlobUrl(image.thumbnailUrl);
             if (blobUrl) {
                 const galleryCard = this.createGalleryCard(image, blobUrl, 'album');
                 DOM.albumDetailGallery.appendChild(galleryCard);
@@ -92,7 +92,7 @@ export const UiUpdater = {
                 continue;
             }
 
-            const blobUrl = await ApiService.convertS3UrlToBlobUrl(image.imageUrl);
+            const blobUrl = await ApiService.convertS3UrlToBlobUrl(image.thumbnailUrl);
             if (blobUrl) {
                 const galleryCard = this.createGalleryCard(image, blobUrl, 'myImages');
                 DOM.albumDetailEditMyImagesGallery.appendChild(galleryCard);
