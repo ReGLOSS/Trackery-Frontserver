@@ -375,8 +375,16 @@ public class OAuthController {
 					log.info("OAuth 계정 연동 성공: provider={}", provider);
 					return "redirect:/oauth/close-popup?success=true&linked=true&provider=" + provider;
 				} else {
-					log.info("OAuth 로그인 성공: provider={}", provider);
-					return "redirect:/oauth/close-popup?success=true";
+					// isNewUser 플래그 확인
+					boolean isNewUser = false;
+					if (jsonResponse.has("data")) {
+						JsonNode data = jsonResponse.get("data");
+						isNewUser = (data.has("newUser") && data.get("newUser").asBoolean()) ||
+									(data.has("isNewUser") && data.get("isNewUser").asBoolean());
+					}
+					
+					log.info("OAuth 로그인 성공: provider={}, isNewUser={}", provider, isNewUser);
+					return "redirect:/oauth/close-popup?success=true&provider=" + provider + "&isNewUser=" + isNewUser;
 				}
 			} else {
 				String errorMessage = "로그인에 실패했습니다";
@@ -599,6 +607,7 @@ public class OAuthController {
 		@RequestParam(value = "success", required = false) String success,
 		@RequestParam(value = "linked", required = false) String linked,
 		@RequestParam(value = "provider", required = false) String provider,
+		@RequestParam(value = "isNewUser", required = false) String isNewUser,
 		@RequestParam(value = "error", required = false) String error,
 		@RequestParam(value = "error_description", required = false) String errorDescription,
 		Model model) {
@@ -606,13 +615,14 @@ public class OAuthController {
 		model.addAttribute("success", "true".equals(success));
 		model.addAttribute("linked", "true".equals(linked));
 		model.addAttribute("provider", provider);
+		model.addAttribute("isNewUser", "true".equals(isNewUser));
 		
 		if (error != null) {
 			model.addAttribute("error", error);
 			model.addAttribute("errorDescription", errorDescription);
 			log.info("OAuth 팝업 오류 처리: error={}, description={}", error, errorDescription);
 		} else {
-			log.info("OAuth 팝업 성공 처리: success={}, linked={}, provider={}", success, linked, provider);
+			log.info("OAuth 팝업 성공 처리: success={}, linked={}, provider={}, isNewUser={}", success, linked, provider, isNewUser);
 		}
 		
 		return "oauth/close-popup";
@@ -669,7 +679,7 @@ public class OAuthController {
 			session.removeAttribute("oauth_userName");
 
 			log.info("OAuth 회원가입 완료: provider={}, email={}, userName={}", provider, finalEmail, finalUserName);
-			return "redirect:/oauth/close-popup?success=true&provider=" + provider;
+			return "redirect:/oauth/close-popup?success=true&provider=" + provider + "&isNewUser=true";
 
 		} catch (Exception e) {
 			log.error("OAuth 회원가입 처리 중 오류 발생: ", e);

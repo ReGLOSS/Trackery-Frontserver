@@ -5,7 +5,7 @@
     <title>OAuth 처리 완료</title>
     <link rel="stylesheet" href="/oauth/css/oauth-popup.css" type="text/css">
 </head>
-<body th:attr="data-success=${success}, data-error=${error}, data-error-description=${errorDescription}">
+<body th:attr="data-success=${success}, data-error=${error}, data-error-description=${errorDescription}, data-is-new-user=${isNewUser}">
 <div class="message" th:class="${success} ? 'message success' : (${error} ? 'message error' : 'message')">
     <div th:if="${success}">
         <!-- 연동 완료인 경우 -->
@@ -21,17 +21,33 @@
             <p th:unless="${provider}">계정 연동이 완료되었습니다.</p>
         </div>
         
-        <!-- 신규 가입인 경우 -->
+        <!-- 신규 가입 또는 기존 로그인 구분 -->
         <div th:unless="${linked}">
-            <h2>가입 완료!</h2>
-            <p th:if="${provider}" th:switch="${provider}">
-                <span th:case="'google'">구글 계정으로 가입이 완료되었습니다.</span>
-                <span th:case="'kakao'">카카오 계정으로 가입이 완료되었습니다.</span>
-                <span th:case="'naver'">네이버 계정으로 가입이 완료되었습니다.</span>
-                <span th:case="'github'">깃허브 계정으로 가입이 완료되었습니다.</span>
-                <span th:case="*" th:text="|${provider} 계정으로 가입이 완료되었습니다.|">OAuth 계정으로 가입이 완료되었습니다.</span>
-            </p>
-            <p th:unless="${provider}">가입이 완료되었습니다.</p>
+            <!-- 신규 가입인 경우 -->
+            <div th:if="${isNewUser}">
+                <h2>가입 완료!</h2>
+                <p th:if="${provider}" th:switch="${provider}">
+                    <span th:case="'google'">구글 계정으로 가입이 완료되었습니다.</span>
+                    <span th:case="'kakao'">카카오 계정으로 가입이 완료되었습니다.</span>
+                    <span th:case="'naver'">네이버 계정으로 가입이 완료되었습니다.</span>
+                    <span th:case="'github'">깃허브 계정으로 가입이 완료되었습니다.</span>
+                    <span th:case="*" th:text="|${provider} 계정으로 가입이 완료되었습니다.|">OAuth 계정으로 가입이 완료되었습니다.</span>
+                </p>
+                <p th:unless="${provider}">가입이 완료되었습니다.</p>
+            </div>
+            
+            <!-- 기존 회원 로그인인 경우 -->
+            <div th:unless="${isNewUser}">
+                <h2>로그인 완료!</h2>
+                <p th:if="${provider}" th:switch="${provider}">
+                    <span th:case="'google'">구글 계정으로 로그인했습니다.</span>
+                    <span th:case="'kakao'">카카오 계정으로 로그인했습니다.</span>
+                    <span th:case="'naver'">네이버 계정으로 로그인했습니다.</span>
+                    <span th:case="'github'">깃허브 계정으로 로그인했습니다.</span>
+                    <span th:case="*" th:text="|${provider} 계정으로 로그인했습니다.|">OAuth 계정으로 로그인했습니다.</span>
+                </p>
+                <p th:unless="${provider}">로그인했습니다.</p>
+            </div>
         </div>
         
         <p>창을 닫습니다...</p>
