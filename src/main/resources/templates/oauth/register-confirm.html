@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 확인</title>
+    <link rel="stylesheet" href="/oauth/css/oauth-popup.css" type="text/css">
+</head>
+<body th:attr="data-email=${email}, data-username=${userName}, data-provider=${provider}">
+<div class="container">
+    <h2>새 계정을 생성하시겠습니까?</h2>
+    <p>소셜 로그인으로 새로운 Trackery 계정을 생성하시겠습니까?</p>
+    <p th:if="${provider}" th:switch="${provider}">
+        <span th:case="'google'">구글 계정으로 가입됩니다.</span>
+        <span th:case="'kakao'">카카오 계정으로 가입됩니다.</span>
+        <span th:case="'naver'">네이버 계정으로 가입됩니다.</span>
+        <span th:case="'github'">깃허브 계정으로 가입됩니다.</span>
+        <span th:case="*" th:text="${provider} + ' 계정으로 가입됩니다.'">소셜 계정으로 가입됩니다.</span>
+    </p>
+
+    <div id="buttons">
+        <form method="post" action="/oauth/register-confirm">
+            <input type="hidden" name="provider" th:value="${provider}">
+            <input type="hidden" name="email" th:value="${email}">
+            <input type="hidden" name="userName" th:value="${userName}">
+            <input type="hidden" name="code" th:value="${code}">
+            <input type="hidden" name="state" th:value="${state}" th:if="${state}">
+            <button type="submit" class="btn">회원가입 진행</button>
+            <a href="/" class="btn btn-secondary">취소</a>
+        </form>
+    </div>
+
+    <div id="loading" style="display: none;">
+        <p>처리 중입니다...</p>
+        <div class="spinner"></div>
+    </div>
+</div>
+<script src="/oauth/js/register-confirm.js"></script>
+</body>
+</html>

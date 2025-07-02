@@ -3,33 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <title>OAuth 처리 완료</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #2a2a36;
-        }
-
-        .message {
-            text-align: center;
-            padding: 20px;
-            border-radius: 8px;
-            background-color: #d3d9e8;
-            margin-bottom: 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="/oauth/css/oauth-popup.css" type="text/css">
 </head>
-<body>
+<body th:attr="data-success=${success}, data-error=${error}, data-error-description=${errorDescription}">
 <div class="message" th:class="${success} ? 'message success' : 'message error'">
     <div th:if="${success}">
-        <h2>연동 성공!</h2>
-        <p th:if="${provider}" th:text="|${#strings.defaultString(#maps.containsKey({'google':'구글', 'kakao':'카카오', 'naver':'네이버', 'github':'깃허브'}, provider) ? #maps.get({'google':'구글', 'kakao':'카카오', 'naver':'네이버', 'github':'깃허브'}, provider) : provider, provider)} 연동이 완료되었습니다.|">OAuth 계정 연동이 완료되었습니다.</p>
-        <p th:unless="${provider}">OAuth 계정 연동이 완료되었습니다.</p>
+        <!-- 연동 완료인 경우 -->
+        <div th:if="${linked}">
+            <h2>연동 완료!</h2>
+            <p th:if="${provider}" th:switch="${provider}">
+                <span th:case="'google'">구글 계정 연동이 완료되었습니다.</span>
+                <span th:case="'kakao'">카카오 계정 연동이 완료되었습니다.</span>
+                <span th:case="'naver'">네이버 계정 연동이 완료되었습니다.</span>
+                <span th:case="'github'">깃허브 계정 연동이 완료되었습니다.</span>
+                <span th:case="*" th:text="|${provider} 계정 연동이 완료되었습니다.|">OAuth 계정 연동이 완료되었습니다.</span>
+            </p>
+            <p th:unless="${provider}">계정 연동이 완료되었습니다.</p>
+        </div>
+        
+        <!-- 신규 가입인 경우 -->
+        <div th:unless="${linked}">
+            <h2>가입 완료!</h2>
+            <p th:if="${provider}" th:switch="${provider}">
+                <span th:case="'google'">구글 계정으로 가입이 완료되었습니다.</span>
+                <span th:case="'kakao'">카카오 계정으로 가입이 완료되었습니다.</span>
+                <span th:case="'naver'">네이버 계정으로 가입이 완료되었습니다.</span>
+                <span th:case="'github'">깃허브 계정으로 가입이 완료되었습니다.</span>
+                <span th:case="*" th:text="|${provider} 계정으로 가입이 완료되었습니다.|">OAuth 계정으로 가입이 완료되었습니다.</span>
+            </p>
+            <p th:unless="${provider}">가입이 완료되었습니다.</p>
+        </div>
+        
         <p>창을 닫습니다...</p>
     </div>
     
@@ -44,51 +48,6 @@
     </div>
 </div>
 
-<script type="text/javascript" th:inline="javascript">
-    /*<![CDATA[*/
-    
-    // 서버에서 전달된 값들
-    var success = /*[[${success}]]*/ false;
-    var error = /*[[${error}]]*/ null;
-    var errorDescription = /*[[${errorDescription}]]*/ null;
-    
-    console.log('OAuth 처리 완료 페이지 로드:', {success, error, errorDescription});
-    
-    // 부모 창에 메시지 전송
-    if (window.opener) {
-        if (success) {
-            // 연동 성공
-            window.opener.postMessage({
-                type: 'oauth-link-result',
-                success: true
-            }, window.location.origin);
-        } else if (error) {
-            // 연동 실패
-            window.opener.postMessage({
-                type: 'oauth-link-result',
-                success: false,
-                error: errorDescription || '알 수 없는 오류가 발생했습니다.'
-            }, window.location.origin);
-        } else {
-            // 일반 로그인 완료 (기존 동작)
-            window.opener.postMessage({oauthComplete: true}, window.location.origin);
-        }
-
-        // 잠시 후 창 닫기
-        setTimeout(function () {
-            window.close();
-        }, 3000);
-    } else {
-        // 팝업이 아닌 경우 직접 리다이렉트
-        if (success || (!error && !errorDescription)) {
-            window.location.href = '/home';
-        } else {
-            // 오류 발생 시 홈페이지로
-            window.location.href = '/';
-        }
-    }
-    
-    /*]]>*/
-</script>
+<script src="/oauth/js/close-popup.js"></script>
 </body>
 </html>
