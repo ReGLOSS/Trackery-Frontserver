@@ -34,7 +34,7 @@ export const ApiService = {
         return response.json();
     },
 
-    // 앨범 이미지 조회
+    // 앨범 이미지 썸네일 조회
     async fetchAlbumImages(albumId) {
         const response = await fetch(`/api/albums/${albumId}/images`, {
             method: "GET",
@@ -48,6 +48,17 @@ export const ApiService = {
     // 내 이미지 목록 조회
     async fetchMyImages() {
         const response = await fetch("/api/images/me", {
+            method: "GET",
+            credentials: "include"
+        });
+
+        await this.responseErrorHandler(response);
+        return response.json();
+    },
+
+    // 이미지 상세 조회
+    async fetchImageDetail(imageId) {
+        const response = await fetch(`/api/images?imageId=${imageId}`, {
             method: "GET",
             credentials: "include"
         });

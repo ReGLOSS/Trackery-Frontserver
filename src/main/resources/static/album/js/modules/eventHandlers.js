@@ -160,17 +160,22 @@ export const EventHandlers = {
         }
     },
 
-    // 갤러리 카드 클릭 이벤트 추가
+    // 갤러리 카드 클릭 이벤트 추가 (이벤트 위임 방식)
     addGalleryCardClickEvents() {
-        const galleryCards = document.querySelectorAll('.gallery-card, .my-image-card');
-        galleryCards.forEach(card => {
-            card.addEventListener('click', function(e) {
-                // 체크박스 클릭이 아닐 때만 메인 뷰 업데이트
-                if (!e.target.closest('.image-checkbox')) {
-                    ImageViewer.showImageInMainView(this);
-                }
-            });
-        });
+        // 기존 이벤트 리스너 제거 (중복 방지)
+        document.removeEventListener('click', this.handleGalleryCardClick);
+        
+        // 이벤트 위임으로 갤러리 카드 클릭 처리
+        document.addEventListener('click', this.handleGalleryCardClick);
+    },
+
+    // 갤러리 카드 클릭 핸들러
+    handleGalleryCardClick(e) {
+        const card = e.target.closest('.gallery-card, .my-image-card');
+        
+        if (card && !e.target.closest('.image-checkbox')) {
+            ImageViewer.showImageInMainView(card);
+        }
     },
 
     // 모달 상태 초기화

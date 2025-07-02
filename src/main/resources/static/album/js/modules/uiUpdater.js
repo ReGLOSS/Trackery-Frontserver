@@ -59,7 +59,7 @@ export const UiUpdater = {
         DOM.albumDetailGallery.innerHTML = '';
 
         for (const image of imageList) {
-            const blobUrl = await ApiService.convertS3UrlToBlobUrl(image.imageUrl);
+            const blobUrl = await ApiService.convertS3UrlToBlobUrl(image.thumbnailUrl);
             if (blobUrl) {
                 const galleryCard = this.createGalleryCard(image, blobUrl, 'album');
                 DOM.albumDetailGallery.appendChild(galleryCard);
@@ -92,7 +92,7 @@ export const UiUpdater = {
                 continue;
             }
 
-            const blobUrl = await ApiService.convertS3UrlToBlobUrl(image.imageUrl);
+            const blobUrl = await ApiService.convertS3UrlToBlobUrl(image.thumbnailUrl);
             if (blobUrl) {
                 const galleryCard = this.createGalleryCard(image, blobUrl, 'myImages');
                 DOM.albumDetailEditMyImagesGallery.appendChild(galleryCard);
@@ -148,17 +148,6 @@ export const UiUpdater = {
         });
 
         galleryCard.innerHTML = `<img src="${blobUrl}" alt="${image.imageName}">`;
-        
-        // 클릭 이벤트 추가 (모든 이미지 타입에 대해)
-        galleryCard.addEventListener('click', function(e) {
-            // 체크박스 클릭이 아닐 때만 메인 뷰 업데이트
-            if (!e.target.closest('.image-checkbox')) {
-                // ImageViewer를 직접 import해서 사용하거나 window 객체를 통해 접근
-                if (window.ImageViewer) {
-                    window.ImageViewer.showImageInMainView(this);
-                }
-            }
-        });
 
         return galleryCard;
     },
