@@ -105,6 +105,15 @@
     </div>
 </div>
 <script>
+    // 페이지 로드 시 부모 창에 계정 연동 확인 메시지 전송
+    if (window.opener) {
+        window.opener.postMessage({
+            type: 'oauth-link-required',
+            email: /*[[${email}]]*/ '',
+            provider: /*[[${provider}]]*/ ''
+        }, window.location.origin);
+    }
+
     document.querySelector('form').addEventListener('submit', function () {
         document.getElementById('buttons').style.display = 'none';
         document.getElementById('loading').style.display = 'block';
