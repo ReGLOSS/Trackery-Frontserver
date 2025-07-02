@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="/oauth/css/oauth-popup.css" type="text/css">
 </head>
 <body th:attr="data-success=${success}, data-error=${error}, data-error-description=${errorDescription}">
-<div class="message" th:class="${success} ? 'message success' : 'message error'">
+<div class="message" th:class="${success} ? 'message success' : (${error} ? 'message error' : 'message')">
     <div th:if="${success}">
         <!-- 연동 완료인 경우 -->
         <div th:if="${linked}">
@@ -43,7 +43,7 @@
         <p>창을 닫습니다...</p>
     </div>
     
-    <div th:if="${!success && !error}">
+    <div th:if="${!success and error == null}">
         <p>창을 닫습니다...</p>
     </div>
 </div>
