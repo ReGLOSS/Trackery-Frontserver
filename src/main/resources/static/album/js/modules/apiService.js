@@ -46,8 +46,13 @@ export const ApiService = {
     },
 
     // 내 이미지 목록 조회
-    async fetchMyImages(pageNum = 1, pageSize = 5) {
-        const response = await fetch(`/api/images/me?pageNum=${pageNum}&pageSize=${pageSize}`, {
+    async fetchMyImages(pageNum = 1, pageSize = 5, excludeAlbumId = null) {
+        let url = `/api/images/me?pageNum=${pageNum}&pageSize=${pageSize}`;
+        if (excludeAlbumId) {
+            url += `&excludeAlbumId=${excludeAlbumId}`;
+        }
+        
+        const response = await fetch(url, {
             method: "GET",
             credentials: "include"
         });

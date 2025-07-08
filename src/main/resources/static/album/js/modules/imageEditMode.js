@@ -90,19 +90,20 @@ export const ImageEditMode = {
     // 내 이미지 로드
     async loadMyImages() {
         try {
-            const response = await ApiService.fetchMyImages();
+            // 현재 앨범에 있는 이미지를 제외하고 내 이미지 조회
+            const response = await ApiService.fetchMyImages(1, 5, State.currentAlbumId);
             const imageList = response.data.list;
             const paginationData = response.data;
 
             if (imageList && imageList.length > 0) {
                 await UiUpdater.renderMyImagesGallery(imageList);
                 UiUpdater.renderMyImagesPagination(paginationData);
-                console.log(`내 이미지 ${imageList.length}개 로드 완료`);
+                console.log(`앨범에 없는 내 이미지 ${imageList.length}개 로드 완료`);
             } else {
-                console.log('내 이미지가 없습니다');
+                console.log('추가할 수 있는 내 이미지가 없습니다');
                 // 빈 갤러리 표시
                 if (DOM.albumDetailEditMyImagesGallery) {
-                    DOM.albumDetailEditMyImagesGallery.innerHTML = '<div class="no-images-message">내 이미지가 없습니다.</div>';
+                    DOM.albumDetailEditMyImagesGallery.innerHTML = '<div class="no-images-message">추가할 수 있는 내 이미지가 없습니다.</div>';
                 }
             }
         } catch (error) {

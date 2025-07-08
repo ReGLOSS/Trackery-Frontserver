@@ -114,39 +114,38 @@ export const UiUpdater = {
 
     // 내 이미지 갤러리 렌더링
     async renderMyImagesGallery(imageList) {
-        if (!DOM.albumDetailEditMyImagesGallery) return;
+        if (!DOM.albumDetailEditMyImagesGallery) {
+            console.error('albumDetailEditMyImagesGallery DOM 요소를 찾을 수 없습니다');
+            return;
+        }
 
+        console.log('내 이미지 갤러리 렌더링 시작 - 기존 내용 초기화');
         DOM.albumDetailEditMyImagesGallery.innerHTML = '';
 
-        // 현재 앨범에 있는 이미지 ID들 수집
-        const albumImageIds = this.getCurrentAlbumImageIds();
-        console.log('현재 앨범 이미지 IDs:', albumImageIds);
-        console.log('내 이미지 목록 개수:', imageList.length);
+        console.log('받은 이미지 목록 개수:', imageList.length);
 
-        let addedCount = 0;
-        let excludedCount = 0;
+        if (imageList.length === 0) {
+            DOM.albumDetailEditMyImagesGallery.innerHTML = '<div class="no-images-message">추가할 수 있는 내 이미지가 없습니다.</div>';
+            console.log('추가할 수 있는 이미지가 없어 메시지 표시');
+            return;
+        }
 
+        let successCount = 0;
         for (const image of imageList) {
-            const imageIdStr = String(image.imageId); // 문자열로 통일
-            console.log(`처리 중인 이미지 ID: ${imageIdStr} (원본: ${image.imageId})`);
-            
-            // 이미 앨범에 있는 이미지는 건너뛰기
-            if (albumImageIds.includes(imageIdStr)) {
-                console.log(`이미지 ID ${imageIdStr}는 이미 앨범에 있으므로 제외`);
-                excludedCount++;
-                continue;
-            }
-
-            const blobUrl = await ApiService.convertS3UrlToBlobUrl(image.thumbnailUrl);
-            if (blobUrl) {
-                const galleryCard = this.createGalleryCard(image, blobUrl, 'myImages');
-                DOM.albumDetailEditMyImagesGallery.appendChild(galleryCard);
-                addedCount++;
-                console.log(`이미지 ID ${imageIdStr} 추가됨`);
+            try {
+                const blobUrl = await ApiService.convertS3UrlToBlobUrl(image.thumbnailUrl);
+                if (blobUrl) {
+                    const galleryCard = this.createGalleryCard(image, blobUrl, 'myImages');
+                    DOM.albumDetailEditMyImagesGallery.appendChild(galleryCard);
+                    successCount++;
+                    console.log(`이미지 ID ${image.imageId} 추가됨`);
+                }
+            } catch (error) {
+                console.error(`이미지 ID ${image.imageId} 처리 중 오류:`, error);
             }
         }
         
-        console.log(`내 이미지 갤러리: ${addedCount}개 추가, ${excludedCount}개 제외`);
+        console.log(`내 이미지 갤러리 렌더링 완료: ${successCount}/${imageList.length}개 성공`);
     },
 
     // 내 이미지 페이지네이션 렌더링
@@ -192,25 +191,6 @@ export const UiUpdater = {
         pagination.appendChild(nextItem);
 
         paginationContainer.appendChild(pagination);
-    },
-
-    // 현재 앨범에 있는 이미지 ID들 가져오기
-    getCurrentAlbumImageIds() {
-        const albumGalleryCards = document.querySelectorAll('.album-detail-gallery .gallery-card');
-        const imageIds = [];
-        
-        albumGalleryCards.forEach(card => {
-            const imageId = card.dataset.imageId;
-            if (imageId) {
-                // 문자열로 통일
-                imageIds.push(String(imageId));
-            }
-        });
-        
-        console.log('앨범 갤러리 카드 수:', albumGalleryCards.length);
-        console.log('수집된 이미지 IDs:', imageIds);
-        
-        return imageIds;
     },
 
     // 갤러리 카드 생성
