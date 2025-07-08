@@ -413,7 +413,6 @@ function linkOAuthAccount(provider) {
                     
                     if (event.data.success) {
                         console.log(`${provider} OAuth 연동 성공`);
-                        alert(`${getProviderDisplayName(provider)} 연동이 완료되었습니다.`);
                         
                         // OAuth 아이콘을 active 상태로 변경
                         const oauthIcon = document.getElementById(provider + '-login');

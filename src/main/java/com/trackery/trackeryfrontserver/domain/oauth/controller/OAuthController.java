@@ -23,6 +23,7 @@ import com.trackery.trackeryfrontserver.domain.proxy.service.ProxyService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
  * 25. 3. 26.        inari       OAuthRedirectController 통합
  * 25. 6. 23.        inari       기존 회원 연동 기능 추가
  * 25. 6. 27.        inari       기존 회원이 연동한 간편로그인 타유저 접근금지 처리
+ * 25. 6. 27.        inari       회원가입과 기존 회원 연동 확인을 위한 파라미터 추가
  */
 @Slf4j
 @Controller
@@ -80,6 +82,7 @@ public class OAuthController {
 	 * 지원되는 제공자: google, kakao, naver, github
 	 *
 	 * @param provider OAuth 제공자 (google, kakao, naver, github)
+	 * @param linkToken 기존 계정 연동을 위한 링크 토큰 (선택사항)
 	 * @return 해당 제공자의 인증 페이지로 리다이렉트하는 RedirectView
 	 */
 	@GetMapping("/{provider}")
@@ -176,7 +179,9 @@ public class OAuthController {
 	 *
 	 * @param provider OAuth 제공자 (google, kakao, naver, github)
 	 * @param code 인증 코드
-	 * @param state 상태 값 (네이버 OAuth에서 필요)
+	 * @param state 상태 값 (네이버 OAuth에서 필요, 링크 토큰도 포함)
+	 * @param linkTokenParam URL 파라미터로 전달된 링크 토큰 (선택사항)
+	 * @param request HTTP 요청 객체
 	 * @param response 서블릿 응답 객체
 	 * @param model 뷰 모델
 	 * @return 처리 후 리다이렉트할 뷰 이름
@@ -268,11 +273,18 @@ public class OAuthController {
 			String responseBody = apiResponse.getBody();
 			JsonNode jsonResponse = objectMapper.readTree(responseBody);
 
-			// 이미 존재하는 이메일 확인 (회원가입 시 간편로그인)
-			if (jsonResponse.has("data") &&
-				jsonResponse.get("data").has("existingEmail") &&
-				jsonResponse.get("data").get("existingEmail").asBoolean()) {
+			// 기존 이메일 확인 (회원가입 시 간편로그인) - existingEmail 또는 isExistingEmail 확인
+			boolean isExistingEmail = false;
+			if (jsonResponse.has("data")) {
+				JsonNode data = jsonResponse.get("data");
+				if (data.has("existingEmail")) {
+					isExistingEmail = data.get("existingEmail").asBoolean();
+				} else if (data.has("isExistingEmail")) {
+					isExistingEmail = data.get("isExistingEmail").asBoolean();
+				}
+			}
 
+			if (isExistingEmail) {
 				// 이미 존재하는 이메일인 경우 연동 페이지로 이동
 				String email = jsonResponse.path("data").path("email").asText("");
 
@@ -307,10 +319,73 @@ public class OAuthController {
 				return "oauth/link-account";
 			}
 
+			// 신규 사용자 가입 확인 - isExistingEmail이 false이고 newUser 플래그가 있는 경우
+			if (!isExistingEmail && jsonResponse.has("data")) {
+				JsonNode data = jsonResponse.get("data");
+				
+				// newUser 또는 isNewUser 플래그가 명시적으로 true인 경우에만 신규 사용자 처리
+				boolean isNewUser = (data.has("newUser") && data.get("newUser").asBoolean()) ||
+									(data.has("isNewUser") && data.get("isNewUser").asBoolean());
+				
+				if (isNewUser) {
+					// 사용자 정보 추출 (email이 null일 수 있으므로 다른 필드에서 가져오기)
+					String email = data.path("email").asText("");
+					String userName = data.path("userName").asText("");
+					
+					// OAuth 제공자에서 받은 사용자 정보 확인
+					if (data.has("userInfo")) {
+						JsonNode userInfo = data.get("userInfo");
+						if (email.isEmpty()) {
+							email = userInfo.path("email").asText("");
+						}
+						if (userName.isEmpty()) {
+							userName = userInfo.path("name").asText("");
+						}
+					}
+
+					// 이메일이나 사용자명이 여전히 비어있으면 OAuth 응답에서 직접 추출
+					if (email.isEmpty() && data.has("oauthEmail")) {
+						email = data.path("oauthEmail").asText("");
+					}
+					if (userName.isEmpty() && data.has("oauthName")) {
+						userName = data.path("oauthName").asText("");
+					}
+
+					// 세션에 OAuth 응답 저장 (코드 재사용 방지)
+					HttpSession session = request.getSession();
+					session.setAttribute("oauth_registration_data", responseBody);
+					session.setAttribute("oauth_provider", provider);
+					session.setAttribute("oauth_email", email);
+					session.setAttribute("oauth_userName", userName);
+
+					model.addAttribute("provider", provider);
+					model.addAttribute("email", email);
+					model.addAttribute("userName", userName);
+
+					log.info("신규 사용자 가입 확인 페이지로 이동: provider={}, email={}, userName={}",
+						provider, email, userName);
+					return "oauth/register-confirm";
+				}
+			}
+
 			// 성공적인 로그인/회원가입 처리
 			if (apiResponse.getStatusCode().is2xxSuccessful()) {
-				log.info("OAuth 로그인/회원가입 성공: provider={}", provider);
-				return "oauth/close-popup";
+				// linkToken이 있으면 연동, 없으면 로그인
+				if (linkToken != null && !linkToken.trim().isEmpty()) {
+					log.info("OAuth 계정 연동 성공: provider={}", provider);
+					return "redirect:/oauth/close-popup?success=true&linked=true&provider=" + provider;
+				} else {
+					// isNewUser 플래그 확인
+					boolean isNewUser = false;
+					if (jsonResponse.has("data")) {
+						JsonNode data = jsonResponse.get("data");
+						isNewUser = (data.has("newUser") && data.get("newUser").asBoolean()) ||
+									(data.has("isNewUser") && data.get("isNewUser").asBoolean());
+					}
+					
+					log.info("OAuth 로그인 성공: provider={}, isNewUser={}", provider, isNewUser);
+					return "redirect:/oauth/close-popup?success=true&provider=" + provider + "&isNewUser=" + isNewUser;
+				}
 			} else {
 				String errorMessage = "로그인에 실패했습니다";
 				
@@ -346,10 +421,10 @@ public class OAuthController {
 
 	/**
 	 * 계정 연동 처리를 시작합니다 (폼 제출 방식).
-	 * 세션 대신 토큰을 사용합니다.
+	 * 링크 토큰을 사용하여 기존 계정에 OAuth 제공자를 연동합니다.
 	 *
 	 * @param provider OAuth 제공자 (google, kakao, naver, github)
-	 * @param linkToken 연동 토큰
+	 * @param linkToken 연동 토큰 (선택사항)
 	 * @return OAuth 인증 페이지로 리다이렉트
 	 */
 	@PostMapping("/link")
@@ -381,7 +456,7 @@ public class OAuthController {
 	 * @param request HTTP 요청 객체 (쿠키 추출용)
 	 * @return OAuth URL이 포함된 JSON 응답
 	 */
-	@PostMapping("/api/users/oauth/link/{provider}/url")
+	@PostMapping("/link/{provider}/url")
 	public ResponseEntity<String> generateOAuthUrl(
 		@PathVariable String provider,
 		HttpServletRequest request) {
@@ -438,7 +513,7 @@ public class OAuthController {
 	 * @param response HTTP 응답 객체
 	 * @return 연동 결과 페이지
 	 */
-	@GetMapping("/api/users/oauth/link/{provider}")
+	@GetMapping("/link/{provider}")
 	public String handleOAuthLinkCallback(
 		@PathVariable String provider,
 		@RequestParam("code") String code,
@@ -480,7 +555,7 @@ public class OAuthController {
 			// 연동 결과에 따라 적절한 페이지로 리다이렉트
 			if (apiResponse.getStatusCode().is2xxSuccessful()) {
 				log.info("기존 사용자 OAuth 연동 성공: provider={}", provider);
-				return "redirect:/oauth/close-popup?success=true";
+				return "redirect:/oauth/close-popup?success=true&linked=true&provider=" + provider;
 			} else {
 				String errorMessage = "OAuth 연동에 실패했습니다";
 				
@@ -530,21 +605,87 @@ public class OAuthController {
 	@GetMapping("/close-popup")
 	public String closePopup(
 		@RequestParam(value = "success", required = false) String success,
+		@RequestParam(value = "linked", required = false) String linked,
+		@RequestParam(value = "provider", required = false) String provider,
+		@RequestParam(value = "isNewUser", required = false) String isNewUser,
 		@RequestParam(value = "error", required = false) String error,
 		@RequestParam(value = "error_description", required = false) String errorDescription,
 		Model model) {
 		
 		model.addAttribute("success", "true".equals(success));
+		model.addAttribute("linked", "true".equals(linked));
+		model.addAttribute("provider", provider);
+		model.addAttribute("isNewUser", "true".equals(isNewUser));
 		
 		if (error != null) {
 			model.addAttribute("error", error);
 			model.addAttribute("errorDescription", errorDescription);
 			log.info("OAuth 팝업 오류 처리: error={}, description={}", error, errorDescription);
 		} else {
-			log.info("OAuth 팝업 성공 처리: success={}", success);
+			log.info("OAuth 팝업 성공 처리: success={}, linked={}, provider={}, isNewUser={}", success, linked, provider, isNewUser);
 		}
 		
 		return "oauth/close-popup";
+	}
+
+	/**
+	 * 신규 사용자 OAuth 회원가입을 처리합니다.
+	 * 세션에 저장된 OAuth 데이터를 사용하여 회원가입을 완료합니다.
+	 *
+	 * @param provider OAuth 제공자
+	 * @param email 사용자 이메일
+	 * @param userName 사용자명
+	 * @param request HTTP 요청 객체 (세션 접근용)
+	 * @param response HTTP 응답 객체
+	 * @return 회원가입 결과 페이지
+	 */
+	@PostMapping("/register-confirm")
+	public String confirmOAuthRegistration(
+		@RequestParam("provider") String provider,
+		@RequestParam("email") String email,
+		@RequestParam("userName") String userName,
+		HttpServletRequest request,
+		HttpServletResponse response) {
+
+		try {
+			log.info("OAuth 회원가입 확인 처리: provider={}, email={}, userName={}", provider, email, userName);
+
+			// 세션에서 OAuth 응답 데이터 가져오기 (코드 재사용 방지)
+			HttpSession session = request.getSession();
+			String registrationData = (String) session.getAttribute("oauth_registration_data");
+			String sessionProvider = (String) session.getAttribute("oauth_provider");
+			
+			// 세션 검증
+			if (registrationData == null || !provider.equals(sessionProvider)) {
+				log.error("세션에 OAuth 등록 데이터가 없거나 provider가 일치하지 않음: provider={}, sessionProvider={}", 
+					provider, sessionProvider);
+				return "redirect:/oauth/close-popup?error=session_expired&error_description=" + 
+					URLEncoder.encode("세션이 만료되었습니다. 다시 시도해주세요.", StandardCharsets.UTF_8);
+			}
+
+			// 회원가입 정보 처리
+			String finalEmail = (email != null && !email.trim().isEmpty()) ? email.trim() : "";
+			String finalUserName = (userName != null && !userName.trim().isEmpty()) ? userName.trim() : "";
+			
+			log.info("OAuth 회원가입 처리 - 사용자 입력 정보: email={}, userName={}", finalEmail, finalUserName);
+			
+			// 세션에서 받은 OAuth 응답 데이터는 이미 백엔드에서 검증된 상태이므로
+			// 사용자가 정보를 확인/수정한 후 바로 성공 처리
+			
+			// 세션 정리
+			session.removeAttribute("oauth_registration_data");
+			session.removeAttribute("oauth_provider");
+			session.removeAttribute("oauth_email");
+			session.removeAttribute("oauth_userName");
+
+			log.info("OAuth 회원가입 완료: provider={}, email={}, userName={}", provider, finalEmail, finalUserName);
+			return "redirect:/oauth/close-popup?success=true&provider=" + provider + "&isNewUser=true";
+
+		} catch (Exception e) {
+			log.error("OAuth 회원가입 처리 중 오류 발생: ", e);
+			return "redirect:/oauth/close-popup?error=server_error&error_description=" + 
+				URLEncoder.encode("서버 오류가 발생했습니다", StandardCharsets.UTF_8);
+		}
 	}
 
 	/**
