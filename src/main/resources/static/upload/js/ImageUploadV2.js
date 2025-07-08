@@ -341,7 +341,6 @@ const EventHandlers = {
 
         // 이미지 UI 추가
         const img = document.createElement("img");
-
         img.src = objectUrl;
         img.classList.add("gallery-image");
         img.alt = "추가된 이미지";
@@ -365,13 +364,27 @@ const EventHandlers = {
             img.classList.add("invalid");
         }
 
-        DOM.gallery.appendChild(img);
+        const imageWrapper = document.createElement("div");
+        imageWrapper.classList.add("image-wrapper");
+        imageWrapper.dataset.uuid = img.dataset.uuid; // Propagate uuid to wrapper
+
+        const closeButton = document.createElement("button");
+        closeButton.classList.add("close-button");
+        closeButton.innerHTML = "&times;"; // 'x' mark
+        closeButton.title = "업로드 취소";
+
+        imageWrapper.appendChild(img);
+        imageWrapper.appendChild(closeButton);
+        DOM.gallery.appendChild(imageWrapper);
     },
 
     // 갤러리 이미지 클릭 핸들러
     onGalleryImageClick(event) {
         const target = event.target;
-        if (!target.classList.contains("gallery-image")) return;
+        const imageWrapper = target.closest(".image-wrapper");
+        if (!imageWrapper || target.classList.contains("close-button")) return;
+
+        const img = imageWrapper.querySelector(".gallery-image");
 
         const notSelectedImageDisplay = window.getComputedStyle(DOM.imageNotSelectedBlock).display;
 
@@ -447,12 +460,13 @@ const EventHandlers = {
     // 이미지 업로드 버튼 클릭 핸들러
     async onImageUploadClick() {
         DOM.whileUploadingModal.style.display = "flex";
-        const images = document.querySelectorAll(".gallery-image");
+        const imageWrappers = document.querySelectorAll(".image-wrapper");
 
         const successImageUUIDs = [];
         const failedImageUUIDs = [];
 
-        for (const img of images) {
+        for (const imageWrapper of imageWrappers) {
+            const img = imageWrapper.querySelector(".gallery-image");
             try {
                 const url = await ApiService.requestPresignedPutUrl(img);
                 await ApiService.uploadImageToS3(img, url);
@@ -474,6 +488,26 @@ const EventHandlers = {
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         await UiHelpers.hideUploadingBlockAndShowResultBlock();
+    },
+
+    // 이미지 삭제 버튼 클릭 핸들러
+    onCloseButtonClick(event) {
+        const button = event.target;
+        const imageWrapper = button.closest(".image-wrapper");
+        if (imageWrapper) {
+            const img = imageWrapper.querySelector(".gallery-image");
+            if (img && img.classList.contains("selected")) {
+                // If the deleted image was selected, clear the detail view
+                DOM.imageSelectedBlock.style.display = "none";
+                DOM.imageNotSelectedBlock.style.display = "flex";
+                DOM.description.value = "";
+                DOM.locationBox.value = "";
+                DOM.dateBox.value = "";
+                DOM.publicCheckbox.checked = false;
+            }
+            imageWrapper.remove();
+            ValidationService.updateUploadButtonState(); // Update button state after removal
+        }
     },
 
     async onReloadPageBtnClick() {
@@ -520,6 +554,11 @@ function initialize() {
     DOM.addImageButton.addEventListener("click", EventHandlers.onAddImageClick);
     DOM.fileInput.addEventListener("change", EventHandlers.onFileInputChange);
     document.addEventListener("click", EventHandlers.onGalleryImageClick);
+    document.addEventListener("click", (event) => {
+        if (event.target.classList.contains("close-button")) {
+            EventHandlers.onCloseButtonClick(event);
+        }
+    });
     DOM.description.addEventListener("input", EventHandlers.onDescriptionInput);
     DOM.publicCheckbox.addEventListener("change", EventHandlers.onPublicChange);
     DOM.locationBox.addEventListener("change", EventHandlers.onLocationChange);
