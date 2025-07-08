@@ -20,6 +20,8 @@ const DOM = {
     uploadingBlock: document.querySelector('#uploadingBlock'),
     resultInfoBlock: document.querySelector('#resultInfoBlock'),
     tagBox: document.querySelector('.tag-box'),
+    tagInput: document.querySelector('.tag-input'),
+    tagAddButton: document.querySelector('.tag-add'),
 };
 
 // 이미지 처리 관련 함수들
@@ -335,6 +337,54 @@ const UiHelpers = {
         });
     },
 
+    // 커스텀 태그 추가
+    addCustomTag(tagName) {
+        if (!tagName || tagName.trim() === '') return;
+        
+        // 중복 태그 체크
+        const existingTags = DOM.tagBox.querySelectorAll('.tag:not(.tag-add)');
+        const isDuplicate = Array.from(existingTags).some(tag => 
+            tag.textContent.replace('×', '').trim() === tagName.trim()
+        );
+        
+        if (isDuplicate) {
+            alert('이미 추가된 태그입니다.');
+            return;
+        }
+        
+        const tagElement = document.createElement('span');
+        tagElement.classList.add('tag', 'regional-tag');
+        tagElement.textContent = tagName.trim();
+        tagElement.dataset.tagId = 'custom-' + Date.now(); // 임시 ID
+        tagElement.dataset.tagName = tagName.trim();
+        
+        // 태그 삭제 버튼 추가
+        const deleteButton = document.createElement('button');
+        deleteButton.classList.add('tag-delete');
+        deleteButton.innerHTML = '×';
+        deleteButton.title = '태그 삭제';
+        deleteButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            tagElement.remove();
+            // 선택된 이미지의 태그 정보 즉시 업데이트
+            const selectedImage = document.querySelector(".gallery-image.selected");
+            if (selectedImage) {
+                this.updateSelectedImageTags();
+            }
+        });
+        
+        tagElement.appendChild(deleteButton);
+        
+        const tagAddButton = DOM.tagBox.querySelector('.tag-add');
+        DOM.tagBox.insertBefore(tagElement, tagAddButton);
+        
+        // 선택된 이미지의 태그 정보 업데이트
+        const selectedImage = document.querySelector(".gallery-image.selected");
+        if (selectedImage) {
+            this.updateSelectedImageTags();
+        }
+    },
+
     // 선택된 이미지의 태그 정보 업데이트
     updateSelectedImageTags() {
         const selectedImage = document.querySelector(".gallery-image.selected");
@@ -584,6 +634,42 @@ const EventHandlers = {
         }
     },
 
+    // 태그 추가 버튼 클릭 핸들러
+    onTagAddClick() {
+        DOM.tagInput.style.display = 'inline-block';
+        DOM.tagAddButton.style.display = 'none';
+        DOM.tagInput.focus();
+    },
+
+    // 태그 입력 Enter 키 핸들러
+    onTagInputKeydown(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            const tagName = DOM.tagInput.value.trim();
+            if (tagName) {
+                UiHelpers.addCustomTag(tagName);
+                DOM.tagInput.value = '';
+            }
+            DOM.tagInput.style.display = 'none';
+            DOM.tagAddButton.style.display = 'block';
+        } else if (event.key === 'Escape') {
+            DOM.tagInput.value = '';
+            DOM.tagInput.style.display = 'none';
+            DOM.tagAddButton.style.display = 'block';
+        }
+    },
+
+    // 태그 입력 블러 핸들러
+    onTagInputBlur() {
+        const tagName = DOM.tagInput.value.trim();
+        if (tagName) {
+            UiHelpers.addCustomTag(tagName);
+            DOM.tagInput.value = '';
+        }
+        DOM.tagInput.style.display = 'none';
+        DOM.tagAddButton.style.display = 'block';
+    },
+
 };
 
 // 초기화 함수
@@ -631,6 +717,11 @@ function initialize() {
     DOM.locationBox.addEventListener("change", EventHandlers.onLocationChange);
     DOM.dateBox.addEventListener("change", EventHandlers.onDateChange);
     DOM.imageUploadBtn.addEventListener("click", EventHandlers.onImageUploadClick);
+    
+    // 태그 관련 이벤트 리스너
+    DOM.tagAddButton.addEventListener("click", EventHandlers.onTagAddClick);
+    DOM.tagInput.addEventListener("keydown", EventHandlers.onTagInputKeydown);
+    DOM.tagInput.addEventListener("blur", EventHandlers.onTagInputBlur);
 }
 
 // DOM이 로드된 후 초기화

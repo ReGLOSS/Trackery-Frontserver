@@ -149,6 +149,20 @@
     cursor: pointer;
 }
 
+.tag-input {
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 6px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    outline: none;
+    min-width: 120px;
+}
+
+.tag-input:focus {
+    border-color: #007bff;
+}
+
 .location-box, .date-box {
     position: relative;
     display: flex;
