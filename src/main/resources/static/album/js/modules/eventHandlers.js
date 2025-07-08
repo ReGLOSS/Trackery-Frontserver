@@ -425,18 +425,32 @@ export const EventHandlers = {
         try {
             if (!State.currentAlbumId) return;
 
+            console.log(`앨범 이미지 페이지 ${pageNum} 로드 시작`);
             UiUpdater.showNotification(`${pageNum}페이지 로딩 중...`, 'info');
 
             const imageApiResponse = await ApiService.fetchAlbumImages(State.currentAlbumId, pageNum);
             const imageList = imageApiResponse.data.list;
             const paginationData = imageApiResponse.data;
 
+            console.log(`앨범 이미지 API 응답: ${imageList.length}개 이미지 받음`);
+
             await UiUpdater.renderAlbumDetailGallery(imageList);
             UiUpdater.renderAlbumImagesPagination(paginationData);
+
+            // 이미지 편집 모드가 활성화되어 있다면 체크박스 다시 추가
+            if (State.isImageEditingMode) {
+                // 렌더링 완료 후 체크박스 추가
+                setTimeout(() => {
+                    ImageEditMode.addCheckboxesToGallery('.gallery-card');
+                    console.log('앨범 이미지 편집 모드용 체크박스 추가 완료');
+                }, 100);
+            }
 
             // 갤러리 카드 클릭 이벤트 다시 추가
             this.addGalleryCardClickEvents();
             this.addPaginationClickEvents();
+
+            console.log(`앨범 이미지 페이지 ${pageNum} 로드 완료`);
 
         } catch (error) {
             console.error('앨범 이미지 페이지 로드 실패:', error);
