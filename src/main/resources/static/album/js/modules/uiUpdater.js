@@ -67,6 +67,51 @@ export const UiUpdater = {
         }
     },
 
+    // 앨범 이미지 페이지네이션 렌더링
+    renderAlbumImagesPagination(paginationData) {
+        const paginationContainer = document.querySelector('.album-images-page-num');
+        if (!paginationContainer) return;
+
+        paginationContainer.innerHTML = '';
+
+        if (paginationData.pages <= 1) {
+            return;
+        }
+
+        const pagination = document.createElement('ul');
+        pagination.className = 'pagination';
+
+        // 이전 페이지 버튼
+        const prevItem = document.createElement('li');
+        prevItem.className = `page-item page-prev ${!paginationData.hasPreviousPage ? 'disabled' : ''}`;
+        prevItem.innerHTML = `
+            <a class="page-link" href="#" data-page="${paginationData.prePage}" ${!paginationData.hasPreviousPage ? 'tabindex="-1"' : ''}>
+                ‹
+            </a>
+        `;
+        pagination.appendChild(prevItem);
+
+        // 페이지 번호들
+        paginationData.navigatepageNums.forEach(pageNum => {
+            const pageItem = document.createElement('li');
+            pageItem.className = `page-item ${pageNum === paginationData.pageNum ? 'active' : ''}`;
+            pageItem.innerHTML = `<a class="page-link" href="#" data-page="${pageNum}">${pageNum}</a>`;
+            pagination.appendChild(pageItem);
+        });
+
+        // 다음 페이지 버튼
+        const nextItem = document.createElement('li');
+        nextItem.className = `page-item page-next ${!paginationData.hasNextPage ? 'disabled' : ''}`;
+        nextItem.innerHTML = `
+            <a class="page-link" href="#" data-page="${paginationData.nextPage}" ${!paginationData.hasNextPage ? 'tabindex="-1"' : ''}>
+                ›
+            </a>
+        `;
+        pagination.appendChild(nextItem);
+
+        paginationContainer.appendChild(pagination);
+    },
+
     // 내 이미지 갤러리 렌더링
     async renderMyImagesGallery(imageList) {
         if (!DOM.albumDetailEditMyImagesGallery) return;
@@ -102,6 +147,51 @@ export const UiUpdater = {
         }
         
         console.log(`내 이미지 갤러리: ${addedCount}개 추가, ${excludedCount}개 제외`);
+    },
+
+    // 내 이미지 페이지네이션 렌더링
+    renderMyImagesPagination(paginationData) {
+        const paginationContainer = document.querySelector('.my-images-page-num');
+        if (!paginationContainer) return;
+
+        paginationContainer.innerHTML = '';
+
+        if (paginationData.pages <= 1) {
+            return;
+        }
+
+        const pagination = document.createElement('ul');
+        pagination.className = 'pagination';
+
+        // 이전 페이지 버튼
+        const prevItem = document.createElement('li');
+        prevItem.className = `page-item page-prev ${!paginationData.hasPreviousPage ? 'disabled' : ''}`;
+        prevItem.innerHTML = `
+            <a class="page-link" href="#" data-page="${paginationData.prePage}" ${!paginationData.hasPreviousPage ? 'tabindex="-1"' : ''}>
+                ‹
+            </a>
+        `;
+        pagination.appendChild(prevItem);
+
+        // 페이지 번호들
+        paginationData.navigatepageNums.forEach(pageNum => {
+            const pageItem = document.createElement('li');
+            pageItem.className = `page-item ${pageNum === paginationData.pageNum ? 'active' : ''}`;
+            pageItem.innerHTML = `<a class="page-link" href="#" data-page="${pageNum}">${pageNum}</a>`;
+            pagination.appendChild(pageItem);
+        });
+
+        // 다음 페이지 버튼
+        const nextItem = document.createElement('li');
+        nextItem.className = `page-item page-next ${!paginationData.hasNextPage ? 'disabled' : ''}`;
+        nextItem.innerHTML = `
+            <a class="page-link" href="#" data-page="${paginationData.nextPage}" ${!paginationData.hasNextPage ? 'tabindex="-1"' : ''}>
+                ›
+            </a>
+        `;
+        pagination.appendChild(nextItem);
+
+        paginationContainer.appendChild(pagination);
     },
 
     // 현재 앨범에 있는 이미지 ID들 가져오기

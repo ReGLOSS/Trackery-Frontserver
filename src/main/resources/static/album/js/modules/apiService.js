@@ -35,8 +35,8 @@ export const ApiService = {
     },
 
     // 앨범 이미지 썸네일 조회
-    async fetchAlbumImages(albumId) {
-        const response = await fetch(`/api/albums/${albumId}/images`, {
+    async fetchAlbumImages(albumId, pageNum = 1, pageSize = 5) {
+        const response = await fetch(`/api/albums/${albumId}/images?pageNum=${pageNum}&pageSize=${pageSize}`, {
             method: "GET",
             credentials: "include"
         })
@@ -46,8 +46,8 @@ export const ApiService = {
     },
 
     // 내 이미지 목록 조회
-    async fetchMyImages() {
-        const response = await fetch("/api/images/me", {
+    async fetchMyImages(pageNum = 1, pageSize = 5) {
+        const response = await fetch(`/api/images/me?pageNum=${pageNum}&pageSize=${pageSize}`, {
             method: "GET",
             credentials: "include"
         });

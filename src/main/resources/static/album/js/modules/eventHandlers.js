@@ -149,10 +149,16 @@ export const EventHandlers = {
                 const imageApiResponse = await ApiService.fetchAlbumImages(albumId);
                 console.log(imageApiResponse);
                 const imageList = imageApiResponse.data.list;
+                const paginationData = imageApiResponse.data;
+                
                 await UiUpdater.renderAlbumDetailGallery(imageList);
+                UiUpdater.renderAlbumImagesPagination(paginationData);
                 
                 // 갤러리 카드 클릭 이벤트 추가 (이미지 뷰어 연결은 외부에서 처리)
                 this.addGalleryCardClickEvents();
+                
+                // 페이지네이션 클릭 이벤트 추가
+                this.addPaginationClickEvents();
             }
         } catch (error) {
             console.error("앨범 상세 정보 조회 실패:", error);
@@ -337,6 +343,85 @@ export const EventHandlers = {
         } catch (error) {
             console.error('앨범 삭제 중 오류:', error);
             UiUpdater.showNotification(`앨범 삭제 실패: ${error.message}`, 'error');
+        }
+    },
+
+    // 페이지네이션 클릭 이벤트 추가
+    addPaginationClickEvents() {
+        // 앨범 이미지 페이지네이션
+        const albumPagination = document.querySelector('.album-images-page-num .pagination');
+        if (albumPagination) {
+            albumPagination.addEventListener('click', (e) => {
+                e.preventDefault();
+                const link = e.target.closest('.page-link');
+                if (link && !link.closest('.disabled')) {
+                    const page = parseInt(link.dataset.page);
+                    if (page > 0) {
+                        this.loadAlbumImagesPage(page);
+                    }
+                }
+            });
+        }
+
+        // 내 이미지 페이지네이션
+        const myImagesPagination = document.querySelector('.my-images-page-num .pagination');
+        if (myImagesPagination) {
+            myImagesPagination.addEventListener('click', (e) => {
+                e.preventDefault();
+                const link = e.target.closest('.page-link');
+                if (link && !link.closest('.disabled')) {
+                    const page = parseInt(link.dataset.page);
+                    if (page > 0) {
+                        this.loadMyImagesPage(page);
+                    }
+                }
+            });
+        }
+    },
+
+    // 앨범 이미지 페이지 로드
+    async loadAlbumImagesPage(pageNum) {
+        try {
+            if (!State.currentAlbumId) return;
+
+            UiUpdater.showNotification(`${pageNum}페이지 로딩 중...`, 'info');
+
+            const imageApiResponse = await ApiService.fetchAlbumImages(State.currentAlbumId, pageNum);
+            const imageList = imageApiResponse.data.list;
+            const paginationData = imageApiResponse.data;
+
+            await UiUpdater.renderAlbumDetailGallery(imageList);
+            UiUpdater.renderAlbumImagesPagination(paginationData);
+
+            // 갤러리 카드 클릭 이벤트 다시 추가
+            this.addGalleryCardClickEvents();
+            this.addPaginationClickEvents();
+
+        } catch (error) {
+            console.error('앨범 이미지 페이지 로드 실패:', error);
+            UiUpdater.showNotification('페이지 로드 실패', 'error');
+        }
+    },
+
+    // 내 이미지 페이지 로드
+    async loadMyImagesPage(pageNum) {
+        try {
+            UiUpdater.showNotification(`${pageNum}페이지 로딩 중...`, 'info');
+
+            const response = await ApiService.fetchMyImages(pageNum);
+            const imageList = response.data.list;
+            const paginationData = response.data;
+
+            await UiUpdater.renderMyImagesGallery(imageList);
+            UiUpdater.renderMyImagesPagination(paginationData);
+
+            // 갤러리 카드 클릭 이벤트 다시 추가
+            this.addGalleryCardClickEvents();
+            this.addPaginationClickEvents();
+
+        } catch (error) {
+            console.error('내 이미지 페이지 로드 실패:', error);
+            UiUpdater.showNotification('페이지 로드 실패', 'error');
         }
     }
 };

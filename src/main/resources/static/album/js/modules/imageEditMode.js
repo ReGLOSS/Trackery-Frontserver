@@ -92,9 +92,11 @@ export const ImageEditMode = {
         try {
             const response = await ApiService.fetchMyImages();
             const imageList = response.data.list;
+            const paginationData = response.data;
 
             if (imageList && imageList.length > 0) {
                 await UiUpdater.renderMyImagesGallery(imageList);
+                UiUpdater.renderMyImagesPagination(paginationData);
                 console.log(`내 이미지 ${imageList.length}개 로드 완료`);
             } else {
                 console.log('내 이미지가 없습니다');
