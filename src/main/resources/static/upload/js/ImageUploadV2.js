@@ -16,8 +16,6 @@ const DOM = {
     uploadFailedImageCount: document.querySelector('#uploadFailedImageCount'),
     modalGallery: document.querySelector(".uploading-modal-gallery"),
     failedUploadInfoGroup: document.querySelector("#failedUploadInfoGroup"),
-    reloadUploadPageBtn: document.querySelector("#reloadUploadPageBtn"),
-    confirmBtn: document.querySelector("#confirmBtn"),
     whileUploadingModal: document.querySelector('.while-uploading-modal'),
     uploadingBlock: document.querySelector('#uploadingBlock'),
     resultInfoBlock: document.querySelector('#resultInfoBlock'),
@@ -488,6 +486,14 @@ const EventHandlers = {
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         await UiHelpers.hideUploadingBlockAndShowResultBlock();
+        
+        // 모든 이미지 업로드 성공 시 2초 후 모달 닫고 페이지 새로고침
+        if (failedImageUUIDs.length === 0) {
+            setTimeout(() => {
+                DOM.whileUploadingModal.style.display = "none";
+                window.location.reload();
+            }, 2000);
+        }
     },
 
     // 이미지 삭제 버튼 클릭 핸들러
@@ -510,13 +516,6 @@ const EventHandlers = {
         }
     },
 
-    async onReloadPageBtnClick() {
-        window.location.reload();
-    },
-
-    async onConfirmBtnClick() {
-        window.location.href = "/upload/success";
-    },
 };
 
 // 초기화 함수
@@ -564,8 +563,6 @@ function initialize() {
     DOM.locationBox.addEventListener("change", EventHandlers.onLocationChange);
     DOM.dateBox.addEventListener("change", EventHandlers.onDateChange);
     DOM.imageUploadBtn.addEventListener("click", EventHandlers.onImageUploadClick);
-    DOM.reloadUploadPageBtn.addEventListener("click", EventHandlers.onReloadPageBtnClick);
-    DOM.confirmBtn.addEventListener("click", EventHandlers.onConfirmBtnClick);
 }
 
 // DOM이 로드된 후 초기화
