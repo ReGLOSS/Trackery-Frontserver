@@ -167,6 +167,14 @@ const ApiService = {
     async fetchImgMetaData(imageElement) {
         const fileName = imageElement.dataset.uuid + "." + imageElement.dataset.fileExtension;
 
+        // 현재 UI에 표시된 태그 정보 가져오기
+        let regionalTags = [];
+        try {
+            regionalTags = JSON.parse(imageElement.dataset.regionalTags || '[]');
+        } catch (error) {
+            console.error('태그 파싱 오류:', error);
+        }
+
         try {
             const response = await fetch("/api/images", {
                 method: "POST",
@@ -179,7 +187,8 @@ const ApiService = {
                     longitude: imageElement.dataset.longitude,
                     latitude: imageElement.dataset.latitude,
                     dateString: imageElement.dataset.dateTime,
-                    isPublic: imageElement.dataset.public
+                    isPublic: imageElement.dataset.public,
+                    regionalTags: regionalTags.map(tag => tag.tagName)
                 })
             });
 
@@ -303,9 +312,50 @@ const UiHelpers = {
             const tagElement = document.createElement('span');
             tagElement.classList.add('tag', 'regional-tag');
             tagElement.textContent = tag.tagName;
+            tagElement.dataset.tagId = tag.tagId;
+            tagElement.dataset.tagName = tag.tagName;
             
+            // 태그 삭제 버튼 추가
+            const deleteButton = document.createElement('button');
+            deleteButton.classList.add('tag-delete');
+            deleteButton.innerHTML = '×';
+            deleteButton.title = '태그 삭제';
+            deleteButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                tagElement.remove();
+                // 선택된 이미지의 태그 정보 즉시 업데이트
+                const selectedImage = document.querySelector(".gallery-image.selected");
+                if (selectedImage) {
+                    this.updateSelectedImageTags();
+                }
+            });
+            
+            tagElement.appendChild(deleteButton);
             DOM.tagBox.insertBefore(tagElement, tagAddButton);
         });
+    },
+
+    // 선택된 이미지의 태그 정보 업데이트
+    updateSelectedImageTags() {
+        const selectedImage = document.querySelector(".gallery-image.selected");
+        if (!selectedImage) return;
+
+        const currentTags = DOM.tagBox.querySelectorAll('.tag.regional-tag');
+        const updatedTags = Array.from(currentTags).map(tag => ({
+            tagId: tag.dataset.tagId,
+            tagName: tag.dataset.tagName
+        }));
+
+        selectedImage.dataset.regionalTags = JSON.stringify(updatedTags);
+    },
+
+    // 현재 UI에 표시된 태그 정보 가져오기
+    getCurrentTags() {
+        const currentTags = DOM.tagBox.querySelectorAll('.tag.regional-tag');
+        return Array.from(currentTags).map(tag => ({
+            tagId: tag.dataset.tagId,
+            tagName: tag.dataset.tagName
+        }));
     }
 };
 
@@ -384,6 +434,12 @@ const EventHandlers = {
 
         const img = imageWrapper.querySelector(".gallery-image");
 
+        // 이전에 선택된 이미지의 태그 정보를 저장
+        const previouslySelected = document.querySelector(".gallery-image.selected");
+        if (previouslySelected) {
+            UiHelpers.updateSelectedImageTags();
+        }
+
         const notSelectedImageDisplay = window.getComputedStyle(DOM.imageNotSelectedBlock).display;
 
         if (notSelectedImageDisplay === "flex") {
@@ -416,6 +472,9 @@ const EventHandlers = {
             } catch (error) {
                 console.error('지역 태그 파싱 오류:', error);
             }
+        } else {
+            // 태그 정보가 없으면 기존 태그 모두 제거
+            UiHelpers.addRegionalTags([]);
         }
 
         if (DOM.dateBox.value === "") {
@@ -457,6 +516,12 @@ const EventHandlers = {
 
     // 이미지 업로드 버튼 클릭 핸들러
     async onImageUploadClick() {
+        // 업로드 전에 현재 선택된 이미지의 태그 정보를 저장
+        const currentlySelected = document.querySelector(".gallery-image.selected");
+        if (currentlySelected) {
+            UiHelpers.updateSelectedImageTags();
+        }
+        
         DOM.whileUploadingModal.style.display = "flex";
         const imageWrappers = document.querySelectorAll(".image-wrapper");
 
@@ -465,6 +530,7 @@ const EventHandlers = {
 
         for (const imageWrapper of imageWrappers) {
             const img = imageWrapper.querySelector(".gallery-image");
+            
             try {
                 const url = await ApiService.requestPresignedPutUrl(img);
                 await ApiService.uploadImageToS3(img, url);
@@ -510,6 +576,8 @@ const EventHandlers = {
                 DOM.locationBox.value = "";
                 DOM.dateBox.value = "";
                 DOM.publicCheckbox.checked = false;
+                // 태그 정보도 초기화
+                UiHelpers.addRegionalTags([]);
             }
             imageWrapper.remove();
             ValidationService.updateUploadButtonState(); // Update button state after removal
