@@ -127,7 +127,7 @@ function convertUTMKtoWGS84(x, y) {
     }
 }
 
-let foundLocationData = {longitude: 0, latitude: 0, locationName: ""}
+let foundLocationData = {longitude: 0, latitude: 0, locationName: "", regionalTags: []}
 
 // 전역 변수로 내보내기 (map.js에서 사용)
 window.foundLocationData = foundLocationData;
@@ -144,9 +144,13 @@ function fetchLocationName(utmkcoor) {
     console.log('  Latitude (33-43):', wgs84.latitude >= 33 && wgs84.latitude <= 43);
     console.log('  Latitude (124-132):', wgs84.longitude >= 124 && wgs84.longitude <= 132);
 
-    resultForm.classList.remove("valid", "invalid");
-    mapPickSubmitBtn.disabled = true;
-    resultForm.value = "잠시만 기다려주세요..";
+    if (resultForm) {
+        resultForm.classList.remove("valid", "invalid");
+        resultForm.value = "잠시만 기다려주세요..";
+    }
+    if (mapPickSubmitBtn) {
+        mapPickSubmitBtn.disabled = true;
+    }
 
     fetch("/api/location/name", {
         method: "POST",
@@ -164,15 +168,21 @@ function fetchLocationName(utmkcoor) {
             console.log('API Response data:', data);
             
             if (response.status === 404) {
-                resultForm.value = "위치를 찾을 수 없습니다. 다른 곳으로 시도해주세요.";
-                toggleValidationClass(resultForm, false);
+                if (resultForm) {
+                    resultForm.value = "위치를 찾을 수 없습니다. 다른 곳으로 시도해주세요.";
+                    toggleValidationClass(resultForm, false);
+                }
                 return;
             }
             if (response.status === 200) {
-                resultForm.value = data.data;
-                toggleValidationClass(resultForm, true);
-                mapPickSubmitBtn.disabled = false;
-                foundLocationData = {longitude: wgs84.longitude, latitude: wgs84.latitude, locationName: data.data};
+                if (resultForm) {
+                    resultForm.value = data.data.locationName;
+                    toggleValidationClass(resultForm, true);
+                }
+                if (mapPickSubmitBtn) {
+                    mapPickSubmitBtn.disabled = false;
+                }
+                foundLocationData = {longitude: wgs84.longitude, latitude: wgs84.latitude, locationName: data.data.locationName, regionalTags: data.data.regionalTags || []};
                 window.foundLocationData = foundLocationData;
                 console.log('Final foundLocationData:', foundLocationData);
             } else {
@@ -186,8 +196,10 @@ function fetchLocationName(utmkcoor) {
         })
     }).catch(error => {
         console.error('Fetch error:', error);
-        resultForm.value = "네트워크 오류가 발생했습니다.";
-        toggleValidationClass(resultForm, false);
+        if (resultForm) {
+            resultForm.value = "네트워크 오류가 발생했습니다.";
+            toggleValidationClass(resultForm, false);
+        }
     })
 }
 
@@ -201,22 +213,37 @@ function toggleValidationClass(element, isValid) {
     }
 }
 
-mapPickSubmitBtn.addEventListener('click', function () {
+mapPickSubmitBtn?.addEventListener('click', function () {
     const selectedImage = document.querySelector('.selected');
     const locationBox = document.querySelector('#locationBox');
-    selectedImage.dataset.longitude = foundLocationData.longitude;
-    selectedImage.dataset.latitude = foundLocationData.latitude;
-    selectedImage.dataset.location = foundLocationData.locationName;
-    locationBox.value = foundLocationData.locationName;
-    if (locationBox.classList.contains('invalid')) {
-        locationBox.classList.remove('invalid');
-        locationBox.classList.add('valid');
+    
+    // 선택된 이미지가 있는 경우에만 업데이트
+    if (selectedImage) {
+        selectedImage.dataset.longitude = foundLocationData.longitude;
+        selectedImage.dataset.latitude = foundLocationData.latitude;
+        selectedImage.dataset.location = foundLocationData.locationName;
+        selectedImage.dataset.regionalTags = JSON.stringify(foundLocationData.regionalTags);
     }
+    
+    if (locationBox) {
+        locationBox.value = foundLocationData.locationName;
+        
+        if (locationBox.classList.contains('invalid')) {
+            locationBox.classList.remove('invalid');
+            locationBox.classList.add('valid');
+        }
+    }
+    
+    // 지역 태그 업데이트
+    if (window.UiHelpers && foundLocationData.regionalTags) {
+        window.UiHelpers.addRegionalTags(foundLocationData.regionalTags);
+    }
+    
     mapPickerModal.classList.remove('show');
     resetVariations();
 });
 
-cancelMapPickBtn.addEventListener('click', function () {
+cancelMapPickBtn?.addEventListener('click', function () {
     mapPickerModal.classList.remove('show');
     resetVariations();
 });
@@ -231,7 +258,7 @@ function resetVariations() {
     }
     currentMarker = null;
     utmkcoor = null;
-    foundLocationData = {longitude: 0, latitude: 0, locationName: ""}
+    foundLocationData = {longitude: 0, latitude: 0, locationName: "", regionalTags: []}
     window.foundLocationData = foundLocationData;
     if (resultForm) {
         resultForm.value = "";
