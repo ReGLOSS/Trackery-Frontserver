@@ -91,7 +91,7 @@ export const ImageEditMode = {
     async loadMyImages() {
         try {
             // 현재 앨범에 있는 이미지를 제외하고 내 이미지 조회
-            const response = await ApiService.fetchMyImages(1, 5, State.currentAlbumId);
+            const response = await ApiService.fetchMyImages(1, 9, State.currentAlbumId);
             const imageList = response.data.list;
             const paginationData = response.data;
 
@@ -230,7 +230,34 @@ export const ImageEditMode = {
             
             // 카드에 편집 모드 클래스 추가
             card.classList.add('edit-mode');
+
+            // 이미 선택된 이미지라면 선택 상태로 표시
+            const imageId = card.dataset.imageId;
+            if (State.selectedImages.has(imageId)) {
+                this.restoreCheckboxSelection(card, checkbox);
+            }
         });
+    },
+
+    // 체크박스 선택 상태 복원
+    restoreCheckboxSelection(galleryCard, checkboxContainer) {
+        const imageId = galleryCard.dataset.imageId;
+        const checkIcon = checkboxContainer.querySelector('.check-icon');
+        const cardType = galleryCard.dataset.cardType || 'album';
+        const isMyImage = cardType === 'myImages';
+
+        // 선택된 상태로 UI 업데이트
+        galleryCard.classList.add('checkbox-selected');
+        
+        if (isMyImage) {
+            checkboxContainer.style.backgroundColor = '#28a745'; // 초록색
+        } else {
+            checkboxContainer.style.backgroundColor = '#dc3545'; // 빨간색
+        }
+        
+        checkIcon.style.display = 'block';
+        
+        console.log(`이미지 ID ${imageId} 선택 상태 복원 (${isMyImage ? '내 이미지' : '앨범 이미지'})`);
     },
 
     // 특정 갤러리에서 체크박스 제거

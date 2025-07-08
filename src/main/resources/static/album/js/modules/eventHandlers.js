@@ -470,7 +470,7 @@ export const EventHandlers = {
             UiUpdater.showNotification(`${pageNum}페이지 로딩 중...`, 'info');
 
             // 현재 앨범에 있는 이미지를 제외하고 조회
-            const response = await ApiService.fetchMyImages(pageNum, 5, State.currentAlbumId);
+            const response = await ApiService.fetchMyImages(pageNum, 9, State.currentAlbumId);
             const imageList = response.data.list;
             const paginationData = response.data;
 
