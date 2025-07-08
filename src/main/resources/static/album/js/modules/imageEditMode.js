@@ -98,6 +98,12 @@ export const ImageEditMode = {
             if (imageList && imageList.length > 0) {
                 await UiUpdater.renderMyImagesGallery(imageList);
                 UiUpdater.renderMyImagesPagination(paginationData);
+                
+                // 페이지네이션 이벤트 등록
+                if (window.EventHandlers) {
+                    window.EventHandlers.addPaginationClickEvents();
+                }
+                
                 console.log(`앨범에 없는 내 이미지 ${imageList.length}개 로드 완료`);
             } else {
                 console.log('추가할 수 있는 내 이미지가 없습니다');
