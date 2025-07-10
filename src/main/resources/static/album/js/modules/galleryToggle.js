@@ -22,11 +22,14 @@ export const GalleryToggle = {
     toggleGallery(target, button) {
         const toggleIcon = button.querySelector('.toggle-icon');
         let galleryContent;
+        let paginationContainer;
 
         if (target === 'my-images') {
             galleryContent = DOM.albumDetailEditMyImagesGallery;
+            paginationContainer = document.querySelector('.my-images-page-num');
         } else if (target === 'album-images') {
             galleryContent = DOM.albumDetailGallery;
+            paginationContainer = document.querySelector('.album-images-page-num');
         }
 
         if (!galleryContent) return;
@@ -36,11 +39,17 @@ export const GalleryToggle = {
         if (isCollapsed) {
             // 갤러리 열기
             galleryContent.style.display = 'grid';
+            if (paginationContainer) {
+                paginationContainer.style.display = 'flex';
+            }
             toggleIcon.textContent = '−';
             galleryContent.style.animation = 'slideDown 0.3s ease';
         } else {
             // 갤러리 닫기
             galleryContent.style.animation = 'slideUp 0.3s ease';
+            if (paginationContainer) {
+                paginationContainer.style.display = 'none';
+            }
             setTimeout(() => {
                 galleryContent.style.display = 'none';
             }, 280);

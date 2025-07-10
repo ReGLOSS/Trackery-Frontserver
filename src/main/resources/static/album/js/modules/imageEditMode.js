@@ -90,17 +90,26 @@ export const ImageEditMode = {
     // 내 이미지 로드
     async loadMyImages() {
         try {
-            const response = await ApiService.fetchMyImages();
+            // 현재 앨범에 있는 이미지를 제외하고 내 이미지 조회
+            const response = await ApiService.fetchMyImages(1, 9, State.currentAlbumId);
             const imageList = response.data.list;
+            const paginationData = response.data;
 
             if (imageList && imageList.length > 0) {
                 await UiUpdater.renderMyImagesGallery(imageList);
-                console.log(`내 이미지 ${imageList.length}개 로드 완료`);
+                UiUpdater.renderMyImagesPagination(paginationData);
+                
+                // 페이지네이션 이벤트 등록
+                if (window.EventHandlers) {
+                    window.EventHandlers.addPaginationClickEvents();
+                }
+                
+                console.log(`앨범에 없는 내 이미지 ${imageList.length}개 로드 완료`);
             } else {
-                console.log('내 이미지가 없습니다');
+                console.log('추가할 수 있는 내 이미지가 없습니다');
                 // 빈 갤러리 표시
                 if (DOM.albumDetailEditMyImagesGallery) {
-                    DOM.albumDetailEditMyImagesGallery.innerHTML = '<div class="no-images-message">내 이미지가 없습니다.</div>';
+                    DOM.albumDetailEditMyImagesGallery.innerHTML = '<div class="no-images-message">추가할 수 있는 내 이미지가 없습니다.</div>';
                 }
             }
         } catch (error) {
@@ -221,7 +230,34 @@ export const ImageEditMode = {
             
             // 카드에 편집 모드 클래스 추가
             card.classList.add('edit-mode');
+
+            // 이미 선택된 이미지라면 선택 상태로 표시
+            const imageId = card.dataset.imageId;
+            if (State.selectedImages.has(imageId)) {
+                this.restoreCheckboxSelection(card, checkbox);
+            }
         });
+    },
+
+    // 체크박스 선택 상태 복원
+    restoreCheckboxSelection(galleryCard, checkboxContainer) {
+        const imageId = galleryCard.dataset.imageId;
+        const checkIcon = checkboxContainer.querySelector('.check-icon');
+        const cardType = galleryCard.dataset.cardType || 'album';
+        const isMyImage = cardType === 'myImages';
+
+        // 선택된 상태로 UI 업데이트
+        galleryCard.classList.add('checkbox-selected');
+        
+        if (isMyImage) {
+            checkboxContainer.style.backgroundColor = '#28a745'; // 초록색
+        } else {
+            checkboxContainer.style.backgroundColor = '#dc3545'; // 빨간색
+        }
+        
+        checkIcon.style.display = 'block';
+        
+        console.log(`이미지 ID ${imageId} 선택 상태 복원 (${isMyImage ? '내 이미지' : '앨범 이미지'})`);
     },
 
     // 특정 갤러리에서 체크박스 제거
