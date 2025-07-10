@@ -476,3 +476,28 @@
     }
 }
 
+.page-num-section {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+    background-color: #ffffff;
+    border-top: 1px solid #e9ecef;
+}
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+    background-color: #ffffff;
+    border-top: 1px solid #e9ecef;
+}
+
+.pagination-container .pagination {
+    margin: 0;
+}
+
+.pagination .page-item-subtitle,
+.pagination .page-item-title {
+    display: none;
+}
+
