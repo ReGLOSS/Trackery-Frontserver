@@ -56,6 +56,45 @@
     transform: scale(1.1);
 }
 
+.image-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1/1;
+    overflow: hidden;
+}
+
+.image-wrapper .gallery-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.close-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.image-wrapper:hover .close-button {
+    opacity: 1;
+}
+
+
 .add-image {
     border: 1px solid gray;
     width: 100%;
@@ -94,6 +133,10 @@
     padding: 6px 10px;
     border-radius: 12px;
     font-size: 0.85rem;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .tag-add {
@@ -104,6 +147,20 @@
     border-radius: 8px;
     font-size: 1.2rem;
     cursor: pointer;
+}
+
+.tag-input {
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 6px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    outline: none;
+    min-width: 120px;
+}
+
+.tag-input:focus {
+    border-color: #007bff;
 }
 
 .location-box, .date-box {
@@ -257,4 +314,25 @@ label {
     margin-left: 0.5%;
     padding: 0.1%;
     font-size: 1rem;
+}
+
+.tag-delete {
+    background-color: #ff4757;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    line-height: 1;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.tag-delete:hover {
+    background-color: #d63031;
 }

@@ -43,6 +43,21 @@ class MapManager {
     bindEvents() {
         const backBtn = document.getElementById('back-btn');
         backBtn.addEventListener('click', () => this.debouncedGoBack());
+        this.bindModalEventsOnce();
+    }
+
+    bindModalEventsOnce() {
+        const modalEditBtn = document.getElementById('modalEditBtn');
+        const modalDeleteBtn = document.getElementById('modalDeleteBtn');
+        const modalCancelEditBtn = document.getElementById('modalCancelEditBtn');
+        const modalSaveBtn = document.getElementById('modalSaveBtn');
+        const modalContent = document.querySelector('#imageDetailModal .modal-content');
+
+        if (modalEditBtn) modalEditBtn.addEventListener('click', () => this.enterEditMode());
+        if (modalDeleteBtn) modalDeleteBtn.addEventListener('click', () => this.deleteImage());
+        if (modalCancelEditBtn) modalCancelEditBtn.addEventListener('click', () => this.cancelEditMode());
+        if (modalSaveBtn) modalSaveBtn.addEventListener('click', () => this.saveImageChanges());
+        if (modalContent) modalContent.addEventListener('click', (e) => e.stopPropagation());
     }
 
     async loadSidoView() {
@@ -754,7 +769,7 @@ class MapManager {
 
         try {
             // 원본 이미지 상세 정보를 API에서 가져오기
-            const response = await fetch(`/api/images?imageId=${imageId}`, {
+            const response = await fetch(`/api/images/${imageId}`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -903,58 +918,27 @@ class MapManager {
         const modal = document.getElementById('imageDetailModal');
         const modalOverlay = document.getElementById('modalOverlay');
         const modalClose = document.getElementById('modalClose');
-        const modalCancelBtn = document.getElementById('modalCancelBtn');
-        const modalEditBtn = document.getElementById('modalEditBtn');
-        const modalDeleteBtn = document.getElementById('modalDeleteBtn');
-        const modalCancelEditBtn = document.getElementById('modalCancelEditBtn');
-        const modalSaveBtn = document.getElementById('modalSaveBtn');
 
-        // 모달 닫기 이벤트들
-        const closeEvents = [modalOverlay, modalClose];
-        closeEvents.forEach(element => {
-            if (element) {
-                element.addEventListener('click', () => this.hideModal());
-            }
-        });
+        const closeModal = () => {
+            this.hideModal();
+            modalOverlay.removeEventListener('click', closeModal);
+            modalClose.removeEventListener('click', closeModal);
+            document.removeEventListener('keydown', escKeyHandler);
+        };
 
-        // 수정 버튼 클릭
-        if (modalEditBtn) {
-            modalEditBtn.addEventListener('click', () => this.enterEditMode());
-        }
-
-        // 삭제 버튼 클릭
-        if (modalDeleteBtn) {
-            modalDeleteBtn.addEventListener('click', () => this.deleteImage());
-        }
-
-        // 수정 취소 버튼 클릭
-        if (modalCancelEditBtn) {
-            modalCancelEditBtn.addEventListener('click', () => this.cancelEditMode());
-        }
-
-        // 저장 버튼 클릭
-        if (modalSaveBtn) {
-            modalSaveBtn.addEventListener('click', () => this.saveImageChanges());
-        }
-
-        // ESC 키로 모달 닫기
         const escKeyHandler = (e) => {
             if (e.key === 'Escape') {
                 if (this.isEditMode) {
                     this.cancelEditMode();
                 } else {
-                    this.hideModal();
+                    closeModal();
                 }
-                document.removeEventListener('keydown', escKeyHandler);
             }
         };
-        document.addEventListener('keydown', escKeyHandler);
 
-        // 모달 내부 클릭 시 이벤트 전파 방지
-        const modalContent = modal.querySelector('.modal-content');
-        modalContent.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
+        modalOverlay.addEventListener('click', closeModal);
+        modalClose.addEventListener('click', closeModal);
+        document.addEventListener('keydown', escKeyHandler);
     }
 
     // 날짜 포맷 함수 (한국어 형식)
@@ -1304,6 +1288,9 @@ class MapManager {
 
             // 이미지 목록 새로고침
             this.refreshCurrentImageList();
+
+            // 지도 색상 새로고침
+            this.refreshMapColors();
 
         } catch (error) {
             console.error('Error deleting image:', error);

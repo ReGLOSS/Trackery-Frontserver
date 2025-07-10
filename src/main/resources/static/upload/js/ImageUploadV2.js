@@ -16,12 +16,12 @@ const DOM = {
     uploadFailedImageCount: document.querySelector('#uploadFailedImageCount'),
     modalGallery: document.querySelector(".uploading-modal-gallery"),
     failedUploadInfoGroup: document.querySelector("#failedUploadInfoGroup"),
-    reloadUploadPageBtn: document.querySelector("#reloadUploadPageBtn"),
-    confirmBtn: document.querySelector("#confirmBtn"),
     whileUploadingModal: document.querySelector('.while-uploading-modal'),
     uploadingBlock: document.querySelector('#uploadingBlock'),
     resultInfoBlock: document.querySelector('#resultInfoBlock'),
     tagBox: document.querySelector('.tag-box'),
+    tagInput: document.querySelector('.tag-input'),
+    tagAddButton: document.querySelector('.tag-add'),
 };
 
 // 이미지 처리 관련 함수들
@@ -103,7 +103,7 @@ const ApiService = {
                 dateTime: formattedDateTime,
                 latitude,
                 longitude,
-                regionalTags: location.regionalTags || []
+                tags: location.regionalTags || []
             };
         } catch (err) {
             console.error("위치 정보 요청 실패:", err);
@@ -169,6 +169,14 @@ const ApiService = {
     async fetchImgMetaData(imageElement) {
         const fileName = imageElement.dataset.uuid + "." + imageElement.dataset.fileExtension;
 
+        // 현재 UI에 표시된 태그 정보 가져오기
+        let tags = [];
+        try {
+            tags = JSON.parse(imageElement.dataset.tags || '[]');
+        } catch (error) {
+            console.error('태그 파싱 오류:', error);
+        }
+
         try {
             const response = await fetch("/api/images", {
                 method: "POST",
@@ -181,7 +189,8 @@ const ApiService = {
                     longitude: imageElement.dataset.longitude,
                     latitude: imageElement.dataset.latitude,
                     dateString: imageElement.dataset.dateTime,
-                    isPublic: imageElement.dataset.public
+                    isPublic: imageElement.dataset.public,
+                    tags: tags.map(tag => tag.tagName)
                 })
             });
 
@@ -291,7 +300,7 @@ const UiHelpers = {
     },
 
     // 태그 영역에 지역 태그 추가
-    addRegionalTags(regionalTags) {
+    addTags(tags) {
         const existingTags = DOM.tagBox.querySelectorAll('.tag:not(.tag-add)');
         existingTags.forEach(tag => {
             if (tag.classList.contains('regional-tag')) {
@@ -301,13 +310,102 @@ const UiHelpers = {
 
         const tagAddButton = DOM.tagBox.querySelector('.tag-add');
         
-        regionalTags.forEach(tag => {
+        tags.forEach(tag => {
             const tagElement = document.createElement('span');
             tagElement.classList.add('tag', 'regional-tag');
             tagElement.textContent = tag.tagName;
+            tagElement.dataset.tagId = tag.tagId;
+            tagElement.dataset.tagName = tag.tagName;
             
+            // 태그 삭제 버튼 추가
+            const deleteButton = document.createElement('button');
+            deleteButton.classList.add('tag-delete');
+            deleteButton.innerHTML = '×';
+            deleteButton.title = '태그 삭제';
+            deleteButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                tagElement.remove();
+                // 선택된 이미지의 태그 정보 즉시 업데이트
+                const selectedImage = document.querySelector(".gallery-image.selected");
+                if (selectedImage) {
+                    this.updateSelectedImageTags();
+                }
+            });
+            
+            tagElement.appendChild(deleteButton);
             DOM.tagBox.insertBefore(tagElement, tagAddButton);
         });
+    },
+
+    // 커스텀 태그 추가
+    addCustomTag(tagName) {
+        if (!tagName || tagName.trim() === '') return;
+        
+        // 중복 태그 체크
+        const existingTags = DOM.tagBox.querySelectorAll('.tag:not(.tag-add)');
+        const isDuplicate = Array.from(existingTags).some(tag => 
+            tag.textContent.replace('×', '').trim() === tagName.trim()
+        );
+        
+        if (isDuplicate) {
+            alert('이미 추가된 태그입니다.');
+            return;
+        }
+        
+        const tagElement = document.createElement('span');
+        tagElement.classList.add('tag', 'regional-tag');
+        tagElement.textContent = tagName.trim();
+        tagElement.dataset.tagId = 'custom-' + Date.now(); // 임시 ID
+        tagElement.dataset.tagName = tagName.trim();
+        
+        // 태그 삭제 버튼 추가
+        const deleteButton = document.createElement('button');
+        deleteButton.classList.add('tag-delete');
+        deleteButton.innerHTML = '×';
+        deleteButton.title = '태그 삭제';
+        deleteButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            tagElement.remove();
+            // 선택된 이미지의 태그 정보 즉시 업데이트
+            const selectedImage = document.querySelector(".gallery-image.selected");
+            if (selectedImage) {
+                this.updateSelectedImageTags();
+            }
+        });
+        
+        tagElement.appendChild(deleteButton);
+        
+        const tagAddButton = DOM.tagBox.querySelector('.tag-add');
+        DOM.tagBox.insertBefore(tagElement, tagAddButton);
+        
+        // 선택된 이미지의 태그 정보 업데이트
+        const selectedImage = document.querySelector(".gallery-image.selected");
+        if (selectedImage) {
+            this.updateSelectedImageTags();
+        }
+    },
+
+    // 선택된 이미지의 태그 정보 업데이트
+    updateSelectedImageTags() {
+        const selectedImage = document.querySelector(".gallery-image.selected");
+        if (!selectedImage) return;
+
+        const currentTags = DOM.tagBox.querySelectorAll('.tag.regional-tag');
+        const updatedTags = Array.from(currentTags).map(tag => ({
+            tagId: tag.dataset.tagId,
+            tagName: tag.dataset.tagName
+        }));
+
+        selectedImage.dataset.tags = JSON.stringify(updatedTags);
+    },
+
+    // 현재 UI에 표시된 태그 정보 가져오기
+    getCurrentTags() {
+        const currentTags = DOM.tagBox.querySelectorAll('.tag.regional-tag');
+        return Array.from(currentTags).map(tag => ({
+            tagId: tag.dataset.tagId,
+            tagName: tag.dataset.tagName
+        }));
     }
 };
 
@@ -335,13 +433,12 @@ const EventHandlers = {
 
         // EXIF 파싱 + 위치 요청
         const parsedData = await ApiService.fetchLocation(file);
-        const {location = '', dateTime = '', regionalTags = []} = parsedData;
+        const {location = '', dateTime = '', tags = []} = parsedData;
 
         const objectUrl = URL.createObjectURL(file);
 
         // 이미지 UI 추가
         const img = document.createElement("img");
-
         img.src = objectUrl;
         img.classList.add("gallery-image");
         img.alt = "추가된 이미지";
@@ -355,7 +452,7 @@ const EventHandlers = {
         img.dataset.fileExtension = fileExtension;
         img.dataset.latitude = parsedData.latitude;
         img.dataset.longitude = parsedData.longitude;
-        img.dataset.regionalTags = JSON.stringify(regionalTags);
+        img.dataset.tags = JSON.stringify(tags);
 
         if (dateTime && location) {
             img.classList.add("valid");
@@ -365,13 +462,33 @@ const EventHandlers = {
             img.classList.add("invalid");
         }
 
-        DOM.gallery.appendChild(img);
+        const imageWrapper = document.createElement("div");
+        imageWrapper.classList.add("image-wrapper");
+        imageWrapper.dataset.uuid = img.dataset.uuid; // Propagate uuid to wrapper
+
+        const closeButton = document.createElement("button");
+        closeButton.classList.add("close-button");
+        closeButton.innerHTML = "&times;"; // 'x' mark
+        closeButton.title = "업로드 취소";
+
+        imageWrapper.appendChild(img);
+        imageWrapper.appendChild(closeButton);
+        DOM.gallery.appendChild(imageWrapper);
     },
 
     // 갤러리 이미지 클릭 핸들러
     onGalleryImageClick(event) {
         const target = event.target;
-        if (!target.classList.contains("gallery-image")) return;
+        const imageWrapper = target.closest(".image-wrapper");
+        if (!imageWrapper || target.classList.contains("close-button")) return;
+
+        const img = imageWrapper.querySelector(".gallery-image");
+
+        // 이전에 선택된 이미지의 태그 정보를 저장
+        const previouslySelected = document.querySelector(".gallery-image.selected");
+        if (previouslySelected) {
+            UiHelpers.updateSelectedImageTags();
+        }
 
         const notSelectedImageDisplay = window.getComputedStyle(DOM.imageNotSelectedBlock).display;
 
@@ -389,7 +506,7 @@ const EventHandlers = {
         document.querySelector('#mapPickerModal').classList.remove('show');
         resetVariations();
 
-        const {preview, location, dateTime, description, tags, public: isPublic, regionalTags} = target.dataset;
+        const {preview, location, dateTime, description, tags, public: isPublic} = target.dataset;
 
         document.querySelector(".image-detail").src = preview;
         DOM.description.value = description;
@@ -398,13 +515,16 @@ const EventHandlers = {
         DOM.publicCheckbox.checked = isPublic === "true";
 
         // 지역 태그 추가
-        if (regionalTags) {
+        if (tags) {
             try {
-                const parsedTags = JSON.parse(regionalTags);
-                UiHelpers.addRegionalTags(parsedTags);
+                const parsedTags = JSON.parse(tags);
+                UiHelpers.addTags(parsedTags);
             } catch (error) {
                 console.error('지역 태그 파싱 오류:', error);
             }
+        } else {
+            // 태그 정보가 없으면 기존 태그 모두 제거
+            UiHelpers.addTags([]);
         }
 
         if (DOM.dateBox.value === "") {
@@ -446,13 +566,21 @@ const EventHandlers = {
 
     // 이미지 업로드 버튼 클릭 핸들러
     async onImageUploadClick() {
+        // 업로드 전에 현재 선택된 이미지의 태그 정보를 저장
+        const currentlySelected = document.querySelector(".gallery-image.selected");
+        if (currentlySelected) {
+            UiHelpers.updateSelectedImageTags();
+        }
+        
         DOM.whileUploadingModal.style.display = "flex";
-        const images = document.querySelectorAll(".gallery-image");
+        const imageWrappers = document.querySelectorAll(".image-wrapper");
 
         const successImageUUIDs = [];
         const failedImageUUIDs = [];
 
-        for (const img of images) {
+        for (const imageWrapper of imageWrappers) {
+            const img = imageWrapper.querySelector(".gallery-image");
+            
             try {
                 const url = await ApiService.requestPresignedPutUrl(img);
                 await ApiService.uploadImageToS3(img, url);
@@ -474,15 +602,74 @@ const EventHandlers = {
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         await UiHelpers.hideUploadingBlockAndShowResultBlock();
+        
+        // 모든 이미지 업로드 성공 시 2초 후 모달 닫고 페이지 새로고침
+        if (failedImageUUIDs.length === 0) {
+            setTimeout(() => {
+                DOM.whileUploadingModal.style.display = "none";
+                window.location.reload();
+            }, 2000);
+        }
     },
 
-    async onReloadPageBtnClick() {
-        window.location.reload();
+    // 이미지 삭제 버튼 클릭 핸들러
+    onCloseButtonClick(event) {
+        const button = event.target;
+        const imageWrapper = button.closest(".image-wrapper");
+        if (imageWrapper) {
+            const img = imageWrapper.querySelector(".gallery-image");
+            if (img && img.classList.contains("selected")) {
+                // If the deleted image was selected, clear the detail view
+                DOM.imageSelectedBlock.style.display = "none";
+                DOM.imageNotSelectedBlock.style.display = "flex";
+                DOM.description.value = "";
+                DOM.locationBox.value = "";
+                DOM.dateBox.value = "";
+                DOM.publicCheckbox.checked = false;
+                // 태그 정보도 초기화
+                UiHelpers.addTags([]);
+            }
+            imageWrapper.remove();
+            ValidationService.updateUploadButtonState(); // Update button state after removal
+        }
     },
 
-    async onConfirmBtnClick() {
-        window.location.href = "/upload/success";
+    // 태그 추가 버튼 클릭 핸들러
+    onTagAddClick() {
+        DOM.tagInput.style.display = 'inline-block';
+        DOM.tagAddButton.style.display = 'none';
+        DOM.tagInput.focus();
     },
+
+    // 태그 입력 Enter 키 핸들러
+    onTagInputKeydown(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            const tagName = DOM.tagInput.value.trim();
+            if (tagName) {
+                UiHelpers.addCustomTag(tagName);
+                DOM.tagInput.value = '';
+            }
+            DOM.tagInput.style.display = 'none';
+            DOM.tagAddButton.style.display = 'block';
+        } else if (event.key === 'Escape') {
+            DOM.tagInput.value = '';
+            DOM.tagInput.style.display = 'none';
+            DOM.tagAddButton.style.display = 'block';
+        }
+    },
+
+    // 태그 입력 블러 핸들러
+    onTagInputBlur() {
+        const tagName = DOM.tagInput.value.trim();
+        if (tagName) {
+            UiHelpers.addCustomTag(tagName);
+            DOM.tagInput.value = '';
+        }
+        DOM.tagInput.style.display = 'none';
+        DOM.tagAddButton.style.display = 'block';
+    },
+
 };
 
 // 초기화 함수
@@ -520,13 +707,21 @@ function initialize() {
     DOM.addImageButton.addEventListener("click", EventHandlers.onAddImageClick);
     DOM.fileInput.addEventListener("change", EventHandlers.onFileInputChange);
     document.addEventListener("click", EventHandlers.onGalleryImageClick);
+    document.addEventListener("click", (event) => {
+        if (event.target.classList.contains("close-button")) {
+            EventHandlers.onCloseButtonClick(event);
+        }
+    });
     DOM.description.addEventListener("input", EventHandlers.onDescriptionInput);
     DOM.publicCheckbox.addEventListener("change", EventHandlers.onPublicChange);
     DOM.locationBox.addEventListener("change", EventHandlers.onLocationChange);
     DOM.dateBox.addEventListener("change", EventHandlers.onDateChange);
     DOM.imageUploadBtn.addEventListener("click", EventHandlers.onImageUploadClick);
-    DOM.reloadUploadPageBtn.addEventListener("click", EventHandlers.onReloadPageBtnClick);
-    DOM.confirmBtn.addEventListener("click", EventHandlers.onConfirmBtnClick);
+    
+    // 태그 관련 이벤트 리스너
+    DOM.tagAddButton.addEventListener("click", EventHandlers.onTagAddClick);
+    DOM.tagInput.addEventListener("keydown", EventHandlers.onTagInputKeydown);
+    DOM.tagInput.addEventListener("blur", EventHandlers.onTagInputBlur);
 }
 
 // DOM이 로드된 후 초기화

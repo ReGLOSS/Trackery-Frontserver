@@ -124,6 +124,18 @@ export const ImageViewer = {
             return parts.length > 0 ? parts.join(' ') : '위치 정보 없음';
         };
 
+        // 태그 포맷팅
+        const formatTags = (tags) => {
+            if (!tags || tags.length === 0) {
+                return '<span style="color: #777;">태그 없음</span>';
+            }
+            return tags.map(tag => {
+                // 태그가 객체인 경우 tagName 또는 name 속성을 사용, 아니면 tag 자체를 사용
+                const tagName = typeof tag === 'object' ? (tag.tagName || tag.name) : tag;
+                return `<span style="background: #f0f0f0; color: #333; padding: 4px 12px; border-radius: 15px; font-size: 0.85rem;">#${tagName}</span>`;
+            }).join('');
+        };
+
         // 모달 생성
         const infoOverlay = document.createElement('div');
         infoOverlay.className = 'image-info-overlay';
@@ -184,6 +196,10 @@ export const ImageViewer = {
                     <span style="color: #333;">${formatLocation(imageData.sdName, imageData.sggName)}</span>
                 </div>
                 <div style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                    <strong style="color: #555; display: block; margin-bottom: 5px;">태그</strong>
+                    <div style="color: #333; display: flex; flex-wrap: wrap; gap: 5px;">${formatTags(imageData.tags)}</div>
+                </div>
+                <div style="border-bottom: 1px solid #eee; padding-bottom: 10px;">
                     <strong style="color: #555; display: block; margin-bottom: 5px;">공개 설정</strong>
                     <span style="color: #333;">${CONSTANTS.IS_PUBLIC[imageData.isPublic] || '정보 없음'}</span>
                 </div>
@@ -195,9 +211,14 @@ export const ImageViewer = {
         infoOverlay.appendChild(infoPanel);
         document.body.appendChild(infoOverlay);
 
-        // 모달이 제거될 때 이벤트 리스너도 제거
-        infoOverlay.addEventListener('remove', () => {
-            document.removeEventListener('keydown', handleEscKey);
-        });
+        // ESC 키로 모달 닫기
+        const handleEscKey = (e) => {
+            if (e.key === 'Escape') {
+                document.body.removeChild(infoOverlay);
+                document.removeEventListener('keydown', handleEscKey);
+            }
+        };
+        
+        document.addEventListener('keydown', handleEscKey);
     }
 };
