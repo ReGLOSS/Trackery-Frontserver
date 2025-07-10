@@ -127,7 +127,7 @@ function convertUTMKtoWGS84(x, y) {
     }
 }
 
-let foundLocationData = {longitude: 0, latitude: 0, locationName: "", regionalTags: []}
+let foundLocationData = {longitude: 0, latitude: 0, locationName: "", tags: []}
 
 // 전역 변수로 내보내기 (map.js에서 사용)
 window.foundLocationData = foundLocationData;
@@ -182,7 +182,7 @@ function fetchLocationName(utmkcoor) {
                 if (mapPickSubmitBtn) {
                     mapPickSubmitBtn.disabled = false;
                 }
-                foundLocationData = {longitude: wgs84.longitude, latitude: wgs84.latitude, locationName: data.data.locationName, regionalTags: data.data.regionalTags || []};
+                foundLocationData = {longitude: wgs84.longitude, latitude: wgs84.latitude, locationName: data.data.locationName, tags: data.data.regionalTags || []};
                 window.foundLocationData = foundLocationData;
                 console.log('Final foundLocationData:', foundLocationData);
             } else {
@@ -222,7 +222,7 @@ mapPickSubmitBtn?.addEventListener('click', function () {
         selectedImage.dataset.longitude = foundLocationData.longitude;
         selectedImage.dataset.latitude = foundLocationData.latitude;
         selectedImage.dataset.location = foundLocationData.locationName;
-        selectedImage.dataset.regionalTags = JSON.stringify(foundLocationData.regionalTags);
+        selectedImage.dataset.tags = JSON.stringify(foundLocationData.tags);
     }
     
     if (locationBox) {
@@ -235,8 +235,8 @@ mapPickSubmitBtn?.addEventListener('click', function () {
     }
     
     // 지역 태그 업데이트
-    if (window.UiHelpers && foundLocationData.regionalTags) {
-        window.UiHelpers.addRegionalTags(foundLocationData.regionalTags);
+    if (window.UiHelpers && foundLocationData.tags) {
+        window.UiHelpers.addTags(foundLocationData.tags);
     }
     
     mapPickerModal.classList.remove('show');
@@ -258,7 +258,7 @@ function resetVariations() {
     }
     currentMarker = null;
     utmkcoor = null;
-    foundLocationData = {longitude: 0, latitude: 0, locationName: "", regionalTags: []}
+    foundLocationData = {longitude: 0, latitude: 0, locationName: "", tags: []}
     window.foundLocationData = foundLocationData;
     if (resultForm) {
         resultForm.value = "";

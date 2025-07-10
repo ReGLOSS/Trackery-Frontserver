@@ -103,7 +103,7 @@ const ApiService = {
                 dateTime: formattedDateTime,
                 latitude,
                 longitude,
-                regionalTags: location.regionalTags || []
+                tags: location.regionalTags || []
             };
         } catch (err) {
             console.error("위치 정보 요청 실패:", err);
@@ -170,9 +170,9 @@ const ApiService = {
         const fileName = imageElement.dataset.uuid + "." + imageElement.dataset.fileExtension;
 
         // 현재 UI에 표시된 태그 정보 가져오기
-        let regionalTags = [];
+        let tags = [];
         try {
-            regionalTags = JSON.parse(imageElement.dataset.regionalTags || '[]');
+            tags = JSON.parse(imageElement.dataset.tags || '[]');
         } catch (error) {
             console.error('태그 파싱 오류:', error);
         }
@@ -190,7 +190,7 @@ const ApiService = {
                     latitude: imageElement.dataset.latitude,
                     dateString: imageElement.dataset.dateTime,
                     isPublic: imageElement.dataset.public,
-                    regionalTags: regionalTags.map(tag => tag.tagName)
+                    tags: tags.map(tag => tag.tagName)
                 })
             });
 
@@ -300,7 +300,7 @@ const UiHelpers = {
     },
 
     // 태그 영역에 지역 태그 추가
-    addRegionalTags(regionalTags) {
+    addTags(tags) {
         const existingTags = DOM.tagBox.querySelectorAll('.tag:not(.tag-add)');
         existingTags.forEach(tag => {
             if (tag.classList.contains('regional-tag')) {
@@ -310,7 +310,7 @@ const UiHelpers = {
 
         const tagAddButton = DOM.tagBox.querySelector('.tag-add');
         
-        regionalTags.forEach(tag => {
+        tags.forEach(tag => {
             const tagElement = document.createElement('span');
             tagElement.classList.add('tag', 'regional-tag');
             tagElement.textContent = tag.tagName;
@@ -396,7 +396,7 @@ const UiHelpers = {
             tagName: tag.dataset.tagName
         }));
 
-        selectedImage.dataset.regionalTags = JSON.stringify(updatedTags);
+        selectedImage.dataset.tags = JSON.stringify(updatedTags);
     },
 
     // 현재 UI에 표시된 태그 정보 가져오기
@@ -433,7 +433,7 @@ const EventHandlers = {
 
         // EXIF 파싱 + 위치 요청
         const parsedData = await ApiService.fetchLocation(file);
-        const {location = '', dateTime = '', regionalTags = []} = parsedData;
+        const {location = '', dateTime = '', tags = []} = parsedData;
 
         const objectUrl = URL.createObjectURL(file);
 
@@ -452,7 +452,7 @@ const EventHandlers = {
         img.dataset.fileExtension = fileExtension;
         img.dataset.latitude = parsedData.latitude;
         img.dataset.longitude = parsedData.longitude;
-        img.dataset.regionalTags = JSON.stringify(regionalTags);
+        img.dataset.tags = JSON.stringify(tags);
 
         if (dateTime && location) {
             img.classList.add("valid");
@@ -506,7 +506,7 @@ const EventHandlers = {
         document.querySelector('#mapPickerModal').classList.remove('show');
         resetVariations();
 
-        const {preview, location, dateTime, description, tags, public: isPublic, regionalTags} = target.dataset;
+        const {preview, location, dateTime, description, tags, public: isPublic} = target.dataset;
 
         document.querySelector(".image-detail").src = preview;
         DOM.description.value = description;
@@ -515,16 +515,16 @@ const EventHandlers = {
         DOM.publicCheckbox.checked = isPublic === "true";
 
         // 지역 태그 추가
-        if (regionalTags) {
+        if (tags) {
             try {
-                const parsedTags = JSON.parse(regionalTags);
-                UiHelpers.addRegionalTags(parsedTags);
+                const parsedTags = JSON.parse(tags);
+                UiHelpers.addTags(parsedTags);
             } catch (error) {
                 console.error('지역 태그 파싱 오류:', error);
             }
         } else {
             // 태그 정보가 없으면 기존 태그 모두 제거
-            UiHelpers.addRegionalTags([]);
+            UiHelpers.addTags([]);
         }
 
         if (DOM.dateBox.value === "") {
@@ -627,7 +627,7 @@ const EventHandlers = {
                 DOM.dateBox.value = "";
                 DOM.publicCheckbox.checked = false;
                 // 태그 정보도 초기화
-                UiHelpers.addRegionalTags([]);
+                UiHelpers.addTags([]);
             }
             imageWrapper.remove();
             ValidationService.updateUploadButtonState(); // Update button state after removal
