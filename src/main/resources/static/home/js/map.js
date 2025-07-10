@@ -769,7 +769,7 @@ class MapManager {
 
         try {
             // 원본 이미지 상세 정보를 API에서 가져오기
-            const response = await fetch(`/api/images?imageId=${imageId}`, {
+            const response = await fetch(`/api/images/${imageId}`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
