@@ -88,22 +88,48 @@ const ApiService = {
         }
 
         try {
-            const response = await fetch("/api/location/name", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                credentials: "include",
-                body: JSON.stringify({latitude, longitude})
-            });
+            // 병렬로 두 API 요청 실행
+            const [locationResponse, tagsResponse] = await Promise.all([
+                fetch("/api/location/name", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    credentials: "include",
+                    body: JSON.stringify({latitude, longitude})
+                }),
+                fetch("/api/tags/default", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    credentials: "include",
+                    body: JSON.stringify({
+                        date: formattedDateTime,
+                        coordinate: {
+                            latitude: latitude,
+                            longitude: longitude
+                        }
+                    })
+                })
+            ]);
 
-            const data = await response.json();
-            const location = data.data;
+            const locationData = await locationResponse.json();
+            const tagsData = await tagsResponse.json();
+
+            console.log('Location API Response:', locationData);
+            console.log('Tags API Response:', tagsData);
+
+            const location = locationData.data;
+
+            // 태그 정보 병합: 기존 regionalTags + 새로운 default tags
+            let combinedTags = location.regionalTags || [];
+            if (tagsResponse.status === 200 && tagsData.code === 200 && Array.isArray(tagsData.data)) {
+                combinedTags = [...combinedTags, ...tagsData.data];
+            }
 
             return {
                 location: location.locationName,
                 dateTime: formattedDateTime,
                 latitude,
                 longitude,
-                tags: location.regionalTags || []
+                tags: combinedTags
             };
         } catch (err) {
             console.error("위치 정보 요청 실패:", err);
@@ -314,7 +340,7 @@ const UiHelpers = {
             const tagElement = document.createElement('span');
             tagElement.classList.add('tag', 'regional-tag');
             tagElement.textContent = tag.tagName;
-            tagElement.dataset.tagId = tag.tagId;
+            tagElement.dataset.tagId = tag.tagId || '';
             tagElement.dataset.tagName = tag.tagName;
             
             // 태그 삭제 버튼 추가
@@ -401,10 +427,11 @@ const UiHelpers = {
 
     // 현재 UI에 표시된 태그 정보 가져오기
     getCurrentTags() {
-        const currentTags = DOM.tagBox.querySelectorAll('.tag.regional-tag');
+        const currentTags = DOM.tagBox.querySelectorAll('.tag.regional-tag, .tag.custom-tag');
         return Array.from(currentTags).map(tag => ({
             tagId: tag.dataset.tagId,
-            tagName: tag.dataset.tagName
+            tagName: tag.dataset.tagName,
+            isCustom: tag.classList.contains('custom-tag')
         }));
     }
 };
@@ -514,17 +541,42 @@ const EventHandlers = {
         DOM.dateBox.value = dateTime;
         DOM.publicCheckbox.checked = isPublic === "true";
 
-        // 지역 태그 추가
+        // 태그 정보 로드 및 UI 업데이트
+        DOM.tagBox.querySelectorAll('.tag:not(.tag-add)').forEach(tag => tag.remove()); // Clear all tags first
+
         if (tags) {
             try {
                 const parsedTags = JSON.parse(tags);
-                UiHelpers.addTags(parsedTags);
+                parsedTags.forEach(tag => {
+                    if (tag.isCustom) {
+                        UiHelpers.addCustomTag(tag.tagName);
+                    } else {
+                        const tagElement = document.createElement('span');
+                        tagElement.classList.add('tag', 'regional-tag');
+                        tagElement.textContent = tag.tagName;
+                        tagElement.dataset.tagId = tag.tagId || '';
+                        tagElement.dataset.tagName = tag.tagName;
+
+                        const deleteButton = document.createElement('button');
+                        deleteButton.classList.add('tag-delete');
+                        deleteButton.innerHTML = '×';
+                        deleteButton.title = '태그 삭제';
+                        deleteButton.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            tagElement.remove();
+                            const selectedImage = document.querySelector(".gallery-image.selected");
+                            if (selectedImage) {
+                                UiHelpers.updateSelectedImageTags();
+                            }
+                        });
+                        tagElement.appendChild(deleteButton);
+                        const tagAddButton = DOM.tagBox.querySelector('.tag-add');
+                        DOM.tagBox.insertBefore(tagElement, tagAddButton);
+                    }
+                });
             } catch (error) {
-                console.error('지역 태그 파싱 오류:', error);
+                console.error('태그 파싱 오류:', error);
             }
-        } else {
-            // 태그 정보가 없으면 기존 태그 모두 제거
-            UiHelpers.addTags([]);
         }
 
         if (DOM.dateBox.value === "") {
@@ -560,8 +612,70 @@ const EventHandlers = {
     },
 
     // 날짜 변경 핸들러
-    onDateChange() {
+    async onDateChange() {
         ValidationService.validateLocationAndDate();
+        
+        // 날짜 변경 시 계절 태그 업데이트
+        const selectedImage = document.querySelector(".gallery-image.selected");
+        if (selectedImage) {
+            await EventHandlers.updateSeasonalTags(selectedImage);
+        }
+    },
+    
+    // 계절 태그 업데이트 헬퍼 함수
+    async updateSeasonalTags(selectedImage) {
+        const dateTime = selectedImage.dataset.dateTime;
+        const latitude = selectedImage.dataset.latitude;
+        const longitude = selectedImage.dataset.longitude;
+        
+        if (!dateTime || !latitude || !longitude) {
+            return;
+        }
+        
+        try {
+            const response = await fetch("/api/tags/default", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                credentials: "include",
+                body: JSON.stringify({
+                    date: dateTime,
+                    coordinate: {
+                        latitude: parseFloat(latitude),
+                        longitude: parseFloat(longitude)
+                    }
+                })
+            });
+            
+            if (response.ok) {
+                const tagsData = await response.json();
+                if (tagsData.code === 200 && Array.isArray(tagsData.data)) {
+                    // 1. Collect custom tags
+                    const customTags = [];
+                    DOM.tagBox.querySelectorAll('.tag.custom-tag').forEach(tag => {
+                        customTags.push({
+                            tagId: tag.dataset.tagId,
+                            tagName: tag.dataset.tagName
+                        });
+                    });
+
+                    // 2. Clear all existing regional/default tags from the UI
+                    DOM.tagBox.querySelectorAll('.tag.regional-tag').forEach(tag => tag.remove());
+
+                    // 3. Add new default tags (regional + seasonal)
+                    UiHelpers.addTags(tagsData.data);
+
+                    // 4. Re-add custom tags
+                    customTags.forEach(tag => {
+                        UiHelpers.addCustomTag(tag.tagName);
+                    });
+                    
+                    // 선택된 이미지의 태그 정보 업데이트
+                    UiHelpers.updateSelectedImageTags();
+                }
+            }
+        } catch (error) {
+            console.error('계절 태그 업데이트 중 오류:', error);
+        }
     },
 
     // 이미지 업로드 버튼 클릭 핸들러
@@ -682,7 +796,7 @@ function initialize() {
         dateFormat: "Y / m / d",
         maxDate: "today",
         locale: "ko",
-        onClose: function () {
+        onClose: async function () {
             const selectedImage = document.querySelector(".gallery-image.selected");
             if (selectedImage) {
                 selectedImage.dataset.dateTime = DOM.dateBox.value;
@@ -693,6 +807,9 @@ function initialize() {
                 }
 
                 ValidationService.validateLocationAndDate();
+                
+                // 날짜 변경 시 계절 태그 업데이트
+                await EventHandlers.updateSeasonalTags(selectedImage);
             }
         }
     });
