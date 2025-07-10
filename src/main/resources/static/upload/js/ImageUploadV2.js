@@ -1,4 +1,4 @@
-import {parseExif} from "/upload/js/ExifParser.js";
+import {parseExif} from "./ExifParser.js";
 
 // DOM 엘리먼트 관련 상수들
 const DOM = {
@@ -21,6 +21,7 @@ const DOM = {
     whileUploadingModal: document.querySelector('.while-uploading-modal'),
     uploadingBlock: document.querySelector('#uploadingBlock'),
     resultInfoBlock: document.querySelector('#resultInfoBlock'),
+    tagBox: document.querySelector('.tag-box'),
 };
 
 // 이미지 처리 관련 함수들
@@ -98,10 +99,11 @@ const ApiService = {
             const location = data.data;
 
             return {
-                location,
+                location: location.locationName,
                 dateTime: formattedDateTime,
                 latitude,
-                longitude
+                longitude,
+                regionalTags: location.regionalTags || []
             };
         } catch (err) {
             console.error("위치 정보 요청 실패:", err);
@@ -286,6 +288,26 @@ const UiHelpers = {
     async indicateResult(successImageUUIDs = [], failedImageUUIDs = []) {
         DOM.uploadedImageCount.textContent = successImageUUIDs.length + "장의 이미지를 성공적으로 업로드했습니다.";
         DOM.uploadFailedImageCount.textContent = failedImageUUIDs.length + "장의 이미지는 업로드에 실패했습니다.";
+    },
+
+    // 태그 영역에 지역 태그 추가
+    addRegionalTags(regionalTags) {
+        const existingTags = DOM.tagBox.querySelectorAll('.tag:not(.tag-add)');
+        existingTags.forEach(tag => {
+            if (tag.classList.contains('regional-tag')) {
+                tag.remove();
+            }
+        });
+
+        const tagAddButton = DOM.tagBox.querySelector('.tag-add');
+        
+        regionalTags.forEach(tag => {
+            const tagElement = document.createElement('span');
+            tagElement.classList.add('tag', 'regional-tag');
+            tagElement.textContent = tag.tagName;
+            
+            DOM.tagBox.insertBefore(tagElement, tagAddButton);
+        });
     }
 };
 
@@ -313,7 +335,7 @@ const EventHandlers = {
 
         // EXIF 파싱 + 위치 요청
         const parsedData = await ApiService.fetchLocation(file);
-        const {location = '', dateTime = ''} = parsedData;
+        const {location = '', dateTime = '', regionalTags = []} = parsedData;
 
         const objectUrl = URL.createObjectURL(file);
 
@@ -333,6 +355,7 @@ const EventHandlers = {
         img.dataset.fileExtension = fileExtension;
         img.dataset.latitude = parsedData.latitude;
         img.dataset.longitude = parsedData.longitude;
+        img.dataset.regionalTags = JSON.stringify(regionalTags);
 
         if (dateTime && location) {
             img.classList.add("valid");
@@ -366,13 +389,23 @@ const EventHandlers = {
         document.querySelector('#mapPickerModal').classList.remove('show');
         resetVariations();
 
-        const {preview, location, dateTime, description, tags, public: isPublic} = target.dataset;
+        const {preview, location, dateTime, description, tags, public: isPublic, regionalTags} = target.dataset;
 
         document.querySelector(".image-detail").src = preview;
         DOM.description.value = description;
         DOM.locationBox.value = location;
         DOM.dateBox.value = dateTime;
         DOM.publicCheckbox.checked = isPublic === "true";
+
+        // 지역 태그 추가
+        if (regionalTags) {
+            try {
+                const parsedTags = JSON.parse(regionalTags);
+                UiHelpers.addRegionalTags(parsedTags);
+            } catch (error) {
+                console.error('지역 태그 파싱 오류:', error);
+            }
+        }
 
         if (DOM.dateBox.value === "") {
             DOM.dateBox.classList.add("invalid");
@@ -498,3 +531,6 @@ function initialize() {
 
 // DOM이 로드된 후 초기화
 document.addEventListener('DOMContentLoaded', initialize);
+
+// 전역으로 노출 (맵 피커 모달에서 사용)
+window.UiHelpers = UiHelpers;
