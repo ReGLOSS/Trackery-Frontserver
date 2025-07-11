@@ -152,55 +152,94 @@ function fetchLocationName(utmkcoor) {
         mapPickSubmitBtn.disabled = true;
     }
 
-    fetch("/api/location/name", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        credentials: "include",
-        body: JSON.stringify({
-            longitude: wgs84.longitude,
-            latitude: wgs84.latitude
+    // 선택된 이미지의 날짜 정보 사용 (없으면 현재 날짜 사용)
+    let dateToUse = '';
+    const selectedImage = document.querySelector(".gallery-image.selected");
+    if (selectedImage && selectedImage.dataset.dateTime) {
+        dateToUse = selectedImage.dataset.dateTime;
+    } else {
+        const now = new Date();
+        dateToUse = `${now.getFullYear()} / ${now.getMonth() + 1} / ${now.getDate()}`;
+    }
+
+    // 병렬로 두 API 요청 실행
+    Promise.all([
+        fetch("/api/location/name", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "include",
+            body: JSON.stringify({
+                longitude: wgs84.longitude,
+                latitude: wgs84.latitude
+            })
+        }),
+        fetch("/api/tags/default", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "include",
+            body: JSON.stringify({
+                date: dateToUse,
+                coordinate: {
+                    latitude: wgs84.latitude,
+                    longitude: wgs84.longitude
+                }
+            })
         })
-    }).then(response => {
-        response.json().then(data => {
-            console.log('API Response status:', response.status);
-            console.log('API Response data:', data);
+    ]).then(async ([locationResponse, tagsResponse]) => {
+        const locationData = await locationResponse.json();
+        const tagsData = await tagsResponse.json();
+
+        console.log('Location API Response status:', locationResponse.status);
+        console.log('Location API Response data:', locationData);
+        console.log('Tags API Response status:', tagsResponse.status);
+        console.log('Tags API Response data:', tagsData);
+        
+        if (locationResponse.status === 404) {
+            if (resultForm) {
+                resultForm.value = "위치를 찾을 수 없습니다. 다른 곳으로 시도해주세요.";
+                toggleValidationClass(resultForm, false);
+            }
+            return;
+        }
+        if (locationResponse.status === 200) {
+            if (resultForm) {
+                resultForm.value = locationData.data.locationName;
+                toggleValidationClass(resultForm, true);
+            }
+            if (mapPickSubmitBtn) {
+                mapPickSubmitBtn.disabled = false;
+            }
             
-            if (response.status === 404) {
-                if (resultForm) {
-                    resultForm.value = "위치를 찾을 수 없습니다. 다른 곳으로 시도해주세요.";
-                    toggleValidationClass(resultForm, false);
-                }
-                return;
+            // 태그 정보 병합: 기존 regionalTags + 새로운 default tags
+            let combinedTags = locationData.data.regionalTags || [];
+            if (tagsResponse.status === 200 && tagsData.code === 200 && Array.isArray(tagsData.data)) {
+                combinedTags = [...combinedTags, ...tagsData.data];
             }
-            if (response.status === 200) {
-                if (resultForm) {
-                    resultForm.value = data.data.locationName;
-                    toggleValidationClass(resultForm, true);
-                }
-                if (mapPickSubmitBtn) {
-                    mapPickSubmitBtn.disabled = false;
-                }
-                foundLocationData = {longitude: wgs84.longitude, latitude: wgs84.latitude, locationName: data.data.locationName, tags: data.data.regionalTags || []};
-                window.foundLocationData = foundLocationData;
-                console.log('Final foundLocationData:', foundLocationData);
-            } else {
-                console.error('API Error - Status:', response.status, 'Data:', data);
-                alert(data.message);
-            }
-            console.log('=== END FETCH LOCATION NAME DEBUG ===');
-        }).catch(error => {
-            console.error('JSON parsing error:', error);
-            console.log('Raw response:', response);
-        })
+            
+            foundLocationData = {
+                longitude: wgs84.longitude, 
+                latitude: wgs84.latitude, 
+                locationName: locationData.data.locationName, 
+                tags: combinedTags
+            };
+            window.foundLocationData = foundLocationData;
+            console.log('Final foundLocationData:', foundLocationData);
+        } else {
+            console.error('API Error - Status:', locationResponse.status, 'Data:', locationData);
+            alert(locationData.message);
+        }
+        console.log('=== END FETCH LOCATION NAME DEBUG ===');
     }).catch(error => {
         console.error('Fetch error:', error);
         if (resultForm) {
             resultForm.value = "네트워크 오류가 발생했습니다.";
             toggleValidationClass(resultForm, false);
         }
-    })
+    });
 }
 
 function toggleValidationClass(element, isValid) {
