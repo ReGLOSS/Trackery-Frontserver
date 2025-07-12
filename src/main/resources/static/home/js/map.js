@@ -814,15 +814,53 @@ class MapManager {
         // 태그
         const modalTagBox = document.getElementById('modalTagBox');
         modalTagBox.innerHTML = '';
+        
+        // 태그 추가 버튼과 입력 필드를 위한 컨테이너 생성
+        const tagAddButton = document.createElement('button');
+        tagAddButton.className = 'tag-add';
+        tagAddButton.textContent = '+';
+        tagAddButton.style.display = 'none'; // 편집 모드가 아닐 때는 숨김
+        tagAddButton.id = 'modalTagAddButton';
+        
+        const tagInput = document.createElement('input');
+        tagInput.type = 'text';
+        tagInput.className = 'tag-input';
+        tagInput.placeholder = '태그 입력 후 Enter';
+        tagInput.style.display = 'none'; // 기본적으로 숨김
+        tagInput.id = 'modalTagInput';
 
         if (imageData.tags && imageData.tags.length > 0) {
             imageData.tags.forEach(tag => {
                 const tagElement = document.createElement('span');
                 tagElement.className = 'tag';
-                tagElement.textContent = typeof tag === 'object' ? (tag.tagName || tag.name || tag) : tag;
+                
+                // 태그 객체에서 tagId와 tagName 추출
+                const tagId = typeof tag === 'object' ? tag.tagId : null;
+                const tagName = typeof tag === 'object' ? (tag.tagName || tag.name || tag) : tag;
+                
+                tagElement.textContent = tagName;
+                tagElement.dataset.tagId = tagId;
+                tagElement.dataset.tagName = tagName;
+                
+                // 편집 모드일 때만 삭제 버튼 표시되도록 설정
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'tag-delete';
+                deleteButton.innerHTML = '×';
+                deleteButton.title = '태그 삭제';
+                deleteButton.style.display = 'none'; // 편집 모드가 아닐 때는 숨김
+                deleteButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    tagElement.remove();
+                });
+                
+                tagElement.appendChild(deleteButton);
                 modalTagBox.appendChild(tagElement);
             });
         }
+        
+        // 태그 추가 버튼과 입력 필드를 마지막에 추가
+        modalTagBox.appendChild(tagInput);
+        modalTagBox.appendChild(tagAddButton);
 
         // 위치 - 시도와 시군구를 모두 표시
         const modalLocationBox = document.getElementById('modalLocationBox');
@@ -1045,6 +1083,9 @@ class MapManager {
         modalPublicStatus.style.display = 'none';
         modalPublicCheckboxArea.style.display = 'block';
 
+        // 태그 편집 모드 활성화
+        this.enableTagEditMode();
+
         // 날짜 피커 편집 모드 활성화
         if (this.modalDatePicker) {
             this.modalDatePicker.set('clickOpens', true);
@@ -1079,6 +1120,9 @@ class MapManager {
             if (this.originalModalData.locationName) {
                 modalLocationBox.value = this.originalModalData.locationName;
             }
+
+            // 태그도 원본으로 복원
+            this.restoreOriginalTags();
         }
 
         // 입력 필드들을 읽기 전용으로 변경
@@ -1091,6 +1135,9 @@ class MapManager {
 
         modalPublicStatus.style.display = 'block';
         modalPublicCheckboxArea.style.display = 'none';
+
+        // 태그 편집 모드 비활성화
+        this.disableTagEditMode();
 
         // 날짜 피커 읽기 모드 비활성화
         if (this.modalDatePicker) {
@@ -1173,6 +1220,12 @@ class MapManager {
             }
         }
 
+        // 태그 변경 체크
+        const tagChanges = this.getTagChanges();
+        if (tagChanges.tagsToRemove.length > 0) {
+            updateData.tagsToRemove = tagChanges.tagsToRemove;
+        }
+
         console.log('=== SAVE IMAGE CHANGES DEBUG ===');
         console.log('Image ID:', imageId);
         console.log('Original data:', this.originalModalData);
@@ -1241,6 +1294,11 @@ class MapManager {
             if (updateData.longitude !== undefined || updateData.latitude !== undefined) {
                 this.refreshCurrentImageList();
                 this.refreshMapColors();
+            }
+
+            // 태그가 변경된 경우 현재 모달의 이미지 데이터 새로고침
+            if (updateData.tagsToRemove !== undefined) {
+                await this.refreshCurrentModalImageData(imageId);
             }
 
             // 이제 위치 데이터 리셋 (저장 완료 후)
@@ -1509,6 +1567,304 @@ class MapManager {
         if (modalEditDateBtn) {
             modalEditDateBtn.style.display = this.isEditMode ? 'inline' : 'none';
         }
+    }
+
+    // 태그 편집 모드 활성화
+    enableTagEditMode() {
+        const modalTagBox = document.getElementById('modalTagBox');
+        if (!modalTagBox) return;
+
+        // 모든 태그의 삭제 버튼 표시
+        const deleteButtons = modalTagBox.querySelectorAll('.tag-delete');
+        deleteButtons.forEach(button => {
+            button.style.display = 'flex';
+        });
+
+        // 태그 추가 버튼과 입력 필드 표시
+        const tagAddButton = document.getElementById('modalTagAddButton');
+        const tagInput = document.getElementById('modalTagInput');
+
+        if (tagAddButton) {
+            tagAddButton.style.display = 'block';
+            // 태그 추가 버튼 이벤트 등록
+            tagAddButton.addEventListener('click', () => this.showTagInput());
+        }
+
+        if (tagInput) {
+            // 태그 입력 이벤트 등록
+            tagInput.addEventListener('keydown', (e) => this.handleTagInputKeydown(e));
+            tagInput.addEventListener('blur', () => this.hideTagInput());
+        }
+    }
+
+    // 태그 편집 모드 비활성화
+    disableTagEditMode() {
+        const modalTagBox = document.getElementById('modalTagBox');
+        if (!modalTagBox) return;
+
+        // 모든 태그의 삭제 버튼 숨김
+        const deleteButtons = modalTagBox.querySelectorAll('.tag-delete');
+        deleteButtons.forEach(button => {
+            button.style.display = 'none';
+        });
+
+        // 태그 추가 버튼과 입력 필드 숨김
+        const tagAddButton = document.getElementById('modalTagAddButton');
+        const tagInput = document.getElementById('modalTagInput');
+
+        if (tagAddButton) {
+            tagAddButton.style.display = 'none';
+        }
+
+        if (tagInput) {
+            tagInput.style.display = 'none';
+        }
+    }
+
+    // 태그 입력 필드 표시
+    showTagInput() {
+        const tagAddButton = document.getElementById('modalTagAddButton');
+        const tagInput = document.getElementById('modalTagInput');
+
+        if (tagAddButton && tagInput) {
+            tagAddButton.style.display = 'none';
+            tagInput.style.display = 'inline-block';
+            tagInput.focus();
+        }
+    }
+
+    // 태그 입력 필드 숨김
+    hideTagInput() {
+        const tagAddButton = document.getElementById('modalTagAddButton');
+        const tagInput = document.getElementById('modalTagInput');
+
+        if (tagAddButton && tagInput) {
+            const tagName = tagInput.value.trim();
+            if (tagName) {
+                this.addCustomTag(tagName);
+                tagInput.value = '';
+            }
+            tagInput.style.display = 'none';
+            tagAddButton.style.display = 'block';
+        }
+    }
+
+    // 태그 입력 키 이벤트 처리
+    handleTagInputKeydown(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            this.hideTagInput();
+        } else if (e.key === 'Escape') {
+            const tagInput = document.getElementById('modalTagInput');
+            if (tagInput) {
+                tagInput.value = '';
+            }
+            this.hideTagInput();
+        }
+    }
+
+    // 커스텀 태그 추가
+    addCustomTag(tagName) {
+        if (!tagName || tagName.trim() === '') return;
+
+        const modalTagBox = document.getElementById('modalTagBox');
+        if (!modalTagBox) return;
+
+        // 중복 태그 체크
+        const existingTags = modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton)');
+        const isDuplicate = Array.from(existingTags).some(tag => 
+            tag.textContent.replace('×', '').trim() === tagName.trim()
+        );
+
+        if (isDuplicate) {
+            alert('이미 추가된 태그입니다.');
+            return;
+        }
+
+        // 새 태그 요소 생성
+        const tagElement = document.createElement('span');
+        tagElement.className = 'tag';
+        tagElement.textContent = tagName.trim();
+        tagElement.dataset.tagId = 'custom-' + Date.now(); // 임시 ID
+        tagElement.dataset.tagName = tagName.trim();
+
+        // 삭제 버튼 추가
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'tag-delete';
+        deleteButton.innerHTML = '×';
+        deleteButton.title = '태그 삭제';
+        deleteButton.style.display = this.isEditMode ? 'flex' : 'none';
+        deleteButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            tagElement.remove();
+        });
+
+        tagElement.appendChild(deleteButton);
+
+        // 태그 추가 버튼 앞에 삽입
+        const tagAddButton = document.getElementById('modalTagAddButton');
+        modalTagBox.insertBefore(tagElement, tagAddButton);
+    }
+
+    // 원본 태그로 복원
+    restoreOriginalTags() {
+        const modalTagBox = document.getElementById('modalTagBox');
+        if (!modalTagBox || !this.originalModalData) return;
+
+        // 기존 태그들 제거 (추가 버튼과 입력 필드는 유지)
+        const existingTags = modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)');
+        existingTags.forEach(tag => tag.remove());
+
+        // 원본 태그들 다시 추가
+        if (this.originalModalData.tags && this.originalModalData.tags.length > 0) {
+            this.originalModalData.tags.forEach(tag => {
+                const tagElement = document.createElement('span');
+                tagElement.className = 'tag';
+                
+                const tagId = typeof tag === 'object' ? tag.tagId : null;
+                const tagName = typeof tag === 'object' ? (tag.tagName || tag.name || tag) : tag;
+                
+                tagElement.textContent = tagName;
+                tagElement.dataset.tagId = tagId;
+                tagElement.dataset.tagName = tagName;
+                
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'tag-delete';
+                deleteButton.innerHTML = '×';
+                deleteButton.title = '태그 삭제';
+                deleteButton.style.display = 'none'; // 읽기 모드에서는 숨김
+                deleteButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    tagElement.remove();
+                });
+                
+                tagElement.appendChild(deleteButton);
+                
+                const tagAddButton = document.getElementById('modalTagAddButton');
+                modalTagBox.insertBefore(tagElement, tagAddButton);
+            });
+        }
+    }
+
+    // 태그 변경사항 가져오기
+    getTagChanges() {
+        const modalTagBox = document.getElementById('modalTagBox');
+        const tagsToRemove = [];
+
+        if (!modalTagBox || !this.originalModalData) {
+            return { tagsToRemove };
+        }
+
+        // 현재 태그 목록 가져오기
+        const currentTags = Array.from(modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)'))
+            .map(tag => ({
+                tagId: tag.dataset.tagId,
+                tagName: tag.dataset.tagName
+            }));
+
+        // 원본 태그와 비교하여 삭제된 태그 찾기
+        if (this.originalModalData.tags) {
+            this.originalModalData.tags.forEach(originalTag => {
+                const originalTagId = typeof originalTag === 'object' ? originalTag.tagId : null;
+                const originalTagName = typeof originalTag === 'object' ? (originalTag.tagName || originalTag.name || originalTag) : originalTag;
+                
+                // 현재 태그 목록에서 원본 태그를 찾을 수 없으면 삭제된 것
+                const stillExists = currentTags.some(currentTag => 
+                    (originalTagId && currentTag.tagId === originalTagId) ||
+                    currentTag.tagName === originalTagName
+                );
+
+                if (!stillExists && originalTagId && !originalTagId.toString().startsWith('custom-')) {
+                    tagsToRemove.push(parseInt(originalTagId));
+                }
+            });
+        }
+
+        return { tagsToRemove };
+    }
+
+    // 현재 모달의 이미지 데이터 새로고침
+    async refreshCurrentModalImageData(imageId) {
+        try {
+            // API에서 최신 이미지 데이터 가져오기
+            const response = await fetch(`/api/images/${imageId}`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch updated image data: ${response.status}`);
+            }
+
+            const responseData = await response.json();
+            const updatedImageData = responseData.data;
+
+            console.log('Refreshing modal with updated image data:', updatedImageData);
+
+            // 태그 정보만 업데이트 (다른 정보는 유지)
+            this.updateModalTags(updatedImageData.tags);
+
+            // 원본 데이터도 업데이트
+            if (this.originalModalData) {
+                this.originalModalData.tags = updatedImageData.tags || [];
+            }
+
+        } catch (error) {
+            console.error('Error refreshing modal image data:', error);
+        }
+    }
+
+    // 모달의 태그 정보만 업데이트
+    updateModalTags(newTags) {
+        const modalTagBox = document.getElementById('modalTagBox');
+        if (!modalTagBox) return;
+
+        console.log('Updating modal tags. Current edit mode:', this.isEditMode);
+        console.log('New tags received:', newTags);
+
+        // 기존 태그들 제거 (추가 버튼과 입력 필드는 유지)
+        const existingTags = modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)');
+        console.log('Removing existing tags:', existingTags.length);
+        existingTags.forEach(tag => tag.remove());
+
+        // 새로운 태그들 추가
+        if (newTags && newTags.length > 0) {
+            newTags.forEach(tag => {
+                const tagElement = document.createElement('span');
+                tagElement.className = 'tag';
+                
+                const tagId = typeof tag === 'object' ? tag.tagId : null;
+                const tagName = typeof tag === 'object' ? (tag.tagName || tag.name || tag) : tag;
+                
+                tagElement.textContent = tagName;
+                tagElement.dataset.tagId = tagId;
+                tagElement.dataset.tagName = tagName;
+                
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'tag-delete';
+                deleteButton.innerHTML = '×';
+                deleteButton.title = '태그 삭제';
+                deleteButton.style.display = 'none'; // 새로고침 후에는 편집 모드가 해제되므로 숨김
+                deleteButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    tagElement.remove();
+                });
+                
+                tagElement.appendChild(deleteButton);
+                
+                const tagAddButton = document.getElementById('modalTagAddButton');
+                if (tagAddButton) {
+                    modalTagBox.insertBefore(tagElement, tagAddButton);
+                } else {
+                    modalTagBox.appendChild(tagElement);
+                }
+            });
+        }
+
+        console.log('Modal tags updated successfully. Final tag count:', modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)').length);
     }
 
 

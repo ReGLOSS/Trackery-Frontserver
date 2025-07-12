@@ -462,20 +462,81 @@
 }
 
 .modal-body .tag-box {
+    background-color: darkgray;
+    padding: 1%;
+    border-radius: 8px;
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    min-height: 32px;
+    gap: 8px;
     align-items: center;
+    min-height: 32px;
 }
 
 .modal-body .tag {
-    background-color: #e9ecef;
+    background-color: #dbe7ff;
     color: #495057;
-    padding: 4px 8px;
+    padding: 6px 10px;
     border-radius: 12px;
-    font-size: 12px;
+    font-size: 0.85rem;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-weight: 500;
+}
+
+.modal-body .tag-add {
+    background-color: #ddd;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.modal-body .tag-add:hover {
+    background-color: #bbb;
+}
+
+.modal-body .tag-input {
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 6px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    outline: none;
+    min-width: 120px;
+}
+
+.modal-body .tag-input:focus {
+    border-color: #007bff;
+}
+
+.modal-body .tag-delete {
+    background-color: #ff4757;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    line-height: 1;
+    transition: background-color 0.2s ease-in-out;
+    margin-left: auto;
+}
+
+.modal-body .tag-delete:hover {
+    background-color: #d63031;
 }
 
 .modal-body .checkbox-area label {

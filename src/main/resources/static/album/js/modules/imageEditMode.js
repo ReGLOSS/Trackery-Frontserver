@@ -146,6 +146,9 @@ export const ImageEditMode = {
                     await window.EventHandlers.loadAlbumDetail(State.currentAlbumId);
                 }
                 
+                // 현재 선택된 이미지가 있다면 상세 정보도 새로고침
+                await this.refreshSelectedImageData();
+                
                 // 메인 갤러리의 해당 앨범 카드 이미지 개수도 업데이트
                 await this.updateMainGalleryImageCount();
                 
@@ -175,6 +178,34 @@ export const ImageEditMode = {
             DOM.albumDetailEditMyImagesGallery.innerHTML = '';
         }
         GalleryToggle.hideMyImagesSection();
+    },
+
+    // 선택된 이미지 데이터 새로고침
+    async refreshSelectedImageData() {
+        try {
+            // 현재 선택된 이미지 카드 찾기
+            const selectedCard = document.querySelector('.gallery-card.selected');
+            if (!selectedCard) {
+                console.log('선택된 이미지가 없어 새로고침하지 않습니다.');
+                return;
+            }
+
+            const imageId = selectedCard.dataset.imageId;
+            if (!imageId) {
+                console.log('선택된 이미지의 ID를 찾을 수 없습니다.');
+                return;
+            }
+
+            // ImageViewer 모듈을 통해 이미지 데이터 새로고침
+            if (window.ImageViewer && window.ImageViewer.showImageInMainView) {
+                console.log(`이미지 ID ${imageId}의 데이터를 새로고침합니다.`);
+                await window.ImageViewer.showImageInMainView(selectedCard);
+            } else {
+                console.log('ImageViewer 모듈을 찾을 수 없습니다.');
+            }
+        } catch (error) {
+            console.error('선택된 이미지 데이터 새로고침 중 오류:', error);
+        }
     },
 
     // 메인 갤러리의 이미지 개수 업데이트
