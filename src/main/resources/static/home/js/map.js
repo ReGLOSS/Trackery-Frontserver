@@ -1225,6 +1225,9 @@ class MapManager {
         if (tagChanges.tagsToRemove.length > 0) {
             updateData.tagsToRemove = tagChanges.tagsToRemove;
         }
+        if (tagChanges.tagsToAdd.length > 0) {
+            updateData.tagsToAdd = tagChanges.tagsToAdd;
+        }
 
         console.log('=== SAVE IMAGE CHANGES DEBUG ===');
         console.log('Image ID:', imageId);
@@ -1290,10 +1293,11 @@ class MapManager {
             // 편집 모드 해제
             this.cancelEditMode();
 
-            // 위치 정보가 변경된 경우 현재 이미지 목록 및 지도 색상 새로고침
-            if (updateData.longitude !== undefined || updateData.latitude !== undefined) {
+            // 위치나 날짜 정보가 변경된 경우 백엔드에서 새로운 태그를 받아오기 위해 모달 데이터 새로고침
+            if (updateData.longitude !== undefined || updateData.latitude !== undefined || updateData.imageDate !== undefined) {
                 this.refreshCurrentImageList();
                 this.refreshMapColors();
+                await this.refreshCurrentModalImageData(imageId);
             }
 
             // 태그가 변경된 경우 현재 모달의 이미지 데이터 새로고침
@@ -1471,8 +1475,14 @@ class MapManager {
                         locationName: window.foundLocationData.locationName
                     };
 
+                    // 위치 변경시 태그도 실시간으로 업데이트
+                    if (window.foundLocationData.tags && Array.isArray(window.foundLocationData.tags)) {
+                        this.updateModalTagsFromLocationChange(window.foundLocationData.tags);
+                    }
+
                     console.log('Location selected from map picker:', this.modalFoundLocationData);
                     console.log('window.foundLocationData:', window.foundLocationData);
+                    console.log('window.foundTagData:', window.foundTagData);
                 } else {
                     console.log('No location data found:', window.foundLocationData);
                 }
@@ -1750,9 +1760,10 @@ class MapManager {
     getTagChanges() {
         const modalTagBox = document.getElementById('modalTagBox');
         const tagsToRemove = [];
+        const tagsToAdd = [];
 
         if (!modalTagBox || !this.originalModalData) {
-            return { tagsToRemove };
+            return { tagsToRemove, tagsToAdd };
         }
 
         // 현재 태그 목록 가져오기
@@ -1762,25 +1773,59 @@ class MapManager {
                 tagName: tag.dataset.tagName
             }));
 
+        console.log('=== GET TAG CHANGES DEBUG ===');
+        console.log('Original tags:', this.originalModalData.tags);
+        console.log('Current tags:', currentTags);
+
         // 원본 태그와 비교하여 삭제된 태그 찾기
         if (this.originalModalData.tags) {
             this.originalModalData.tags.forEach(originalTag => {
                 const originalTagId = typeof originalTag === 'object' ? originalTag.tagId : null;
                 const originalTagName = typeof originalTag === 'object' ? (originalTag.tagName || originalTag.name || originalTag) : originalTag;
                 
+                console.log('Checking original tag:', { originalTagId, originalTagName });
+                
                 // 현재 태그 목록에서 원본 태그를 찾을 수 없으면 삭제된 것
-                const stillExists = currentTags.some(currentTag => 
-                    (originalTagId && currentTag.tagId === originalTagId) ||
-                    currentTag.tagName === originalTagName
-                );
+                const stillExists = currentTags.some(currentTag => {
+                    const tagIdMatch = originalTagId && currentTag.tagId && currentTag.tagId === originalTagId.toString();
+                    const tagNameMatch = currentTag.tagName === originalTagName;
+                    console.log(`Comparing with current tag: ${currentTag.tagName} (ID: ${currentTag.tagId})`);
+                    console.log(`Tag ID match: ${tagIdMatch}, Tag name match: ${tagNameMatch}`);
+                    return tagIdMatch || tagNameMatch;
+                });
 
-                if (!stillExists && originalTagId && !originalTagId.toString().startsWith('custom-')) {
+                console.log(`Tag ${originalTagName} still exists: ${stillExists}`);
+
+                if (!stillExists && originalTagId && !originalTagId.toString().startsWith('custom-') && !originalTagId.toString().startsWith('location-')) {
+                    console.log(`Adding tag to remove: ${originalTagId}`);
                     tagsToRemove.push(parseInt(originalTagId));
                 }
             });
         }
 
-        return { tagsToRemove };
+        // 새로 추가된 태그 찾기 (original에 없고 current에 있는 태그)
+        currentTags.forEach(currentTag => {
+            const isOriginal = this.originalModalData.tags && this.originalModalData.tags.some(originalTag => {
+                const originalTagId = typeof originalTag === 'object' ? originalTag.tagId : null;
+                const originalTagName = typeof originalTag === 'object' ? (originalTag.tagName || originalTag.name || originalTag) : originalTag;
+                
+                const tagIdMatch = originalTagId && currentTag.tagId && currentTag.tagId === originalTagId.toString();
+                const tagNameMatch = currentTag.tagName === originalTagName;
+                return tagIdMatch || tagNameMatch;
+            });
+
+            // 원본에 없는 새로운 태그이면 추가 목록에 포함
+            if (!isOriginal && currentTag.tagName) {
+                console.log(`Adding new tag: ${currentTag.tagName}`);
+                tagsToAdd.push(currentTag.tagName);
+            }
+        });
+
+        console.log('Tags to remove:', tagsToRemove);
+        console.log('Tags to add:', tagsToAdd);
+        console.log('=== END GET TAG CHANGES DEBUG ===');
+
+        return { tagsToRemove, tagsToAdd };
     }
 
     // 현재 모달의 이미지 데이터 새로고침
@@ -1804,12 +1849,18 @@ class MapManager {
 
             console.log('Refreshing modal with updated image data:', updatedImageData);
 
-            // 태그 정보만 업데이트 (다른 정보는 유지)
-            this.updateModalTags(updatedImageData.tags);
-
-            // 원본 데이터도 업데이트
-            if (this.originalModalData) {
-                this.originalModalData.tags = updatedImageData.tags || [];
+            // 서버에서 태그가 비어있으면 현재 모달의 태그를 유지
+            if (!updatedImageData.tags || updatedImageData.tags.length === 0) {
+                console.log('Server returned empty tags, keeping current modal tags');
+                // 현재 모달의 태그들을 유지하고 서버 데이터는 업데이트하지 않음
+            } else {
+                // 태그 정보만 업데이트 (다른 정보는 유지)
+                this.updateModalTags(updatedImageData.tags);
+                
+                // 원본 데이터도 업데이트
+                if (this.originalModalData) {
+                    this.originalModalData.tags = updatedImageData.tags;
+                }
             }
 
         } catch (error) {
@@ -1865,6 +1916,64 @@ class MapManager {
         }
 
         console.log('Modal tags updated successfully. Final tag count:', modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)').length);
+    }
+
+    // 위치 변경시 태그 실시간 업데이트
+    updateModalTagsFromLocationChange(newTags) {
+        console.log('Updating modal tags from location change:', newTags);
+        
+        if (!this.isEditMode) {
+            console.log('Not in edit mode, skipping tag update');
+            return;
+        }
+
+        const modalTagBox = document.getElementById('modalTagBox');
+        if (!modalTagBox) {
+            console.log('Modal tag box not found');
+            return;
+        }
+
+        // 현재 태그들을 새로운 태그로 교체
+        // 기존 태그들 제거 (추가 버튼과 입력 필드는 유지)
+        const existingTags = modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)');
+        console.log('Removing existing tags for location change:', existingTags.length);
+        existingTags.forEach(tag => tag.remove());
+
+        // 새로운 위치 기반 태그들 추가
+        if (newTags && newTags.length > 0) {
+            newTags.forEach(tag => {
+                const tagElement = document.createElement('span');
+                tagElement.className = 'tag';
+                
+                const tagId = typeof tag === 'object' ? tag.tagId : null;
+                const tagName = typeof tag === 'object' ? (tag.tagName || tag.name || tag) : tag;
+                
+                tagElement.textContent = tagName;
+                tagElement.dataset.tagId = tagId || 'location-' + Date.now(); // 위치 기반 임시 ID
+                tagElement.dataset.tagName = tagName;
+                
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'tag-delete';
+                deleteButton.innerHTML = '×';
+                deleteButton.title = '태그 삭제';
+                deleteButton.style.display = this.isEditMode ? 'flex' : 'none';
+                deleteButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    tagElement.remove();
+                });
+                
+                tagElement.appendChild(deleteButton);
+                
+                const tagAddButton = document.getElementById('modalTagAddButton');
+                if (tagAddButton) {
+                    modalTagBox.insertBefore(tagElement, tagAddButton);
+                } else {
+                    modalTagBox.appendChild(tagElement);
+                }
+            });
+        }
+
+        console.log('Location-based tags updated successfully. Final tag count:', modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)').length);
     }
 
 
