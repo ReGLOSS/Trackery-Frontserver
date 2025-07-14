@@ -206,24 +206,27 @@ function fetchLocationName(utmkcoor) {
             return;
         }
         if (locationResponse.status === 200) {
+            const { sdName, sggName, regionalTags } = locationData.data;
+            const displayLocationName = `${sdName} ${sggName}`.trim();
+
             if (resultForm) {
-                resultForm.value = locationData.data.locationName;
+                resultForm.value = displayLocationName;
                 toggleValidationClass(resultForm, true);
             }
             if (mapPickSubmitBtn) {
                 mapPickSubmitBtn.disabled = false;
             }
-            
+
             // 태그 정보 병합: 기존 regionalTags + 새로운 default tags
-            let combinedTags = locationData.data.regionalTags || [];
+            let combinedTags = regionalTags || [];
             if (tagsResponse.status === 200 && tagsData.code === 200 && Array.isArray(tagsData.data)) {
                 combinedTags = [...combinedTags, ...tagsData.data];
             }
-            
+
             foundLocationData = {
-                longitude: wgs84.longitude, 
-                latitude: wgs84.latitude, 
-                locationName: locationData.data.locationName, 
+                longitude: wgs84.longitude,
+                latitude: wgs84.latitude,
+                locationName: displayLocationName,
                 tags: combinedTags
             };
             window.foundLocationData = foundLocationData;

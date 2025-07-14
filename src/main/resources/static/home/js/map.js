@@ -871,9 +871,7 @@ class MapManager {
             locationText = imageData.sggName;
         } else if (imageData.sdName) {
             locationText = imageData.sdName;
-        } else {
-            locationText = imageData.locationName || '';
-        }
+        } 
         modalLocationBox.value = locationText;
 
         // 날짜 - flatpickr 형식에 맞게 포맷팅
@@ -1210,6 +1208,7 @@ class MapManager {
             // 올바른 좌표 순서로 전송
             updateData.longitude = this.modalFoundLocationData.longitude;
             updateData.latitude = this.modalFoundLocationData.latitude;
+            updateData.locationName = this.modalFoundLocationData.locationName;
         }
 
         // 날짜 변경 체크

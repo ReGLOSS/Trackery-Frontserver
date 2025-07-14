@@ -117,6 +117,7 @@ const ApiService = {
             console.log('Tags API Response:', tagsData);
 
             const location = locationData.data;
+            const displayLocationName = `${location.sdName} ${location.sggName}`.trim();
 
             // 태그 정보 병합: 기존 regionalTags + 새로운 default tags
             let combinedTags = location.regionalTags || [];
@@ -125,7 +126,7 @@ const ApiService = {
             }
 
             return {
-                location: location.locationName,
+                location: displayLocationName,
                 dateTime: formattedDateTime,
                 latitude,
                 longitude,
