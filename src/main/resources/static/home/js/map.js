@@ -26,7 +26,7 @@ class MapManager {
         this.modalDatePicker = null;
 
         // 모달 맵 픽커 데이터
-        this.modalFoundLocationData = {longitude: 0, latitude: 0, locationName: ""};
+        this.modalFoundLocationData = {longitude: 0, latitude: 0, sdName: "", sggName: "", locationName: ""};
 
         // 지도 클릭 이벤트 바인딩 상태
         this.mapClickEventBound = false;
@@ -918,6 +918,8 @@ class MapManager {
             tags: imageData.tags || [],
             isPublic: imageData.isPublic || false,
             imageDate: imageData.imageDate || '',
+            sdName: imageData.sdName || '',
+            sggName: imageData.sggName || '',
             locationName: locationText
         };
 
@@ -1208,7 +1210,8 @@ class MapManager {
             // 올바른 좌표 순서로 전송
             updateData.longitude = this.modalFoundLocationData.longitude;
             updateData.latitude = this.modalFoundLocationData.latitude;
-            updateData.locationName = this.modalFoundLocationData.locationName;
+            updateData.sdName = this.modalFoundLocationData.sdName;
+            updateData.sggName = this.modalFoundLocationData.sggName;
         }
 
         // 날짜 변경 체크
@@ -1471,6 +1474,8 @@ class MapManager {
                     this.modalFoundLocationData = {
                         latitude: window.foundLocationData.latitude,
                         longitude: window.foundLocationData.longitude,
+                        sdName: window.foundLocationData.sdName,
+                        sggName: window.foundLocationData.sggName,
                         locationName: window.foundLocationData.locationName
                     };
 
@@ -1531,7 +1536,7 @@ class MapManager {
 
     // 모달 맵 픽커 변수 초기화
     resetModalMapPickerVariations() {
-        this.modalFoundLocationData = {longitude: 0, latitude: 0, locationName: ""};
+        this.modalFoundLocationData = {longitude: 0, latitude: 0, sdName: "", sggName: "", locationName: ""};
         const modalMapPickResultForm = document.querySelector('#modalMapPickerModal #mapPickResultForm');
         const modalMapPickSubmitBtn = document.querySelector('#modalMapPickerModal #mapPickSubmitBtn');
 

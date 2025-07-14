@@ -164,33 +164,22 @@ function fetchLocationName(utmkcoor) {
         dateToUse = `${now.getFullYear()} / ${now.getMonth() + 1} / ${now.getDate()}`;
     }
 
-    // 병렬로 두 API 요청 실행
-    Promise.all([
-        fetch("/api/location/name", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            credentials: "include",
-            body: JSON.stringify({
-                longitude: wgs84.longitude,
-                latitude: wgs84.latitude
-            })
-        }),
-        fetch("/api/tags/season", {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-            },
+    // 위치 정보만 요청 (계절태그는 유지)
+    fetch("/api/location/name", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({
+            longitude: wgs84.longitude,
+            latitude: wgs84.latitude
         })
-    ]).then(async ([locationResponse, tagsResponse]) => {
+    }).then(async (locationResponse) => {
         const locationData = await locationResponse.json();
-        const tagsData = await tagsResponse.json();
 
         console.log('Location API Response status:', locationResponse.status);
         console.log('Location API Response data:', locationData);
-        console.log('Tags API Response status:', tagsResponse.status);
-        console.log('Tags API Response data:', tagsData);
         
         if (locationResponse.status === 404) {
             if (resultForm) {
@@ -211,18 +200,34 @@ function fetchLocationName(utmkcoor) {
                 mapPickSubmitBtn.disabled = false;
             }
 
-            // 태그 정보 병합: sdName, sggName을 최우선으로 추가
-            let combinedTags = [];
-            if (sdName) combinedTags.push({ tagName: sdName, tagId: 'sdName' });
-            if (sggName) combinedTags.push({ tagName: sggName, tagId: 'sggName' });
+            // 기존 계절태그 유지: 현재 선택된 이미지의 태그에서 계절태그 추출
+            let existingSeasonTags = [];
+            const selectedImage = document.querySelector(".gallery-image.selected");
+            if (selectedImage && selectedImage.dataset.tags) {
+                try {
+                    const existingTags = JSON.parse(selectedImage.dataset.tags);
+                    existingSeasonTags = existingTags.filter(tag => 
+                        tag.tagName && (
+                            tag.tagName.includes('봄') || tag.tagName.includes('여름') || 
+                            tag.tagName.includes('가을') || tag.tagName.includes('겨울')
+                        )
+                    );
+                } catch (e) {
+                    console.log('기존 태그 파싱 실패:', e);
+                }
+            }
+
+            // 위치태그만 새로 구성: sdName, sggName을 최우선으로 추가
+            let locationTags = [];
+            if (sdName) locationTags.push({ tagName: sdName, tagId: 'sdName' });
+            if (sggName) locationTags.push({ tagName: sggName, tagId: 'sggName' });
 
             if (regionalTags && Array.isArray(regionalTags)) {
-                combinedTags = [...combinedTags, ...regionalTags];
+                locationTags = [...locationTags, ...regionalTags];
             }
 
-            if (tagsResponse.status === 200 && tagsData.code === 200 && Array.isArray(tagsData.data)) {
-                combinedTags = [...combinedTags, ...tagsData.data];
-            }
+            // 기존 계절태그 + 새로운 위치태그 결합
+            const combinedTags = [...existingSeasonTags, ...locationTags];
 
             foundLocationData = {
                 longitude: wgs84.longitude,
@@ -231,7 +236,7 @@ function fetchLocationName(utmkcoor) {
                 tags: combinedTags
             };
             window.foundLocationData = foundLocationData;
-            console.log('Final foundLocationData:', foundLocationData);
+            console.log('Final foundLocationData (계절태그 유지):', foundLocationData);
         } else {
             console.error('API Error - Status:', locationResponse.status, 'Data:', locationData);
             alert(locationData.message);
@@ -301,7 +306,7 @@ function resetVariations() {
     }
     currentMarker = null;
     utmkcoor = null;
-    foundLocationData = {longitude: 0, latitude: 0, locationName: "", tags: []}
+    foundLocationData = {longitude: 0, latitude: 0, sdName: "", sggName: "", locationName: "", tags: []}
     window.foundLocationData = foundLocationData;
     if (resultForm) {
         resultForm.value = "";
