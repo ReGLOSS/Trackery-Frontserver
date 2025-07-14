@@ -49,7 +49,7 @@ function getMapInstance() {
 // 지도 클릭 이벤트는 지도 인스턴스가 초기화된 후에 바인딩
 function bindMapClickEvent() {
     const mapInstance = getMapInstance();
-    if (mapInstance) {
+    if (mapInstance && !mapInstance._mapClickEventBound) {
         mapInstance.on("click", function (e) {
             setTimeout(function () {
                 let x_coor = e.utmk.x;
@@ -70,6 +70,7 @@ function bindMapClickEvent() {
 
             }, 200);
         });
+        mapInstance._mapClickEventBound = true;
     }
 }
 
@@ -78,7 +79,7 @@ function bindMapClickEvent() {
 window.bindMapClickEvent = bindMapClickEvent;
 
 // 기존 map 변수가 있는 경우 (업로드 페이지) 즉시 바인딩
-if (typeof map !== 'undefined') {
+if (typeof map !== 'undefined' && !map._mapClickEventBound) {
     map.on("click", function (e) {
         setTimeout(function () {
             let x_coor = e.utmk.x;
@@ -99,6 +100,7 @@ if (typeof map !== 'undefined') {
 
         }, 200);
     });
+    map._mapClickEventBound = true;
 }
 
 function convertUTMKtoWGS84(x, y) {
@@ -175,19 +177,11 @@ function fetchLocationName(utmkcoor) {
                 latitude: wgs84.latitude
             })
         }),
-        fetch("/api/tags/default", {
-            method: "POST",
+        fetch("/api/tags/season", {
+            method: "GET",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             },
-            credentials: "include",
-            body: JSON.stringify({
-                date: dateToUse,
-                coordinate: {
-                    latitude: wgs84.latitude,
-                    longitude: wgs84.longitude
-                }
-            })
         })
     ]).then(async ([locationResponse, tagsResponse]) => {
         const locationData = await locationResponse.json();

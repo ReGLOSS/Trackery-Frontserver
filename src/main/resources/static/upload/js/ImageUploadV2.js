@@ -96,16 +96,12 @@ const ApiService = {
                     credentials: "include",
                     body: JSON.stringify({latitude, longitude})
                 }),
-                fetch("/api/tags/default", {
+                fetch("/api/tags/season", {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
                     credentials: "include",
                     body: JSON.stringify({
-                        date: formattedDateTime,
-                        coordinate: {
-                            latitude: latitude,
-                            longitude: longitude
-                        }
+                        date: formattedDateTime
                     })
                 })
             ]);
@@ -212,7 +208,6 @@ const ApiService = {
         }
 
         try {
-            try {
             const response = await fetch("/api/images", {
                 method: "POST",
                 credentials: "include",
@@ -434,15 +429,6 @@ const UiHelpers = {
         selectedImage.dataset.tags = JSON.stringify(updatedTags);
     },
 
-    // 현재 UI에 표시된 태그 정보 가져오기
-    getCurrentTags() {
-        const currentTags = DOM.tagBox.querySelectorAll('.tag.regional-tag, .tag.custom-tag');
-        return Array.from(currentTags).map(tag => ({
-            tagId: tag.dataset.tagId,
-            tagName: tag.dataset.tagName,
-            isCustom: tag.classList.contains('custom-tag')
-        }));
-    }
 };
 
 // 이벤트 핸들러 모음
@@ -517,8 +503,6 @@ const EventHandlers = {
         const target = event.target;
         const imageWrapper = target.closest(".image-wrapper");
         if (!imageWrapper || target.classList.contains("close-button")) return;
-
-        const img = imageWrapper.querySelector(".gallery-image");
 
         // 이전에 선택된 이미지의 태그 정보를 저장
         const previouslySelected = document.querySelector(".gallery-image.selected");
@@ -642,16 +626,12 @@ const EventHandlers = {
         }
         
         try {
-            const response = await fetch("/api/tags/default", {
+            const response = await fetch("/api/tags/season", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 credentials: "include",
                 body: JSON.stringify({
-                    date: dateTime,
-                    coordinate: {
-                        latitude: parseFloat(latitude),
-                        longitude: parseFloat(longitude)
-                    }
+                    date: dateTime
                 })
             });
             
