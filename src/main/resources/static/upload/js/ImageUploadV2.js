@@ -119,8 +119,15 @@ const ApiService = {
             const location = locationData.data;
             const displayLocationName = `${location.sdName} ${location.sggName}`.trim();
 
-            // 태그 정보 병합: 기존 regionalTags + 새로운 default tags
-            let combinedTags = location.regionalTags || [];
+            // 태그 정보 병합: sdName, sggName을 최우선으로 추가
+            let combinedTags = [];
+            if (location.sdName) combinedTags.push({ tagName: location.sdName, tagId: 'sdName' });
+            if (location.sggName) combinedTags.push({ tagName: location.sggName, tagId: 'sggName' });
+
+            if (location.regionalTags && Array.isArray(location.regionalTags)) {
+                combinedTags = [...combinedTags, ...location.regionalTags];
+            }
+
             if (tagsResponse.status === 200 && tagsData.code === 200 && Array.isArray(tagsData.data)) {
                 combinedTags = [...combinedTags, ...tagsData.data];
             }
@@ -205,6 +212,7 @@ const ApiService = {
         }
 
         try {
+            try {
             const response = await fetch("/api/images", {
                 method: "POST",
                 credentials: "include",

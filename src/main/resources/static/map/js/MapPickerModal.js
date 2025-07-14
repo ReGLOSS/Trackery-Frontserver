@@ -217,8 +217,15 @@ function fetchLocationName(utmkcoor) {
                 mapPickSubmitBtn.disabled = false;
             }
 
-            // 태그 정보 병합: 기존 regionalTags + 새로운 default tags
-            let combinedTags = regionalTags || [];
+            // 태그 정보 병합: sdName, sggName을 최우선으로 추가
+            let combinedTags = [];
+            if (sdName) combinedTags.push({ tagName: sdName, tagId: 'sdName' });
+            if (sggName) combinedTags.push({ tagName: sggName, tagId: 'sggName' });
+
+            if (regionalTags && Array.isArray(regionalTags)) {
+                combinedTags = [...combinedTags, ...regionalTags];
+            }
+
             if (tagsResponse.status === 200 && tagsData.code === 200 && Array.isArray(tagsData.data)) {
                 combinedTags = [...combinedTags, ...tagsData.data];
             }
