@@ -132,38 +132,65 @@
 
 .album-card {
     background: #ffffff;
-    border-radius: 0.125rem; /* 2px */
-    padding: 1.25rem 1.25rem 1.5625rem 1.25rem; /* 20px 20px 25px 20px */
+    border-radius: 0.125rem;
+    padding: 1rem 1rem 2rem 1rem;
     transition: all 0.3s ease;
     position: relative;
     cursor: pointer;
     max-width: 20rem; /* 320px */
-    aspect-ratio: 12/15;
+    aspect-ratio: 4/5; /* 폴라로이드 비율 */
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1), 0 0.125rem 0.25rem rgba(0, 0, 0, 0.06);
+}
+
+.album-card:hover {
+    transform: translateY(-0.125rem); /* 2px */
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15), 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+}
+
+.album-card a {
+    display: block;
+    width: 100%;
+    height: 80%;
+    overflow: hidden;
+    border-radius: 0.125rem;
+    margin-bottom: 1rem;
+}
+
+.album-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
 }
 
 .card-album-title {
     text-align: center;
-    font-size: 1.2rem;
-    margin-top: 1rem;
-    margin-bottom: 1rem;
-    font-weight: bold;
+    font-size: 1rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+    color: #333;
+    line-height: 1.2;
 }
 
 .card-album-image-count {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     position: absolute;
-    right: 0.625rem; /* 10px */
-    bottom: 0rem; /* 0px */
+    right: 1rem;
+    bottom: 0.5rem;
+    color: #666;
+    font-weight: 400;
 }
 
 /* 앨범 카드 애니메이션 */
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(0.625rem); /* 10px */
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0.625rem);
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 }

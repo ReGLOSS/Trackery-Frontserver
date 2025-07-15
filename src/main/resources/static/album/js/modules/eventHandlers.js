@@ -66,7 +66,7 @@ export const EventHandlers = {
             } else {
                 DOM.noAlbumContainer.style.display = 'none';
                 DOM.albumExistsContainer.style.display = 'flex';
-                UiUpdater.renderAlbumGallery(actualData.albumList);
+                await UiUpdater.renderAlbumGallery(actualData.albumList);
                 
                 // 앨범 카드 클릭 이벤트 추가
                 this.addAlbumCardClickEvents();

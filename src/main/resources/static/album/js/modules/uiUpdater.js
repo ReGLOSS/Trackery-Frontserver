@@ -7,21 +7,30 @@ import { ApiService } from './apiService.js';
 
 export const UiUpdater = {
     // 앨범 갤러리 렌더링
-    renderAlbumGallery(albumList) {
+    async renderAlbumGallery(albumList) {
         if (!DOM.albumGallery) return;
 
         DOM.albumGallery.innerHTML = '';
 
-        albumList.forEach(album => {
+        for (const album of albumList) {
             const albumCard = document.createElement('div');
             albumCard.className = 'album-card';
             albumCard.style.cursor = 'pointer'; // 클릭 가능함을 표시
             albumCard.dataset.albumId = album.albumId;
             albumCard.dataset.isPublic = album.isPublic;
 
+            // albumThumbnailUrl이 있으면 blob으로 처리, 없으면 기본 이미지 사용
+            let imageUrl = '/images/default-image1.webp';
+            if (album.albumThumbnailUrl) {
+                const blobUrl = await ApiService.convertS3UrlToBlobUrl(album.albumThumbnailUrl);
+                if (blobUrl) {
+                    imageUrl = blobUrl;
+                }
+            }
+
             albumCard.innerHTML = `
                 <a>
-                    <img src="/images/default-image1.webp" alt="album-image">
+                    <img src="${imageUrl}" alt="album-image">
                 </a>
                 <p class="card-album-title">${album.albumTitle}</p>
                 <p class="text-muted card-album-image-count">항목 : ${album.albumImageCount} 장</p>
@@ -29,7 +38,7 @@ export const UiUpdater = {
 
             // 앨범 카드 클릭 이벤트는 외부에서 추가하도록 함
             DOM.albumGallery.appendChild(albumCard);
-        });
+        }
     },
 
     // 앨범 상세 정보 업데이트
