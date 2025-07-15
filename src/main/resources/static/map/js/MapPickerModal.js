@@ -49,7 +49,7 @@ function getMapInstance() {
 // 지도 클릭 이벤트는 지도 인스턴스가 초기화된 후에 바인딩
 function bindMapClickEvent() {
     const mapInstance = getMapInstance();
-    if (mapInstance) {
+    if (mapInstance && !mapInstance._mapClickEventBound) {
         mapInstance.on("click", function (e) {
             setTimeout(function () {
                 let x_coor = e.utmk.x;
@@ -70,6 +70,7 @@ function bindMapClickEvent() {
 
             }, 200);
         });
+        mapInstance._mapClickEventBound = true;
     }
 }
 
@@ -78,7 +79,7 @@ function bindMapClickEvent() {
 window.bindMapClickEvent = bindMapClickEvent;
 
 // 기존 map 변수가 있는 경우 (업로드 페이지) 즉시 바인딩
-if (typeof map !== 'undefined') {
+if (typeof map !== 'undefined' && !map._mapClickEventBound) {
     map.on("click", function (e) {
         setTimeout(function () {
             let x_coor = e.utmk.x;
@@ -99,6 +100,7 @@ if (typeof map !== 'undefined') {
 
         }, 200);
     });
+    map._mapClickEventBound = true;
 }
 
 function convertUTMKtoWGS84(x, y) {
@@ -162,41 +164,22 @@ function fetchLocationName(utmkcoor) {
         dateToUse = `${now.getFullYear()} / ${now.getMonth() + 1} / ${now.getDate()}`;
     }
 
-    // 병렬로 두 API 요청 실행
-    Promise.all([
-        fetch("/api/location/name", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            credentials: "include",
-            body: JSON.stringify({
-                longitude: wgs84.longitude,
-                latitude: wgs84.latitude
-            })
-        }),
-        fetch("/api/tags/default", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            credentials: "include",
-            body: JSON.stringify({
-                date: dateToUse,
-                coordinate: {
-                    latitude: wgs84.latitude,
-                    longitude: wgs84.longitude
-                }
-            })
+    // 위치 정보만 요청 (계절태그는 유지)
+    fetch("/api/location/name", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({
+            longitude: wgs84.longitude,
+            latitude: wgs84.latitude
         })
-    ]).then(async ([locationResponse, tagsResponse]) => {
+    }).then(async (locationResponse) => {
         const locationData = await locationResponse.json();
-        const tagsData = await tagsResponse.json();
 
         console.log('Location API Response status:', locationResponse.status);
         console.log('Location API Response data:', locationData);
-        console.log('Tags API Response status:', tagsResponse.status);
-        console.log('Tags API Response data:', tagsData);
         
         if (locationResponse.status === 404) {
             if (resultForm) {
@@ -206,28 +189,54 @@ function fetchLocationName(utmkcoor) {
             return;
         }
         if (locationResponse.status === 200) {
+            const { sdName, sggName, regionalTags } = locationData.data;
+            const displayLocationName = `${sdName} ${sggName}`.trim();
+
             if (resultForm) {
-                resultForm.value = locationData.data.locationName;
+                resultForm.value = displayLocationName;
                 toggleValidationClass(resultForm, true);
             }
             if (mapPickSubmitBtn) {
                 mapPickSubmitBtn.disabled = false;
             }
-            
-            // 태그 정보 병합: 기존 regionalTags + 새로운 default tags
-            let combinedTags = locationData.data.regionalTags || [];
-            if (tagsResponse.status === 200 && tagsData.code === 200 && Array.isArray(tagsData.data)) {
-                combinedTags = [...combinedTags, ...tagsData.data];
+
+            // 기존 계절태그 유지: 현재 선택된 이미지의 태그에서 계절태그 추출
+            let existingSeasonTags = [];
+            const selectedImage = document.querySelector(".gallery-image.selected");
+            if (selectedImage && selectedImage.dataset.tags) {
+                try {
+                    const existingTags = JSON.parse(selectedImage.dataset.tags);
+                    existingSeasonTags = existingTags.filter(tag => 
+                        tag.tagName && (
+                            tag.tagName.includes('봄') || tag.tagName.includes('여름') || 
+                            tag.tagName.includes('가을') || tag.tagName.includes('겨울')
+                        )
+                    );
+                } catch (e) {
+                    console.log('기존 태그 파싱 실패:', e);
+                }
             }
-            
+
+            // 위치태그만 새로 구성: sdName, sggName을 최우선으로 추가
+            let locationTags = [];
+            if (sdName) locationTags.push({ tagName: sdName, tagId: 'sdName' });
+            if (sggName) locationTags.push({ tagName: sggName, tagId: 'sggName' });
+
+            if (regionalTags && Array.isArray(regionalTags)) {
+                locationTags = [...locationTags, ...regionalTags];
+            }
+
+            // 기존 계절태그 + 새로운 위치태그 결합
+            const combinedTags = [...existingSeasonTags, ...locationTags];
+
             foundLocationData = {
-                longitude: wgs84.longitude, 
-                latitude: wgs84.latitude, 
-                locationName: locationData.data.locationName, 
+                longitude: wgs84.longitude,
+                latitude: wgs84.latitude,
+                locationName: displayLocationName,
                 tags: combinedTags
             };
             window.foundLocationData = foundLocationData;
-            console.log('Final foundLocationData:', foundLocationData);
+            console.log('Final foundLocationData (계절태그 유지):', foundLocationData);
         } else {
             console.error('API Error - Status:', locationResponse.status, 'Data:', locationData);
             alert(locationData.message);
@@ -297,7 +306,7 @@ function resetVariations() {
     }
     currentMarker = null;
     utmkcoor = null;
-    foundLocationData = {longitude: 0, latitude: 0, locationName: "", tags: []}
+    foundLocationData = {longitude: 0, latitude: 0, sdName: "", sggName: "", locationName: "", tags: []}
     window.foundLocationData = foundLocationData;
     if (resultForm) {
         resultForm.value = "";
