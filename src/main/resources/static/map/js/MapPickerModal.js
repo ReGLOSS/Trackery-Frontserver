@@ -17,6 +17,21 @@ if (modalToggleButton && modalToggleButton.id === 'editLocationBtn') {
             });
 
             window.dispatchEvent(new Event('resize'));
+            
+            // 선택된 이미지의 기존 좌표가 있으면 지도에 표시
+            const selectedImage = document.querySelector('.gallery-image.selected');
+            if (selectedImage && selectedImage.dataset.latitude && selectedImage.dataset.longitude) {
+                const latitude = parseFloat(selectedImage.dataset.latitude);
+                const longitude = parseFloat(selectedImage.dataset.longitude);
+                const location = selectedImage.dataset.location || "현재 위치";
+                
+                console.log('Showing existing location on map:', {latitude, longitude, location});
+                
+                // 지도가 완전히 로드된 후 좌표 표시
+                setTimeout(() => {
+                    showLocationOnMap(longitude, latitude, location);
+                }, 500);
+            }
         }
     });
 }
@@ -126,6 +141,32 @@ function convertUTMKtoWGS84(x, y) {
     return {
         longitude: result[0],  // result[0] is longitude (East-West, 124-132 for Korea)
         latitude: result[1]    // result[1] is latitude (North-South, 33-43 for Korea)
+    }
+}
+
+function convertWGS84toUTMK(longitude, latitude) {
+    const proj4 = window.proj4;
+    if (!proj4) {
+        console.error("좌표 변환 라이브러리 로드 안 됨.")
+        return;
+    }
+
+    // WGS84 좌표계 정의 (EPSG:4326)
+    const wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
+    // UTM-K 좌표계 정의 (EPSG:5179)
+    const utmk = "+proj=tmerc +lat_0=38 +lon_0=127.5 +k=0.9996 +x_0=1000000 +y_0=2000000 +ellps=GRS80 +units=m +no_defs";
+
+    // 변환 실행 - proj4 result[0] = x, result[1] = y
+    const result = proj4(wgs84, utmk, [longitude, latitude]);
+
+    console.log('WGS84 to UTMK conversion:');
+    console.log('Input WGS84:', {longitude, latitude});
+    console.log('Output UTMK array:', result);
+    console.log('Parsed as x:', result[0], 'y:', result[1]);
+
+    return {
+        x: result[0],  // result[0] is x (UTMK x coordinate)
+        y: result[1]   // result[1] is y (UTMK y coordinate)
     }
 }
 
@@ -295,6 +336,71 @@ cancelMapPickBtn?.addEventListener('click', function () {
     mapPickerModal.classList.remove('show');
     resetVariations();
 });
+
+// 기존 좌표를 지도 중심으로 설정하고 마커 표시하는 함수
+function showLocationOnMap(longitude, latitude, locationName) {
+    console.log('=== SHOWING LOCATION ON MAP ===');
+    console.log('Input coordinates:', {longitude, latitude, locationName});
+    
+    if (!longitude || !latitude) {
+        console.error('Invalid coordinates provided');
+        return;
+    }
+    
+    const mapInstance = getMapInstance();
+    if (!mapInstance) {
+        console.error('Map instance not found');
+        return;
+    }
+    
+    // WGS84 좌표를 UTMK로 변환
+    const utmkCoords = convertWGS84toUTMK(longitude, latitude);
+    console.log('Converted to UTMK:', utmkCoords);
+    
+    if (!utmkCoords) {
+        console.error('Failed to convert coordinates');
+        return;
+    }
+    
+    // 기존 마커 제거
+    if (currentMarker) {
+        mapInstance.removeLayer(currentMarker);
+    }
+    
+    // 지도 중심을 해당 좌표로 이동
+    const utmkPoint = sop.utmk(utmkCoords.x, utmkCoords.y);
+    mapInstance.setView(utmkPoint, 15); // 확대 레벨 15로 설정
+    
+    // 마커 생성 및 표시
+    currentMarker = sop.marker(utmkCoords);
+    currentMarker.addTo(mapInstance);
+    
+    // 결과 폼에 위치 이름 표시
+    if (resultForm) {
+        resultForm.value = locationName || "현재 위치";
+        toggleValidationClass(resultForm, true);
+    }
+    
+    // 버튼 활성화
+    if (mapPickSubmitBtn) {
+        mapPickSubmitBtn.disabled = false;
+    }
+    
+    // foundLocationData 업데이트
+    foundLocationData = {
+        longitude: longitude,
+        latitude: latitude,
+        locationName: locationName || "현재 위치",
+        tags: []
+    };
+    window.foundLocationData = foundLocationData;
+    
+    console.log('Map centered and marker placed successfully');
+    console.log('=== END SHOWING LOCATION ON MAP ===');
+}
+
+// 전역으로 노출 (다른 스크립트에서 사용 가능)
+window.showLocationOnMap = showLocationOnMap;
 
 function resetVariations() {
     const mapInstance = getMapInstance();

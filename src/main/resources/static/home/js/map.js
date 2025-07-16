@@ -932,6 +932,9 @@ class MapManager {
 
         // 모달 맵 픽커 초기화
         this.initModalMapPicker();
+        
+        // 지도에서 보기 버튼 초기화
+        this.initViewOnMapButton();
     }
 
     // 모달 표시
@@ -2177,6 +2180,97 @@ class MapManager {
             }
         } catch (error) {
             console.error('Error updating seasonal tags in modal:', error);
+        }
+    }
+
+    // 지도에서 보기 버튼 초기화
+    initViewOnMapButton() {
+        const modalViewOnMapBtn = document.getElementById('modalViewOnMapBtn');
+        if (modalViewOnMapBtn) {
+            modalViewOnMapBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showImageLocationOnMap();
+            });
+        }
+    }
+
+    // 이미지 위치를 지도에 표시
+    async showImageLocationOnMap() {
+        const modalEditBtn = document.getElementById('modalEditBtn');
+        const imageId = modalEditBtn?.dataset.imageId;
+        
+        if (!imageId) {
+            console.error('Image ID not found');
+            return;
+        }
+
+        console.log('=== SHOW IMAGE LOCATION ON MAP ===');
+        console.log('Image ID:', imageId);
+
+        try {
+            // API에서 최신 이미지 좌표 정보 가져오기
+            const coords = await this.fetchImageCoordinates(imageId);
+            console.log('Fetched coordinates:', coords);
+            
+            if (coords && coords.latitude && coords.longitude) {
+                const latitude = coords.latitude;
+                const longitude = coords.longitude;
+                const locationName = coords.locationName || `${coords.sdName || ''} ${coords.sggName || ''}`.trim() || '현재 위치';
+                
+                console.log('Showing image location on map:', {latitude, longitude, locationName});
+                
+                // 지도 모달 열기
+                this.showModalMapPicker();
+                
+                // 지도가 로드된 후 위치 표시
+                setTimeout(() => {
+                    if (window.showLocationOnMap) {
+                        console.log('Calling showLocationOnMap with:', longitude, latitude, locationName);
+                        window.showLocationOnMap(longitude, latitude, locationName);
+                    } else {
+                        console.error('showLocationOnMap function not found');
+                    }
+                }, 500);
+            } else {
+                console.log('No coordinates found for image:', coords);
+                alert('이미지에 위치 정보가 없습니다.');
+            }
+        } catch (error) {
+            console.error('Error fetching image coordinates:', error);
+            alert('위치 정보를 가져올 수 없습니다.');
+        }
+        
+        console.log('=== END SHOW IMAGE LOCATION ON MAP ===');
+    }
+
+    // 이미지 좌표 정보 가져오기
+    async fetchImageCoordinates(imageId) {
+        try {
+            const response = await fetch(`/api/images/${imageId}`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch image coordinates: ${response.status}`);
+            }
+
+            const responseData = await response.json();
+            const imageData = responseData.data;
+
+            return {
+                latitude: imageData.latitude,
+                longitude: imageData.longitude,
+                locationName: `${imageData.sdName || ''} ${imageData.sggName || ''}`.trim(),
+                sdName: imageData.sdName,
+                sggName: imageData.sggName
+            };
+        } catch (error) {
+            console.error('Error fetching image coordinates:', error);
+            return null;
         }
     }
 

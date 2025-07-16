@@ -621,7 +621,7 @@ const EventHandlers = {
         const latitude = selectedImage.dataset.latitude;
         const longitude = selectedImage.dataset.longitude;
         
-        if (!dateTime || !latitude || !longitude) {
+        if (!dateTime) {
             return;
         }
         
@@ -636,46 +636,45 @@ const EventHandlers = {
             });
             
             if (response.ok) {
-                const tagsData = await response.json();
-                if (tagsData.code === 200 && Array.isArray(tagsData.data)) {
-                    // 1. 커스텀 태그 수집
-                    const customTags = [];
-                    DOM.tagBox.querySelectorAll('.tag.custom-tag').forEach(tag => {
-                        customTags.push({
-                            tagId: tag.dataset.tagId,
-                            tagName: tag.dataset.tagName
-                        });
-                    });
-
-                    // 2. 기존 위치태그 유지 (sdName, sggName, 기타 지역태그)
-                    const existingLocationTags = [];
+                const seasonData = await response.json();
+                if (seasonData.code === 200 && Array.isArray(seasonData.data)) {
+                    // 1. 기존 계절태그만 제거 (다른 태그는 보존)
                     DOM.tagBox.querySelectorAll('.tag.regional-tag').forEach(tag => {
                         const tagName = tag.dataset.tagName;
-                        // 계절태그가 아닌 경우만 유지
-                        if (tagName && !tagName.includes('봄') && !tagName.includes('여름') && 
-                            !tagName.includes('가을') && !tagName.includes('겨울')) {
-                            existingLocationTags.push({
-                                tagId: tag.dataset.tagId,
-                                tagName: tagName
-                            });
+                        if (tagName && (tagName.includes('봄') || tagName.includes('여름') || 
+                                      tagName.includes('가을') || tagName.includes('겨울'))) {
+                            tag.remove();
                         }
                     });
 
-                    // 3. 모든 기존 지역/계절 태그 제거
-                    DOM.tagBox.querySelectorAll('.tag.regional-tag').forEach(tag => tag.remove());
+                    // 2. 새로운 계절태그만 추가
+                    const tagAddButton = DOM.tagBox.querySelector('.tag-add');
+                    seasonData.data.forEach(tag => {
+                        const tagElement = document.createElement('span');
+                        tagElement.classList.add('tag', 'regional-tag');
+                        tagElement.textContent = tag.tagName;
+                        tagElement.dataset.tagId = tag.tagId || '';
+                        tagElement.dataset.tagName = tag.tagName;
 
-                    // 4. 기존 위치태그 다시 추가
-                    UiHelpers.addTags(existingLocationTags);
+                        // 태그 삭제 버튼 추가
+                        const deleteButton = document.createElement('button');
+                        deleteButton.classList.add('tag-delete');
+                        deleteButton.innerHTML = '×';
+                        deleteButton.title = '태그 삭제';
+                        deleteButton.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            tagElement.remove();
+                            const selectedImage = document.querySelector(".gallery-image.selected");
+                            if (selectedImage) {
+                                UiHelpers.updateSelectedImageTags();
+                            }
+                        });
 
-                    // 5. 새로운 계절태그 추가
-                    UiHelpers.addTags(tagsData.data);
-
-                    // 6. 커스텀 태그 다시 추가
-                    customTags.forEach(tag => {
-                        UiHelpers.addCustomTag(tag.tagName);
+                        tagElement.appendChild(deleteButton);
+                        DOM.tagBox.insertBefore(tagElement, tagAddButton);
                     });
                     
-                    // 선택된 이미지의 태그 정보 업데이트
+                    // 3. 선택된 이미지의 태그 정보 업데이트
                     UiHelpers.updateSelectedImageTags();
                 }
             }
