@@ -117,8 +117,8 @@ const ApiService = {
 
             // 태그 정보 병합: sdName, sggName을 최우선으로 추가
             let combinedTags = [];
-            if (location.sdName) combinedTags.push({ tagName: location.sdName, tagId: 'sdName' });
-            if (location.sggName) combinedTags.push({ tagName: location.sggName, tagId: 'sggName' });
+            if (location.sdName) combinedTags.push({tagName: location.sdName, tagId: 'sdName'});
+            if (location.sggName) combinedTags.push({tagName: location.sggName, tagId: 'sggName'});
 
             if (location.regionalTags && Array.isArray(location.regionalTags)) {
                 combinedTags = [...combinedTags, ...location.regionalTags];
@@ -433,6 +433,14 @@ const UiHelpers = {
 
 // 이벤트 핸들러 모음
 const EventHandlers = {
+    setInitialValidationState(img, dateTime, location) {
+        if (dateTime && location) {
+            img.classList.add("valid");
+        } else {
+            img.classList.add("invalid");
+        }
+    },
+
     // 이미지 추가 버튼 클릭 핸들러
     onAddImageClick() {
         DOM.fileInput.click();
@@ -476,13 +484,8 @@ const EventHandlers = {
         img.dataset.longitude = parsedData.longitude;
         img.dataset.tags = JSON.stringify(tags);
 
-        if (dateTime && location) {
-            img.classList.add("valid");
-        }
-
-        if (!dateTime || !location) {
-            img.classList.add("invalid");
-        }
+        // 초기 validation 상태 설정
+        EventHandlers.setInitialValidationState(img, dateTime, location);
 
         const imageWrapper = document.createElement("div");
         imageWrapper.classList.add("image-wrapper");
@@ -496,6 +499,9 @@ const EventHandlers = {
         imageWrapper.appendChild(img);
         imageWrapper.appendChild(closeButton);
         DOM.gallery.appendChild(imageWrapper);
+
+        // 업로드 버튼 상태 업데이트
+        ValidationService.updateUploadButtonState();
     },
 
     // 갤러리 이미지 클릭 핸들러
@@ -574,10 +580,16 @@ const EventHandlers = {
 
         if (DOM.dateBox.value === "") {
             DOM.dateBox.classList.add("invalid");
+        } else {
+            DOM.dateBox.classList.remove("invalid");
+            DOM.dateBox.classList.add("valid");
         }
 
         if (DOM.locationBox.value === "") {
             DOM.locationBox.classList.add("invalid");
+        } else {
+            DOM.locationBox.classList.remove("invalid");
+            DOM.locationBox.classList.add("valid");
         }
     },
 
@@ -601,30 +613,35 @@ const EventHandlers = {
 
     // 위치 변경 핸들러
     onLocationChange() {
+        const selectedImage = document.querySelector(".gallery-image.selected");
+        if (selectedImage) {
+            selectedImage.dataset.location = DOM.locationBox.value;
+        }
         ValidationService.validateLocationAndDate();
+        ValidationService.updateUploadButtonState();
     },
 
     // 날짜 변경 핸들러
     async onDateChange() {
         ValidationService.validateLocationAndDate();
-        
+
         // 날짜 변경 시 계절 태그 업데이트
         const selectedImage = document.querySelector(".gallery-image.selected");
         if (selectedImage) {
             await EventHandlers.updateSeasonalTags(selectedImage);
         }
     },
-    
+
     // 계절 태그 업데이트 헬퍼 함수 (위치태그 유지)
     async updateSeasonalTags(selectedImage) {
         const dateTime = selectedImage.dataset.dateTime;
         const latitude = selectedImage.dataset.latitude;
         const longitude = selectedImage.dataset.longitude;
-        
+
         if (!dateTime || !latitude || !longitude) {
             return;
         }
-        
+
         try {
             const response = await fetch("/api/tags/season", {
                 method: "POST",
@@ -634,7 +651,7 @@ const EventHandlers = {
                     date: dateTime
                 })
             });
-            
+
             if (response.ok) {
                 const tagsData = await response.json();
                 if (tagsData.code === 200 && Array.isArray(tagsData.data)) {
@@ -652,7 +669,7 @@ const EventHandlers = {
                     DOM.tagBox.querySelectorAll('.tag.regional-tag').forEach(tag => {
                         const tagName = tag.dataset.tagName;
                         // 계절태그가 아닌 경우만 유지
-                        if (tagName && !tagName.includes('봄') && !tagName.includes('여름') && 
+                        if (tagName && !tagName.includes('봄') && !tagName.includes('여름') &&
                             !tagName.includes('가을') && !tagName.includes('겨울')) {
                             existingLocationTags.push({
                                 tagId: tag.dataset.tagId,
@@ -674,7 +691,7 @@ const EventHandlers = {
                     customTags.forEach(tag => {
                         UiHelpers.addCustomTag(tag.tagName);
                     });
-                    
+
                     // 선택된 이미지의 태그 정보 업데이트
                     UiHelpers.updateSelectedImageTags();
                 }
@@ -691,7 +708,7 @@ const EventHandlers = {
         if (currentlySelected) {
             UiHelpers.updateSelectedImageTags();
         }
-        
+
         DOM.whileUploadingModal.style.display = "flex";
         const imageWrappers = document.querySelectorAll(".image-wrapper");
 
@@ -700,7 +717,7 @@ const EventHandlers = {
 
         for (const imageWrapper of imageWrappers) {
             const img = imageWrapper.querySelector(".gallery-image");
-            
+
             try {
                 const url = await ApiService.requestPresignedPutUrl(img);
                 await ApiService.uploadImageToS3(img, url);
@@ -722,7 +739,7 @@ const EventHandlers = {
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         await UiHelpers.hideUploadingBlockAndShowResultBlock();
-        
+
         // 모든 이미지 업로드 성공 시 2초 후 모달 닫고 페이지 새로고침
         if (failedImageUUIDs.length === 0) {
             setTimeout(() => {
@@ -813,7 +830,7 @@ function initialize() {
                 }
 
                 ValidationService.validateLocationAndDate();
-                
+
                 // 날짜 변경 시 계절 태그 업데이트
                 await EventHandlers.updateSeasonalTags(selectedImage);
             }
@@ -838,9 +855,10 @@ function initialize() {
     DOM.description.addEventListener("input", EventHandlers.onDescriptionInput);
     DOM.publicCheckbox.addEventListener("change", EventHandlers.onPublicChange);
     DOM.locationBox.addEventListener("change", EventHandlers.onLocationChange);
+    DOM.locationBox.addEventListener("input", EventHandlers.onLocationChange);
     DOM.dateBox.addEventListener("change", EventHandlers.onDateChange);
     DOM.imageUploadBtn.addEventListener("click", EventHandlers.onImageUploadClick);
-    
+
     // 태그 관련 이벤트 리스너
     DOM.tagAddButton.addEventListener("click", EventHandlers.onTagAddClick);
     DOM.tagInput.addEventListener("keydown", EventHandlers.onTagInputKeydown);
@@ -852,3 +870,4 @@ document.addEventListener('DOMContentLoaded', initialize);
 
 // 전역으로 노출 (맵 피커 모달에서 사용)
 window.UiHelpers = UiHelpers;
+window.ValidationService = ValidationService;
