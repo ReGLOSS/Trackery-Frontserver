@@ -136,12 +136,14 @@ const ApiService = {
                 tags: combinedTags
             };
         } catch (err) {
-            console.error("위치 정보 요청 실패:", err);
+            console.error("위치 정보 요청 실패 (CORS 오류 또는 네트워크 오류):", err);
+            console.warn("좌표는 있지만 대한민국 범위 밖이거나 네트워크 오류로 인해 위치 정보를 가져올 수 없습니다. EXIF 정보 없음과 동일하게 처리합니다.");
+            // CORS 오류나 네트워크 오류 발생 시 EXIF 정보 없음과 동일하게 처리
             return {
+                location: '',
                 dateTime: formattedDateTime,
-                latitude,
-                longitude,
-                location: ""
+                latitude: null,
+                longitude: null,
             };
         }
     },
