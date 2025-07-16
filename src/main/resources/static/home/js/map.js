@@ -828,6 +828,17 @@ class MapManager {
         tagInput.placeholder = '태그 입력 후 Enter';
         tagInput.style.display = 'none'; // 기본적으로 숨김
         tagInput.id = 'modalTagInput';
+        
+        // 태그 추가 버튼 클릭 이벤트 리스너
+        tagAddButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showTagInput();
+        });
+        
+        // 태그 입력 필드 키다운 이벤트 리스너
+        tagInput.addEventListener('keydown', (e) => {
+            this.handleTagInputKeydown(e);
+        });
 
         if (imageData.tags && imageData.tags.length > 0) {
             imageData.tags.forEach(tag => {

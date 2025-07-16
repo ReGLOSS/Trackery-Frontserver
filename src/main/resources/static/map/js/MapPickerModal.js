@@ -280,8 +280,9 @@ function fetchLocationName(utmkcoor) {
                 mapPickSubmitBtn.disabled = false;
             }
 
-            // 기존 계절태그 유지: 현재 선택된 이미지의 태그에서 계절태그 추출
+            // 기존 태그 분류: 계절태그와 위치태그 분리
             let existingSeasonTags = [];
+            let existingLocationTags = [];
             const selectedImage = document.querySelector(".gallery-image.selected");
             if (selectedImage && selectedImage.dataset.tags) {
                 try {
@@ -292,22 +293,33 @@ function fetchLocationName(utmkcoor) {
                             tag.tagName.includes('가을') || tag.tagName.includes('겨울')
                         )
                     );
+                    existingLocationTags = existingTags.filter(tag => 
+                        tag.tagName && !(
+                            tag.tagName.includes('봄') || tag.tagName.includes('여름') || 
+                            tag.tagName.includes('가을') || tag.tagName.includes('겨울')
+                        )
+                    );
                 } catch (e) {
                     console.log('기존 태그 파싱 실패:', e);
                 }
             }
 
-            // 위치태그만 새로 구성: sdName, sggName을 최우선으로 추가
-            let locationTags = [];
-            if (sdName) locationTags.push({ tagName: sdName, tagId: 'sdName' });
-            if (sggName) locationTags.push({ tagName: sggName, tagId: 'sggName' });
+            // 새로운 위치태그 구성: sdName, sggName을 최우선으로 추가
+            let newLocationTags = [];
+            if (sdName) newLocationTags.push({ tagName: sdName, tagId: 'sdName' });
+            if (sggName) newLocationTags.push({ tagName: sggName, tagId: 'sggName' });
 
             if (regionalTags && Array.isArray(regionalTags)) {
-                locationTags = [...locationTags, ...regionalTags];
+                newLocationTags = [...newLocationTags, ...regionalTags];
             }
 
-            // 기존 계절태그 + 새로운 위치태그 결합
-            const combinedTags = [...existingSeasonTags, ...locationTags];
+            // 중복 제거: 기존 위치태그와 새로운 위치태그 비교
+            const uniqueLocationTags = newLocationTags.filter(newTag => 
+                !existingLocationTags.some(existingTag => existingTag.tagName === newTag.tagName)
+            );
+
+            // 기존 계절태그 + 기존 위치태그 + 새로운 위치태그(중복 제거) 결합
+            const combinedTags = [...existingSeasonTags, ...existingLocationTags, ...uniqueLocationTags];
 
             foundLocationData = {
                 longitude: wgs84.longitude,
