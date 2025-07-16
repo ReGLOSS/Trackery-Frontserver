@@ -912,7 +912,21 @@ class MapManager {
         const modalEditBtn = document.getElementById('modalEditBtn');
         modalEditBtn.dataset.imageId = imageData.imageId;
 
-        // 원본 데이터 저장
+        // 좌표 교정 (한국 범위 확인: 위도 33-43, 경도 124-132)
+        let correctedLatitude = imageData.latitude;
+        let correctedLongitude = imageData.longitude;
+        
+        // 좌표가 뒤바뀐 경우 교정
+        if (imageData.latitude >= 124 && imageData.latitude <= 132 && 
+            imageData.longitude >= 33 && imageData.longitude <= 43) {
+            console.log('Detected swapped coordinates in modal data, correcting...');
+            console.log('Original - latitude:', imageData.latitude, 'longitude:', imageData.longitude);
+            correctedLatitude = imageData.longitude;  // longitude를 latitude로
+            correctedLongitude = imageData.latitude;  // latitude를 longitude로
+            console.log('Corrected - latitude:', correctedLatitude, 'longitude:', correctedLongitude);
+        }
+
+        // 원본 데이터 저장 (교정된 좌표 사용)
         this.originalModalData = {
             imageContent: imageData.imageContent || '',
             tags: imageData.tags || [],
@@ -920,7 +934,9 @@ class MapManager {
             imageDate: imageData.imageDate || '',
             sdName: imageData.sdName || '',
             sggName: imageData.sggName || '',
-            locationName: locationText
+            locationName: locationText,
+            latitude: correctedLatitude,
+            longitude: correctedLongitude
         };
 
         // 편집 모드 초기화
@@ -1537,18 +1553,37 @@ class MapManager {
     showModalMapPicker() {
         const modalMapPickerModal = document.getElementById('modalMapPickerModal');
         if (modalMapPickerModal) {
+            // 기존 지도 인스턴스 완전 리셋
+            if (typeof window.resetMapInstance === 'function') {
+                window.resetMapInstance();
+            }
+            
             modalMapPickerModal.classList.add('show');
 
-            // 맵 크기 조정만 수행 (지도는 이미 초기화되어 있음)
+            // 맵 크기 조정 및 초기화
             setTimeout(() => {
-                window.dispatchEvent(new Event('resize'));
-
                 // 지도 클릭 이벤트는 처음 한 번만 바인딩되어야 함
                 if (typeof window.bindMapClickEvent === 'function' && !this.mapClickEventBound) {
                     window.bindMapClickEvent();
                     this.mapClickEventBound = true;
                 }
-            }, 100);
+                
+                // 현재 표시된 이미지의 좌표가 있으면 지도에 표시
+                if (this.originalModalData.latitude && this.originalModalData.longitude) {
+                    const latitude = this.originalModalData.latitude;
+                    const longitude = this.originalModalData.longitude;
+                    const locationName = this.originalModalData.locationName || "현재 위치";
+                    
+                    console.log('Showing current image location on map:', {latitude, longitude, locationName});
+                    
+                    // 지도 생성을 위한 더 긴 대기 시간
+                    setTimeout(() => {
+                        if (window.showLocationOnMap) {
+                            window.showLocationOnMap(latitude, longitude, locationName);
+                        }
+                    }, 1000);
+                }
+            }, 500);
         }
     }
 
@@ -1623,18 +1658,8 @@ class MapManager {
 
         // 태그 추가 버튼과 입력 필드 표시
         const tagAddButton = document.getElementById('modalTagAddButton');
-        const tagInput = document.getElementById('modalTagInput');
-
         if (tagAddButton) {
             tagAddButton.style.display = 'block';
-            // 태그 추가 버튼 이벤트 등록
-            tagAddButton.addEventListener('click', () => this.showTagInput());
-        }
-
-        if (tagInput) {
-            // 태그 입력 이벤트 등록
-            tagInput.addEventListener('keydown', (e) => this.handleTagInputKeydown(e));
-            tagInput.addEventListener('blur', () => this.hideTagInput());
         }
     }
 
@@ -1659,6 +1684,7 @@ class MapManager {
 
         if (tagInput) {
             tagInput.style.display = 'none';
+            tagInput.value = ''; // 입력 필드 초기화
         }
     }
 
@@ -2225,8 +2251,8 @@ class MapManager {
                 // 지도가 로드된 후 위치 표시
                 setTimeout(() => {
                     if (window.showLocationOnMap) {
-                        console.log('Calling showLocationOnMap with:', longitude, latitude, locationName);
-                        window.showLocationOnMap(longitude, latitude, locationName);
+                        console.log('Calling showLocationOnMap with:', latitude, longitude, locationName);
+                        window.showLocationOnMap(latitude, longitude, locationName);
                     } else {
                         console.error('showLocationOnMap function not found');
                     }

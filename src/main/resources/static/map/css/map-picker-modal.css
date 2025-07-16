@@ -1,49 +1,139 @@
 .map-picker-modal {
     display: none;
     flex-direction: column;
-    gap: 0.5vh;
-    justify-content: center;
+    gap: 10px;
+    justify-content: flex-start;
     align-items: center;
-    width: 30vw;
-    height: 45vh;
-    z-index: 1000;
+    width: 31vw;
+    height: 55vh;
+    z-index: 1500;
     position: relative;
-    left: -18%;
-    background-color: rgba(255, 255, 255, 0.85);
+    background-color: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(8px);
     border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+/* 업로드 페이지에서 사용될 때의 위치 조정 */
+#mapPickerModal {
+    left: -78px;
+}
+
+/* 홈 페이지에서 사용될 때의 위치 조정 */
+#modalMapPickerModal {
+    position: fixed;
+    top: 50%;
+    left: calc(50% + 280px);
+    transform: translate(-50%, -50%);
+    z-index: 1600;
+    /* 사진 수정모드 전용 크기 설정 */
+    width: 35vw;
+    height: 50vh;
+}
+
+/* 화면 크기에 따른 반응형 위치 조정 */
+@media (max-width: 1400px) {
+    #modalMapPickerModal {
+        left: calc(50% + 200px);
+    }
+}
+
+@media (max-width: 1200px) {
+    #modalMapPickerModal {
+        left: calc(50% + 150px);
+    }
+}
+
+@media (max-width: 1000px) {
+    #modalMapPickerModal {
+        left: 50%;
+        top: 60%;
+    }
 }
 
 .map-area {
-    width: 25vw;
-    height: 25vh;
-    margin: 5% 5% 0 5%;
+    width: calc(100% - 20px);
+    height: 32vh;
+    margin: 0 0 10px 0;
+    flex-shrink: 0;
 }
 
 .map-picker-result {
-    width: 25vw;
-    margin-bottom: 1vh;
+    width: calc(100% - 20px);
+    margin: 0 0 10px 0;
+    flex-shrink: 0;
 }
 
 .map-picker-btn-area {
     display: flex;
     justify-content: flex-end;
-    width: 25vw;
-    gap: 5%;
-    padding-bottom: 3%;
+    width: calc(100% - 20px);
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    flex-shrink: 0;
 }
 
 .map-picker-modal.show {
     display: flex;
 }
 
-.form-control.valid {
+/* 맵 픽커 모달 내부의 form-control 스타일 */
+.map-picker-modal .form-control {
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 14px;
+    background-color: #fff;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.map-picker-modal .form-control.valid {
     border: 1px double #2fb344;
     border-radius: 5px;
 }
 
-.form-control.invalid {
+.map-picker-modal .form-control.invalid {
     border: 1px double #D63939FF;
     border-radius: 5px;
+}
+
+/* 맵 픽커 모달 버튼 스타일 */
+.map-picker-modal .btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.map-picker-modal .btn-dark {
+    background-color: #343a40;
+    color: white;
+}
+
+.map-picker-modal .btn-dark:hover {
+    background-color: #23272b;
+}
+
+.map-picker-modal .btn-red {
+    background-color: #dc3545;
+    color: white;
+}
+
+.map-picker-modal .btn-red:hover {
+    background-color: #c82333;
+}
+
+.map-picker-modal .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }

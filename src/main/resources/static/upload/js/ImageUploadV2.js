@@ -524,7 +524,6 @@ const EventHandlers = {
         target.classList.add("selected");
 
         document.querySelector('#mapPickerModal').classList.remove('show');
-        resetVariations();
 
         const {preview, location, dateTime, description, tags, public: isPublic} = target.dataset;
 
