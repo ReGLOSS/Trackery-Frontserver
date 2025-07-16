@@ -286,6 +286,11 @@ mapPickSubmitBtn?.addEventListener('click', function () {
     if (window.UiHelpers && foundLocationData.tags) {
         window.UiHelpers.addTags(foundLocationData.tags);
     }
+
+    if (window.ValidationService) {
+        window.ValidationService.validateLocationAndDate();
+        window.ValidationService.updateUploadButtonState();
+    }
     
     mapPickerModal.classList.remove('show');
     resetVariations();
