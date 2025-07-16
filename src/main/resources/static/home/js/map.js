@@ -1011,60 +1011,73 @@ class MapManager {
         }
     }
 
-    // 이미지가 있는 시도를 초록색으로 표시
+    // 이미지가 있는 시도를 색상으로 표시
     async styleSidosWithImages() {
         if (!this.sidoData) return;
-
-        const paths = document.querySelectorAll('#map-display path');
 
         for (const sido of this.sidoData) {
             const sidoId = sido.sd_id || sido.id || sido.sidoId;
             const pathElement = document.getElementById(sidoId);
 
             if (pathElement) {
-                // 해당 시도의 이미지 개수 확인
-                const hasImages = await this.checkSidoHasImages(sidoId);
+                // 해당 시도의 이미지 존재 여부 확인
+                const imageStatus = await this.checkSidoHasImages(sidoId);
 
-                if (hasImages) {
-                    pathElement.style.fill = '#28a745'; // 초록색
+                console.log(`Sido ${sidoId}: hasAny=${imageStatus.hasAny}, hasAll=${imageStatus.hasAll}`);
+
+                if (imageStatus.hasAll) {
+                    // 모든 시군구에 이미지가 있으면 초록색
+                    pathElement.style.setProperty('fill', '#28a745', 'important');
                     pathElement.classList.add('has-images');
+                    console.log(`Sido ${sidoId} colored GREEN (all districts have images)`);
+                } else if (imageStatus.hasAny) {
+                    // 일부 시군구에만 이미지가 있으면 노란색
+                    pathElement.style.setProperty('fill', '#ffc107', 'important');
+                    pathElement.classList.add('has-images');
+                    console.log(`Sido ${sidoId} colored YELLOW (some districts have images)`);
+                } else {
+                    console.log(`Sido ${sidoId} kept default color (no images)`);
                 }
+                // 아무 시군구에도 이미지가 없으면 기본색 유지 (아무 작업 안함)
             }
         }
     }
 
-    // 시도의 모든 시군구에 이미지가 있는지 확인
+    // 시도의 시군구별 이미지 존재 여부 확인
     async checkSidoHasImages(sidoId) {
         try {
             // 먼저 해당 시도의 시군구 목록을 가져옴
             const sigunguResponse = await fetch(`/api/location/sido/${sidoId}/sigungu`);
             if (!sigunguResponse.ok) {
-                return false;
+                return { hasAny: false, hasAll: false };
             }
 
             const sigunguData = await sigunguResponse.json();
             const sigunguList = Array.isArray(sigunguData) ? sigunguData : (sigunguData.data || []);
 
             if (sigunguList.length === 0) {
-                return false;
+                return { hasAny: false, hasAll: false };
             }
 
-            // 모든 시군구에 이미지가 있는지 확인
+            let sigunguWithImages = 0;
+            
+            // 모든 시군구의 이미지 존재 여부 확인
             for (const sigungu of sigunguList) {
                 const sigunguId = sigungu.sigunguId;
                 const hasImages = await this.checkSigunguHasImages(sigunguId);
 
-                // 하나라도 이미지가 없으면 false 반환
-                if (!hasImages) {
-                    return false;
+                if (hasImages) {
+                    sigunguWithImages++;
                 }
             }
 
-            // 모든 시군구에 이미지가 있는 경우에만 true 반환
-            return true;
+            return {
+                hasAny: sigunguWithImages > 0,
+                hasAll: sigunguWithImages === sigunguList.length
+            };
         } catch (error) {
             console.error('Error checking sido images:', error);
-            return false;
+            return { hasAny: false, hasAll: false };
         }
     }
 
@@ -1299,6 +1312,7 @@ class MapManager {
             if (updateData.longitude !== undefined || updateData.latitude !== undefined || updateData.imageDate !== undefined) {
                 this.refreshCurrentImageList();
                 this.refreshMapColors();
+                await this.refreshUserStats();
                 await this.refreshCurrentModalImageData(imageId);
             }
 
@@ -1356,6 +1370,9 @@ class MapManager {
             // 지도 색상 새로고침
             this.refreshMapColors();
 
+            // 사용자 통계 새로고침
+            await this.refreshUserStats();
+
         } catch (error) {
             console.error('Error deleting image:', error);
             alert('이미지 삭제 중 오류가 발생했습니다.');
@@ -1384,6 +1401,12 @@ class MapManager {
         }
     }
 
+    // 사용자 통계 새로고침
+    async refreshUserStats() {
+        await this.loadUserStats();
+        this.updateStatsDisplay();
+    }
+
     // 날짜 피커 초기화
     initModalDatePicker() {
         if (typeof flatpickr === 'undefined') {
@@ -1404,10 +1427,11 @@ class MapManager {
             locale: "ko",
             clickOpens: false, // 클릭으로는 열리지 않도록 설정
             allowInput: false, // 직접 입력 불가
-            onClose: (selectedDates, dateStr) => {
+            onClose: async (selectedDates, dateStr) => {
                 if (dateStr && this.isEditMode) {
                     console.log('Date selected:', dateStr);
-                    // 날짜가 변경되었을 때 처리
+                    // 날짜가 변경되었을 때 계절 태그 업데이트
+                    await this.updateSeasonalTagsInModal(dateStr);
                 }
             }
         });
@@ -1922,8 +1946,8 @@ class MapManager {
         console.log('Modal tags updated successfully. Final tag count:', modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)').length);
     }
 
-    // 위치 변경시 태그 실시간 업데이트
-    updateModalTagsFromLocationChange(newTags) {
+    // 위치 변경시 태그 실시간 업데이트 (위치 태그 + 계절 태그)
+    async updateModalTagsFromLocationChange(newTags) {
         console.log('Updating modal tags from location change:', newTags);
         
         if (!this.isEditMode) {
@@ -1932,12 +1956,40 @@ class MapManager {
         }
 
         const modalTagBox = document.getElementById('modalTagBox');
+        const modalDateBox = document.getElementById('modalDateBox');
         if (!modalTagBox) {
             console.log('Modal tag box not found');
             return;
         }
 
-        // 현재 태그들을 새로운 태그로 교체
+        // 현재 날짜 정보 가져오기
+        const currentDate = modalDateBox ? modalDateBox.value : '';
+        
+        let seasonalTags = [];
+        // 날짜 정보가 있으면 계절 태그도 함께 가져오기
+        if (currentDate) {
+            try {
+                const response = await fetch("/api/tags/season", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    credentials: "include",
+                    body: JSON.stringify({
+                        date: currentDate
+                    })
+                });
+                
+                if (response.ok) {
+                    const tagsData = await response.json();
+                    if (tagsData.code === 200 && Array.isArray(tagsData.data)) {
+                        seasonalTags = tagsData.data;
+                        console.log('Seasonal tags fetched for location change:', seasonalTags);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching seasonal tags during location change:', error);
+            }
+        }
+
         // 기존 태그들 제거 (추가 버튼과 입력 필드는 유지)
         const existingTags = modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)');
         console.log('Removing existing tags for location change:', existingTags.length);
@@ -1977,7 +2029,155 @@ class MapManager {
             });
         }
 
+        // 계절 태그들 추가
+        if (seasonalTags && seasonalTags.length > 0) {
+            seasonalTags.forEach(tag => {
+                const tagElement = document.createElement('span');
+                tagElement.className = 'tag';
+                
+                const tagId = typeof tag === 'object' ? tag.tagId : null;
+                const tagName = typeof tag === 'object' ? (tag.tagName || tag.name || tag) : tag;
+                
+                tagElement.textContent = tagName;
+                tagElement.dataset.tagId = tagId || 'season-' + Date.now(); // 계절 기반 임시 ID
+                tagElement.dataset.tagName = tagName;
+                
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'tag-delete';
+                deleteButton.innerHTML = '×';
+                deleteButton.title = '태그 삭제';
+                deleteButton.style.display = this.isEditMode ? 'flex' : 'none';
+                deleteButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    tagElement.remove();
+                });
+                
+                tagElement.appendChild(deleteButton);
+                
+                const tagAddButton = document.getElementById('modalTagAddButton');
+                if (tagAddButton) {
+                    modalTagBox.insertBefore(tagElement, tagAddButton);
+                } else {
+                    modalTagBox.appendChild(tagElement);
+                }
+            });
+        }
+
         console.log('Location-based tags updated successfully. Final tag count:', modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)').length);
+    }
+
+    // 모달에서 날짜 변경 시 계절 태그 업데이트
+    async updateSeasonalTagsInModal(dateStr) {
+        if (!this.isEditMode) {
+            console.log('Not in edit mode, skipping seasonal tag update');
+            return;
+        }
+
+        const modalTagBox = document.getElementById('modalTagBox');
+        if (!modalTagBox) {
+            console.log('Modal tag box not found');
+            return;
+        }
+
+        try {
+            const response = await fetch("/api/tags/season", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                credentials: "include",
+                body: JSON.stringify({
+                    date: dateStr
+                })
+            });
+
+            if (response.ok) {
+                const tagsData = await response.json();
+                if (tagsData.code === 200 && Array.isArray(tagsData.data)) {
+                    console.log('Seasonal tags received:', tagsData.data);
+
+                    // 1. 기존 위치태그 유지 (sdName, sggName, 기타 지역태그)
+                    const existingLocationTags = [];
+                    modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)').forEach(tag => {
+                        const tagName = tag.dataset.tagName;
+                        // 계절태그가 아닌 경우만 유지
+                        if (tagName && !tagName.includes('봄') && !tagName.includes('여름') && 
+                            !tagName.includes('가을') && !tagName.includes('겨울')) {
+                            existingLocationTags.push({
+                                tagId: tag.dataset.tagId,
+                                tagName: tagName
+                            });
+                        }
+                    });
+
+                    // 2. 모든 기존 태그 제거
+                    const existingTags = modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)');
+                    existingTags.forEach(tag => tag.remove());
+
+                    // 3. 기존 위치태그 다시 추가
+                    existingLocationTags.forEach(tag => {
+                        const tagElement = document.createElement('span');
+                        tagElement.className = 'tag';
+                        tagElement.textContent = tag.tagName;
+                        tagElement.dataset.tagId = tag.tagId;
+                        tagElement.dataset.tagName = tag.tagName;
+                        
+                        const deleteButton = document.createElement('button');
+                        deleteButton.className = 'tag-delete';
+                        deleteButton.innerHTML = '×';
+                        deleteButton.title = '태그 삭제';
+                        deleteButton.style.display = this.isEditMode ? 'flex' : 'none';
+                        deleteButton.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            tagElement.remove();
+                        });
+                        
+                        tagElement.appendChild(deleteButton);
+                        
+                        const tagAddButton = document.getElementById('modalTagAddButton');
+                        if (tagAddButton) {
+                            modalTagBox.insertBefore(tagElement, tagAddButton);
+                        } else {
+                            modalTagBox.appendChild(tagElement);
+                        }
+                    });
+
+                    // 4. 새로운 계절태그 추가
+                    tagsData.data.forEach(tag => {
+                        const tagElement = document.createElement('span');
+                        tagElement.className = 'tag';
+                        
+                        const tagId = typeof tag === 'object' ? tag.tagId : null;
+                        const tagName = typeof tag === 'object' ? (tag.tagName || tag.name || tag) : tag;
+                        
+                        tagElement.textContent = tagName;
+                        tagElement.dataset.tagId = tagId || 'season-' + Date.now();
+                        tagElement.dataset.tagName = tagName;
+                        
+                        const deleteButton = document.createElement('button');
+                        deleteButton.className = 'tag-delete';
+                        deleteButton.innerHTML = '×';
+                        deleteButton.title = '태그 삭제';
+                        deleteButton.style.display = this.isEditMode ? 'flex' : 'none';
+                        deleteButton.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            tagElement.remove();
+                        });
+                        
+                        tagElement.appendChild(deleteButton);
+                        
+                        const tagAddButton = document.getElementById('modalTagAddButton');
+                        if (tagAddButton) {
+                            modalTagBox.insertBefore(tagElement, tagAddButton);
+                        } else {
+                            modalTagBox.appendChild(tagElement);
+                        }
+                    });
+                    
+                    console.log('Seasonal tags updated successfully in modal');
+                }
+            }
+        } catch (error) {
+            console.error('Error updating seasonal tags in modal:', error);
+        }
     }
 
 
