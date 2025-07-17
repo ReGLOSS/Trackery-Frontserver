@@ -54,9 +54,15 @@ function getMapInstance() {
         // 홈 페이지의 modalMapPickerModal 내부의 지도 찾기
         const mapElement = mapPickerModal.querySelector('#map');
         if (mapElement && window.sop) {
-            // 항상 새로운 지도를 생성하도록 강제 초기화
+            // 기존 지도 인스턴스가 있으면 반환
+            if (window.modalMap && window.modalMap._container) {
+                console.log('Using existing modal map instance');
+                return window.modalMap;
+            }
+            
+            // 새로운 지도 생성
             try {
-                console.log('Forcing complete map reset...');
+                console.log('Creating new modal map instance...');
                 
                 // 전역 변수 초기화
                 if (window.modalMap) {
@@ -91,7 +97,7 @@ function getMapInstance() {
                 return window.modalMap;
                 
             } catch (error) {
-                console.error('지도 강제 재초기화 오류:', error);
+                console.error('지도 생성 오류:', error);
                 return null;
             }
         }
@@ -103,7 +109,15 @@ function getMapInstance() {
 // 지도 클릭 이벤트는 지도 인스턴스가 초기화된 후에 바인딩
 function bindMapClickEvent() {
     const mapInstance = getMapInstance();
-    if (mapInstance && !mapInstance._mapClickEventBound) {
+    if (mapInstance) {
+        console.log('Binding map click event to instance:', mapInstance);
+        
+        // 기존 이벤트 리스너 제거
+        if (mapInstance._mapClickEventBound) {
+            mapInstance.off("click");
+            mapInstance._mapClickEventBound = false;
+        }
+        
         mapInstance.on("click", function (e) {
             setTimeout(function () {
                 let x_coor = e.utmk.x;
@@ -125,6 +139,9 @@ function bindMapClickEvent() {
             }, 200);
         });
         mapInstance._mapClickEventBound = true;
+        console.log('Map click event bound successfully');
+    } else {
+        console.warn('Map instance not found for event binding');
     }
 }
 
@@ -280,25 +297,12 @@ function fetchLocationName(utmkcoor) {
                 mapPickSubmitBtn.disabled = false;
             }
 
-            // 기존 태그 분류: 계절태그와 위치태그 분리
-            let existingSeasonTags = [];
-            let existingLocationTags = [];
+            // 기존 태그 유지하면서 새로운 위치태그만 추가
+            let existingTags = [];
             const selectedImage = document.querySelector(".gallery-image.selected");
             if (selectedImage && selectedImage.dataset.tags) {
                 try {
-                    const existingTags = JSON.parse(selectedImage.dataset.tags);
-                    existingSeasonTags = existingTags.filter(tag => 
-                        tag.tagName && (
-                            tag.tagName.includes('봄') || tag.tagName.includes('여름') || 
-                            tag.tagName.includes('가을') || tag.tagName.includes('겨울')
-                        )
-                    );
-                    existingLocationTags = existingTags.filter(tag => 
-                        tag.tagName && !(
-                            tag.tagName.includes('봄') || tag.tagName.includes('여름') || 
-                            tag.tagName.includes('가을') || tag.tagName.includes('겨울')
-                        )
-                    );
+                    existingTags = JSON.parse(selectedImage.dataset.tags);
                 } catch (e) {
                     console.log('기존 태그 파싱 실패:', e);
                 }
@@ -313,18 +317,20 @@ function fetchLocationName(utmkcoor) {
                 newLocationTags = [...newLocationTags, ...regionalTags];
             }
 
-            // 중복 제거: 기존 위치태그와 새로운 위치태그 비교
+            // 중복 제거: 기존 태그와 새로운 위치태그 비교
             const uniqueLocationTags = newLocationTags.filter(newTag => 
-                !existingLocationTags.some(existingTag => existingTag.tagName === newTag.tagName)
+                !existingTags.some(existingTag => existingTag.tagName === newTag.tagName)
             );
 
-            // 기존 계절태그 + 기존 위치태그 + 새로운 위치태그(중복 제거) 결합
-            const combinedTags = [...existingSeasonTags, ...existingLocationTags, ...uniqueLocationTags];
+            // 기존 태그 + 새로운 위치태그(중복 제거) 결합
+            const combinedTags = [...existingTags, ...uniqueLocationTags];
 
             foundLocationData = {
                 longitude: wgs84.longitude,
                 latitude: wgs84.latitude,
                 locationName: displayLocationName,
+                sdName: sdName,
+                sggName: sggName,
                 tags: combinedTags
             };
             window.foundLocationData = foundLocationData;

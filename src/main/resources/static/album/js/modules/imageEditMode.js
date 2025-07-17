@@ -153,7 +153,8 @@ export const ImageEditMode = {
                 await this.updateMainGalleryImageCount();
                 
             } else {
-                UiUpdater.showNotification('변경사항이 없습니다.', 'info');
+                // 변경사항이 없는 경우 취소와 동일하게 처리
+                console.log('변경사항이 없어 편집 모드를 종료합니다.');
             }
         } catch (error) {
             console.error('이미지 편집 저장 중 오류:', error);
