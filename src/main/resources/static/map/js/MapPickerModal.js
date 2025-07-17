@@ -9,6 +9,15 @@ const resultForm = mapPickerModal?.querySelector('#mapPickResultForm');
 if (modalToggleButton && modalToggleButton.id === 'editLocationBtn') {
     modalToggleButton.addEventListener('click', () => {
         if (mapPickerModal && !mapPickerModal.classList.contains('show')) {
+            // 모달을 열기 전에 상태 초기화 (resetVariations 대신 부분 초기화)
+            if (resultForm) {
+                resultForm.value = "";
+                resultForm.classList.remove("valid", "invalid");
+            }
+            if (mapPickSubmitBtn) {
+                mapPickSubmitBtn.disabled = true;
+            }
+            
             mapPickerModal.classList.toggle('show');
 
             window.scrollTo({
@@ -17,6 +26,21 @@ if (modalToggleButton && modalToggleButton.id === 'editLocationBtn') {
             });
 
             window.dispatchEvent(new Event('resize'));
+            
+            // 선택된 이미지의 기존 좌표가 있으면 지도에 표시
+            const selectedImage = document.querySelector('.gallery-image.selected');
+            if (selectedImage && selectedImage.dataset.latitude && selectedImage.dataset.longitude) {
+                const latitude = parseFloat(selectedImage.dataset.latitude);
+                const longitude = parseFloat(selectedImage.dataset.longitude);
+                const location = selectedImage.dataset.location || "현재 위치";
+                
+                console.log('Showing existing location on map:', {latitude, longitude, location});
+                
+                // 지도가 완전히 로드된 후 좌표 표시
+                setTimeout(() => {
+                    showLocationOnMap(latitude, longitude, location);
+                }, 500);
+            }
         }
     });
 }
@@ -30,16 +54,52 @@ function getMapInstance() {
         // 홈 페이지의 modalMapPickerModal 내부의 지도 찾기
         const mapElement = mapPickerModal.querySelector('#map');
         if (mapElement && window.sop) {
-            // 이미 생성된 지도가 있는지 확인
-            if (!window.modalMap) {
-                window.modalMap = sop.map(mapElement, {
+            // 기존 지도 인스턴스가 있으면 반환
+            if (window.modalMap && window.modalMap._container) {
+                console.log('Using existing modal map instance');
+                return window.modalMap;
+            }
+            
+            // 새로운 지도 생성
+            try {
+                console.log('Creating new modal map instance...');
+                
+                // 전역 변수 초기화
+                if (window.modalMap) {
+                    try {
+                        window.modalMap.remove();
+                    } catch (e) {
+                        console.warn('Error removing modalMap:', e);
+                    }
+                    window.modalMap = null;
+                }
+                
+                // DOM 요소 완전 재생성
+                const mapContainer = mapElement.parentNode;
+                const newMapElement = document.createElement('div');
+                newMapElement.id = 'map';
+                newMapElement.style.width = '100%';
+                newMapElement.style.height = '32vh';
+                
+                // 기존 요소 제거 후 새 요소 추가
+                mapContainer.removeChild(mapElement);
+                mapContainer.appendChild(newMapElement);
+                
+                // 새 지도 생성
+                window.modalMap = sop.map(newMapElement, {
                     zoomSliderControl: false,
                     measureControl: false,
                     attributionControl: false
                 });
                 window.modalMap.setView(sop.utmk(953820, 1953437), 9);
+                console.log('새 지도 생성 완료');
+                
+                return window.modalMap;
+                
+            } catch (error) {
+                console.error('지도 생성 오류:', error);
+                return null;
             }
-            return window.modalMap;
         }
     }
     // 기본 map 인스턴스 반환 (업로드 페이지)
@@ -49,7 +109,15 @@ function getMapInstance() {
 // 지도 클릭 이벤트는 지도 인스턴스가 초기화된 후에 바인딩
 function bindMapClickEvent() {
     const mapInstance = getMapInstance();
-    if (mapInstance && !mapInstance._mapClickEventBound) {
+    if (mapInstance) {
+        console.log('Binding map click event to instance:', mapInstance);
+        
+        // 기존 이벤트 리스너 제거
+        if (mapInstance._mapClickEventBound) {
+            mapInstance.off("click");
+            mapInstance._mapClickEventBound = false;
+        }
+        
         mapInstance.on("click", function (e) {
             setTimeout(function () {
                 let x_coor = e.utmk.x;
@@ -71,6 +139,9 @@ function bindMapClickEvent() {
             }, 200);
         });
         mapInstance._mapClickEventBound = true;
+        console.log('Map click event bound successfully');
+    } else {
+        console.warn('Map instance not found for event binding');
     }
 }
 
@@ -129,6 +200,32 @@ function convertUTMKtoWGS84(x, y) {
     }
 }
 
+function convertWGS84toUTMK(longitude, latitude) {
+    const proj4 = window.proj4;
+    if (!proj4) {
+        console.error("좌표 변환 라이브러리 로드 안 됨.")
+        return;
+    }
+
+    // WGS84 좌표계 정의 (EPSG:4326)
+    const wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
+    // UTM-K 좌표계 정의 (EPSG:5179)
+    const utmk = "+proj=tmerc +lat_0=38 +lon_0=127.5 +k=0.9996 +x_0=1000000 +y_0=2000000 +ellps=GRS80 +units=m +no_defs";
+
+    // 변환 실행 - proj4 result[0] = x, result[1] = y
+    const result = proj4(wgs84, utmk, [longitude, latitude]);
+
+    console.log('WGS84 to UTMK conversion:');
+    console.log('Input WGS84:', {longitude, latitude});
+    console.log('Output UTMK array:', result);
+    console.log('Parsed as x:', result[0], 'y:', result[1]);
+
+    return {
+        x: result[0],  // result[0] is x (UTMK x coordinate)
+        y: result[1]   // result[1] is y (UTMK y coordinate)
+    }
+}
+
 let foundLocationData = {longitude: 0, latitude: 0, locationName: "", tags: []}
 
 // 전역 변수로 내보내기 (map.js에서 사용)
@@ -172,8 +269,8 @@ function fetchLocationName(utmkcoor) {
         },
         credentials: "include",
         body: JSON.stringify({
-            longitude: wgs84.longitude,
-            latitude: wgs84.latitude
+            latitude: wgs84.latitude,
+            longitude: wgs84.longitude
         })
     }).then(async (locationResponse) => {
         const locationData = await locationResponse.json();
@@ -200,39 +297,40 @@ function fetchLocationName(utmkcoor) {
                 mapPickSubmitBtn.disabled = false;
             }
 
-            // 기존 계절태그 유지: 현재 선택된 이미지의 태그에서 계절태그 추출
-            let existingSeasonTags = [];
+            // 기존 태그 유지하면서 새로운 위치태그만 추가
+            let existingTags = [];
             const selectedImage = document.querySelector(".gallery-image.selected");
             if (selectedImage && selectedImage.dataset.tags) {
                 try {
-                    const existingTags = JSON.parse(selectedImage.dataset.tags);
-                    existingSeasonTags = existingTags.filter(tag => 
-                        tag.tagName && (
-                            tag.tagName.includes('봄') || tag.tagName.includes('여름') || 
-                            tag.tagName.includes('가을') || tag.tagName.includes('겨울')
-                        )
-                    );
+                    existingTags = JSON.parse(selectedImage.dataset.tags);
                 } catch (e) {
                     console.log('기존 태그 파싱 실패:', e);
                 }
             }
 
-            // 위치태그만 새로 구성: sdName, sggName을 최우선으로 추가
-            let locationTags = [];
-            if (sdName) locationTags.push({ tagName: sdName, tagId: 'sdName' });
-            if (sggName) locationTags.push({ tagName: sggName, tagId: 'sggName' });
+            // 새로운 위치태그 구성: sdName, sggName을 최우선으로 추가
+            let newLocationTags = [];
+            if (sdName) newLocationTags.push({ tagName: sdName, tagId: 'sdName' });
+            if (sggName) newLocationTags.push({ tagName: sggName, tagId: 'sggName' });
 
             if (regionalTags && Array.isArray(regionalTags)) {
-                locationTags = [...locationTags, ...regionalTags];
+                newLocationTags = [...newLocationTags, ...regionalTags];
             }
 
-            // 기존 계절태그 + 새로운 위치태그 결합
-            const combinedTags = [...existingSeasonTags, ...locationTags];
+            // 중복 제거: 기존 태그와 새로운 위치태그 비교
+            const uniqueLocationTags = newLocationTags.filter(newTag => 
+                !existingTags.some(existingTag => existingTag.tagName === newTag.tagName)
+            );
+
+            // 기존 태그 + 새로운 위치태그(중복 제거) 결합
+            const combinedTags = [...existingTags, ...uniqueLocationTags];
 
             foundLocationData = {
                 longitude: wgs84.longitude,
                 latitude: wgs84.latitude,
                 locationName: displayLocationName,
+                sdName: sdName,
+                sggName: sggName,
                 tags: combinedTags
             };
             window.foundLocationData = foundLocationData;
@@ -300,6 +398,106 @@ cancelMapPickBtn?.addEventListener('click', function () {
     mapPickerModal.classList.remove('show');
     resetVariations();
 });
+
+// 기존 좌표를 지도 중심으로 설정하고 마커 표시하는 함수
+function showLocationOnMap(latitude, longitude, locationName) {
+    console.log('=== SHOWING LOCATION ON MAP ===');
+    console.log('Input coordinates:', {latitude, longitude, locationName});
+    
+    if (!longitude || !latitude) {
+        console.error('Invalid coordinates provided');
+        return;
+    }
+    
+    const mapInstance = getMapInstance();
+    if (!mapInstance) {
+        console.error('Map instance not found');
+        return;
+    }
+    
+    // WGS84 좌표를 UTMK로 변환 (longitude, latitude 순서로 전달)
+    const utmkCoords = convertWGS84toUTMK(longitude, latitude);
+    console.log('Converted to UTMK:', utmkCoords);
+    
+    if (!utmkCoords) {
+        console.error('Failed to convert coordinates');
+        return;
+    }
+    
+    // 기존 마커 제거
+    if (currentMarker) {
+        mapInstance.removeLayer(currentMarker);
+    }
+    
+    // 지도 중심을 해당 좌표로 이동
+    const utmkPoint = sop.utmk(utmkCoords.x, utmkCoords.y);
+    mapInstance.setView(utmkPoint, 15); // 확대 레벨 15로 설정
+    
+    // 마커 생성 및 표시
+    currentMarker = sop.marker(utmkCoords);
+    currentMarker.addTo(mapInstance);
+    
+    // 결과 폼에 위치 이름 표시
+    if (resultForm) {
+        resultForm.value = locationName || "현재 위치";
+        toggleValidationClass(resultForm, true);
+    }
+    
+    // 버튼 활성화
+    if (mapPickSubmitBtn) {
+        mapPickSubmitBtn.disabled = false;
+    }
+    
+    // foundLocationData 업데이트
+    foundLocationData = {
+        longitude: longitude,
+        latitude: latitude,
+        locationName: locationName || "현재 위치",
+        tags: []
+    };
+    window.foundLocationData = foundLocationData;
+    
+    console.log('Map centered and marker placed successfully');
+    console.log('=== END SHOWING LOCATION ON MAP ===');
+}
+
+// 전역으로 노출 (다른 스크립트에서 사용 가능)
+window.showLocationOnMap = showLocationOnMap;
+window.resetMapInstance = resetMapInstance;
+
+// 지도 인스턴스 완전 리셋 함수
+function resetMapInstance() {
+    console.log('Resetting map instance completely...');
+    
+    if (window.modalMap) {
+        try {
+            window.modalMap.remove();
+        } catch (e) {
+            console.warn('Error removing modal map:', e);
+        }
+        window.modalMap = null;
+    }
+    
+    const mapElement = mapPickerModal?.querySelector('#map');
+    if (mapElement) {
+        try {
+            // DOM 요소 완전 재생성
+            const mapContainer = mapElement.parentNode;
+            const newMapElement = document.createElement('div');
+            newMapElement.id = 'map';
+            newMapElement.style.width = '100%';
+            newMapElement.style.height = '32vh';
+            
+            // 기존 요소 제거 후 새 요소 추가
+            mapContainer.removeChild(mapElement);
+            mapContainer.appendChild(newMapElement);
+            
+            console.log('Map DOM element recreated');
+        } catch (e) {
+            console.warn('Error recreating map element:', e);
+        }
+    }
+}
 
 function resetVariations() {
     const mapInstance = getMapInstance();

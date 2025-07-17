@@ -828,6 +828,17 @@ class MapManager {
         tagInput.placeholder = '태그 입력 후 Enter';
         tagInput.style.display = 'none'; // 기본적으로 숨김
         tagInput.id = 'modalTagInput';
+        
+        // 태그 추가 버튼 클릭 이벤트 리스너
+        tagAddButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showTagInput();
+        });
+        
+        // 태그 입력 필드 키다운 이벤트 리스너
+        tagInput.addEventListener('keydown', (e) => {
+            this.handleTagInputKeydown(e);
+        });
 
         if (imageData.tags && imageData.tags.length > 0) {
             imageData.tags.forEach(tag => {
@@ -912,7 +923,21 @@ class MapManager {
         const modalEditBtn = document.getElementById('modalEditBtn');
         modalEditBtn.dataset.imageId = imageData.imageId;
 
-        // 원본 데이터 저장
+        // 좌표 교정 (한국 범위 확인: 위도 33-43, 경도 124-132)
+        let correctedLatitude = imageData.latitude;
+        let correctedLongitude = imageData.longitude;
+        
+        // 좌표가 뒤바뀐 경우 교정
+        if (imageData.latitude >= 124 && imageData.latitude <= 132 && 
+            imageData.longitude >= 33 && imageData.longitude <= 43) {
+            console.log('Detected swapped coordinates in modal data, correcting...');
+            console.log('Original - latitude:', imageData.latitude, 'longitude:', imageData.longitude);
+            correctedLatitude = imageData.longitude;  // longitude를 latitude로
+            correctedLongitude = imageData.latitude;  // latitude를 longitude로
+            console.log('Corrected - latitude:', correctedLatitude, 'longitude:', correctedLongitude);
+        }
+
+        // 원본 데이터 저장 (교정된 좌표 사용)
         this.originalModalData = {
             imageContent: imageData.imageContent || '',
             tags: imageData.tags || [],
@@ -920,7 +945,9 @@ class MapManager {
             imageDate: imageData.imageDate || '',
             sdName: imageData.sdName || '',
             sggName: imageData.sggName || '',
-            locationName: locationText
+            locationName: locationText,
+            latitude: correctedLatitude,
+            longitude: correctedLongitude
         };
 
         // 편집 모드 초기화
@@ -932,6 +959,9 @@ class MapManager {
 
         // 모달 맵 픽커 초기화
         this.initModalMapPicker();
+        
+        // 지도에서 보기 버튼 초기화
+        this.initViewOnMapButton();
     }
 
     // 모달 표시
@@ -1534,18 +1564,52 @@ class MapManager {
     showModalMapPicker() {
         const modalMapPickerModal = document.getElementById('modalMapPickerModal');
         if (modalMapPickerModal) {
+            // 기존 지도 인스턴스 완전 리셋
+            if (typeof window.resetMapInstance === 'function') {
+                window.resetMapInstance();
+            }
+            
             modalMapPickerModal.classList.add('show');
 
-            // 맵 크기 조정만 수행 (지도는 이미 초기화되어 있음)
+            // 맵 크기 조정 및 초기화
             setTimeout(() => {
-                window.dispatchEvent(new Event('resize'));
-
-                // 지도 클릭 이벤트는 처음 한 번만 바인딩되어야 함
-                if (typeof window.bindMapClickEvent === 'function' && !this.mapClickEventBound) {
+                // 지도 클릭 이벤트 바인딩 (항상 실행)
+                if (typeof window.bindMapClickEvent === 'function') {
                     window.bindMapClickEvent();
-                    this.mapClickEventBound = true;
                 }
-            }, 100);
+                
+                // 현재 표시된 이미지의 좌표가 있으면 지도에 표시
+                if (this.originalModalData.latitude && this.originalModalData.longitude) {
+                    const latitude = this.originalModalData.latitude;
+                    const longitude = this.originalModalData.longitude;
+                    const locationName = this.originalModalData.locationName || "현재 위치";
+                    
+                    console.log('Showing current image location on map:', {latitude, longitude, locationName});
+                    
+                    // 지도 생성을 위한 더 긴 대기 시간
+                    setTimeout(() => {
+                        if (window.showLocationOnMap) {
+                            window.showLocationOnMap(latitude, longitude, locationName);
+                        }
+                        
+                        // 기존 좌표 표시 후 추가로 이벤트 바인딩
+                        setTimeout(() => {
+                            if (typeof window.bindMapClickEvent === 'function') {
+                                console.log('Re-binding map click event after location display');
+                                window.bindMapClickEvent();
+                            }
+                        }, 500);
+                    }, 1000);
+                } else {
+                    // 좌표가 없어도 이벤트 바인딩 재실행
+                    setTimeout(() => {
+                        if (typeof window.bindMapClickEvent === 'function') {
+                            console.log('Re-binding map click event (no existing coordinates)');
+                            window.bindMapClickEvent();
+                        }
+                    }, 1000);
+                }
+            }, 500);
         }
     }
 
@@ -1620,18 +1684,8 @@ class MapManager {
 
         // 태그 추가 버튼과 입력 필드 표시
         const tagAddButton = document.getElementById('modalTagAddButton');
-        const tagInput = document.getElementById('modalTagInput');
-
         if (tagAddButton) {
             tagAddButton.style.display = 'block';
-            // 태그 추가 버튼 이벤트 등록
-            tagAddButton.addEventListener('click', () => this.showTagInput());
-        }
-
-        if (tagInput) {
-            // 태그 입력 이벤트 등록
-            tagInput.addEventListener('keydown', (e) => this.handleTagInputKeydown(e));
-            tagInput.addEventListener('blur', () => this.hideTagInput());
         }
     }
 
@@ -1656,6 +1710,7 @@ class MapManager {
 
         if (tagInput) {
             tagInput.style.display = 'none';
+            tagInput.value = ''; // 입력 필드 초기화
         }
     }
 
@@ -1805,46 +1860,117 @@ class MapManager {
         console.log('Original tags:', this.originalModalData.tags);
         console.log('Current tags:', currentTags);
 
-        // 원본 태그와 비교하여 삭제된 태그 찾기
+        // 태그 분류 함수
+        const classifyTagType = (tagName) => {
+            if (!tagName) return 'unknown';
+            
+            // 계절 태그 (봄, 여름, 가을, 겨울 포함)
+            if (tagName.includes('봄') || tagName.includes('여름') || tagName.includes('가을') || tagName.includes('겨울')) {
+                return 'seasonal';
+            }
+            
+            // 시도 태그 (지역명 패턴)
+            if (tagName.includes('시') || tagName.includes('도') || tagName.includes('특별시') || tagName.includes('광역시') || tagName.includes('특별자치시')) {
+                return 'sido';
+            }
+            
+            // 시군구 태그
+            if (tagName.includes('군') || tagName.includes('구') || tagName.includes('시')) {
+                return 'sigungu';
+            }
+            
+            // 나머지는 커스텀 태그
+            return 'custom';
+        };
+
+        // 원본 태그들을 타입별로 분류
+        const originalTagsByType = {
+            sido: [],
+            sigungu: [],
+            seasonal: [],
+            custom: []
+        };
+
         if (this.originalModalData.tags) {
             this.originalModalData.tags.forEach(originalTag => {
-                const originalTagId = typeof originalTag === 'object' ? originalTag.tagId : null;
                 const originalTagName = typeof originalTag === 'object' ? (originalTag.tagName || originalTag.name || originalTag) : originalTag;
+                const originalTagId = typeof originalTag === 'object' ? originalTag.tagId : null;
+                const type = classifyTagType(originalTagName);
                 
-                console.log('Checking original tag:', { originalTagId, originalTagName });
-                
-                // 현재 태그 목록에서 원본 태그를 찾을 수 없으면 삭제된 것
-                const stillExists = currentTags.some(currentTag => {
-                    const tagIdMatch = originalTagId && currentTag.tagId && currentTag.tagId === originalTagId.toString();
-                    const tagNameMatch = currentTag.tagName === originalTagName;
-                    console.log(`Comparing with current tag: ${currentTag.tagName} (ID: ${currentTag.tagId})`);
-                    console.log(`Tag ID match: ${tagIdMatch}, Tag name match: ${tagNameMatch}`);
-                    return tagIdMatch || tagNameMatch;
+                originalTagsByType[type].push({
+                    tagId: originalTagId,
+                    tagName: originalTagName
                 });
-
-                console.log(`Tag ${originalTagName} still exists: ${stillExists}`);
-
-                if (!stillExists && originalTagId && !originalTagId.toString().startsWith('custom-') && !originalTagId.toString().startsWith('location-')) {
-                    console.log(`Adding tag to remove: ${originalTagId}`);
-                    tagsToRemove.push(parseInt(originalTagId));
-                }
             });
         }
 
-        // 새로 추가된 태그 찾기 (original에 없고 current에 있는 태그)
-        currentTags.forEach(currentTag => {
-            const isOriginal = this.originalModalData.tags && this.originalModalData.tags.some(originalTag => {
-                const originalTagId = typeof originalTag === 'object' ? originalTag.tagId : null;
-                const originalTagName = typeof originalTag === 'object' ? (originalTag.tagName || originalTag.name || originalTag) : originalTag;
-                
-                const tagIdMatch = originalTagId && currentTag.tagId && currentTag.tagId === originalTagId.toString();
-                const tagNameMatch = currentTag.tagName === originalTagName;
-                return tagIdMatch || tagNameMatch;
-            });
+        // 현재 태그들을 타입별로 분류
+        const currentTagsByType = {
+            sido: [],
+            sigungu: [],
+            seasonal: [],
+            custom: []
+        };
 
-            // 원본에 없는 새로운 태그이면 추가 목록에 포함
-            if (!isOriginal && currentTag.tagName) {
-                console.log(`Adding new tag: ${currentTag.tagName}`);
+        currentTags.forEach(currentTag => {
+            const type = classifyTagType(currentTag.tagName);
+            currentTagsByType[type].push(currentTag);
+        });
+
+        console.log('Original tags by type:', originalTagsByType);
+        console.log('Current tags by type:', currentTagsByType);
+
+        // 각 타입별로 변경사항 확인
+        ['sido', 'sigungu', 'seasonal'].forEach(type => {
+            const originalTags = originalTagsByType[type];
+            const currentTags = currentTagsByType[type];
+            
+            // 태그 이름만 비교하여 변화 확인
+            const originalNames = originalTags.map(tag => tag.tagName).sort();
+            const currentNames = currentTags.map(tag => tag.tagName).sort();
+            
+            const hasChanges = JSON.stringify(originalNames) !== JSON.stringify(currentNames);
+            console.log(`${type} tags changed:`, hasChanges);
+            
+            if (hasChanges) {
+                // 변화가 있으면 삭제할 태그 추가
+                originalTags.forEach(originalTag => {
+                    const stillExists = currentTags.some(currentTag => currentTag.tagName === originalTag.tagName);
+                    if (!stillExists && originalTag.tagId && !originalTag.tagId.toString().startsWith('custom-') && !originalTag.tagId.toString().startsWith('location-') && !originalTag.tagId.toString().startsWith('season-')) {
+                        console.log(`Adding ${type} tag to remove: ${originalTag.tagId}`);
+                        tagsToRemove.push(parseInt(originalTag.tagId));
+                    }
+                });
+                
+                // 변화가 있으면 추가할 태그 추가
+                currentTags.forEach(currentTag => {
+                    const wasOriginal = originalTags.some(originalTag => originalTag.tagName === currentTag.tagName);
+                    if (!wasOriginal && currentTag.tagName) {
+                        console.log(`Adding new ${type} tag: ${currentTag.tagName}`);
+                        tagsToAdd.push(currentTag.tagName);
+                    }
+                });
+            }
+        });
+
+        // 커스텀 태그는 기존 로직대로 처리
+        const originalCustomTags = originalTagsByType.custom;
+        const currentCustomTags = currentTagsByType.custom;
+        
+        // 삭제된 커스텀 태그 찾기
+        originalCustomTags.forEach(originalTag => {
+            const stillExists = currentCustomTags.some(currentTag => currentTag.tagName === originalTag.tagName);
+            if (!stillExists && originalTag.tagId && !originalTag.tagId.toString().startsWith('custom-') && !originalTag.tagId.toString().startsWith('location-') && !originalTag.tagId.toString().startsWith('season-')) {
+                console.log(`Adding custom tag to remove: ${originalTag.tagId}`);
+                tagsToRemove.push(parseInt(originalTag.tagId));
+            }
+        });
+        
+        // 추가된 커스텀 태그 찾기
+        currentCustomTags.forEach(currentTag => {
+            const wasOriginal = originalCustomTags.some(originalTag => originalTag.tagName === currentTag.tagName);
+            if (!wasOriginal && currentTag.tagName) {
+                console.log(`Adding new custom tag: ${currentTag.tagName}`);
                 tagsToAdd.push(currentTag.tagName);
             }
         });
@@ -1990,10 +2116,48 @@ class MapManager {
             }
         }
 
-        // 기존 태그들 제거 (추가 버튼과 입력 필드는 유지)
+        // 기존 커스텀 태그 보존 (태그 분류 함수 사용)
         const existingTags = modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)');
-        console.log('Removing existing tags for location change:', existingTags.length);
-        existingTags.forEach(tag => tag.remove());
+        const customTags = [];
+        
+        // 태그 분류 함수 (getTagChanges에서 사용한 것과 동일)
+        const classifyTagType = (tagName) => {
+            if (!tagName) return 'unknown';
+            
+            // 계절 태그 (봄, 여름, 가을, 겨울 포함)
+            if (tagName.includes('봄') || tagName.includes('여름') || tagName.includes('가을') || tagName.includes('겨울')) {
+                return 'seasonal';
+            }
+            
+            // 시도 태그 (지역명 패턴)
+            if (tagName.includes('시') || tagName.includes('도') || tagName.includes('특별시') || tagName.includes('광역시') || tagName.includes('특별자치시')) {
+                return 'sido';
+            }
+            
+            // 시군구 태그
+            if (tagName.includes('군') || tagName.includes('구') || tagName.includes('시')) {
+                return 'sigungu';
+            }
+            
+            // 나머지는 커스텀 태그
+            return 'custom';
+        };
+        
+        existingTags.forEach(tag => {
+            const tagName = tag.dataset.tagName;
+            const tagType = classifyTagType(tagName);
+            
+            // 커스텀 태그만 보존
+            if (tagType === 'custom') {
+                customTags.push({
+                    tagId: tag.dataset.tagId,
+                    tagName: tag.dataset.tagName
+                });
+            }
+            tag.remove();
+        });
+        
+        console.log('Preserved custom tags:', customTags);
 
         // 새로운 위치 기반 태그들 추가
         if (newTags && newTags.length > 0) {
@@ -2062,6 +2226,34 @@ class MapManager {
                 }
             });
         }
+
+        // 보존한 커스텀 태그들 다시 추가
+        customTags.forEach(tag => {
+            const tagElement = document.createElement('span');
+            tagElement.className = 'tag';
+            tagElement.textContent = tag.tagName;
+            tagElement.dataset.tagId = tag.tagId;
+            tagElement.dataset.tagName = tag.tagName;
+            
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'tag-delete';
+            deleteButton.innerHTML = '×';
+            deleteButton.title = '태그 삭제';
+            deleteButton.style.display = this.isEditMode ? 'flex' : 'none';
+            deleteButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                tagElement.remove();
+            });
+            
+            tagElement.appendChild(deleteButton);
+            
+            const tagAddButton = document.getElementById('modalTagAddButton');
+            if (tagAddButton) {
+                modalTagBox.insertBefore(tagElement, tagAddButton);
+            } else {
+                modalTagBox.appendChild(tagElement);
+            }
+        });
 
         console.log('Location-based tags updated successfully. Final tag count:', modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)').length);
     }
@@ -2177,6 +2369,97 @@ class MapManager {
             }
         } catch (error) {
             console.error('Error updating seasonal tags in modal:', error);
+        }
+    }
+
+    // 지도에서 보기 버튼 초기화
+    initViewOnMapButton() {
+        const modalViewOnMapBtn = document.getElementById('modalViewOnMapBtn');
+        if (modalViewOnMapBtn) {
+            modalViewOnMapBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showImageLocationOnMap();
+            });
+        }
+    }
+
+    // 이미지 위치를 지도에 표시
+    async showImageLocationOnMap() {
+        const modalEditBtn = document.getElementById('modalEditBtn');
+        const imageId = modalEditBtn?.dataset.imageId;
+        
+        if (!imageId) {
+            console.error('Image ID not found');
+            return;
+        }
+
+        console.log('=== SHOW IMAGE LOCATION ON MAP ===');
+        console.log('Image ID:', imageId);
+
+        try {
+            // API에서 최신 이미지 좌표 정보 가져오기
+            const coords = await this.fetchImageCoordinates(imageId);
+            console.log('Fetched coordinates:', coords);
+            
+            if (coords && coords.latitude && coords.longitude) {
+                const latitude = coords.latitude;
+                const longitude = coords.longitude;
+                const locationName = coords.locationName || `${coords.sdName || ''} ${coords.sggName || ''}`.trim() || '현재 위치';
+                
+                console.log('Showing image location on map:', {latitude, longitude, locationName});
+                
+                // 지도 모달 열기
+                this.showModalMapPicker();
+                
+                // 지도가 로드된 후 위치 표시
+                setTimeout(() => {
+                    if (window.showLocationOnMap) {
+                        console.log('Calling showLocationOnMap with:', latitude, longitude, locationName);
+                        window.showLocationOnMap(latitude, longitude, locationName);
+                    } else {
+                        console.error('showLocationOnMap function not found');
+                    }
+                }, 500);
+            } else {
+                console.log('No coordinates found for image:', coords);
+                alert('이미지에 위치 정보가 없습니다.');
+            }
+        } catch (error) {
+            console.error('Error fetching image coordinates:', error);
+            alert('위치 정보를 가져올 수 없습니다.');
+        }
+        
+        console.log('=== END SHOW IMAGE LOCATION ON MAP ===');
+    }
+
+    // 이미지 좌표 정보 가져오기
+    async fetchImageCoordinates(imageId) {
+        try {
+            const response = await fetch(`/api/images/${imageId}`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch image coordinates: ${response.status}`);
+            }
+
+            const responseData = await response.json();
+            const imageData = responseData.data;
+
+            return {
+                latitude: imageData.latitude,
+                longitude: imageData.longitude,
+                locationName: `${imageData.sdName || ''} ${imageData.sggName || ''}`.trim(),
+                sdName: imageData.sdName,
+                sggName: imageData.sggName
+            };
+        } catch (error) {
+            console.error('Error fetching image coordinates:', error);
+            return null;
         }
     }
 
