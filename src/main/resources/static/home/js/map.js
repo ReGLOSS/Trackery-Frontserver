@@ -248,6 +248,59 @@ class MapManager {
         const svgContent = await response.text();
         const mapDisplay = document.getElementById('map-display');
         mapDisplay.innerHTML = svgContent;
+        
+        this.bindMapMouseEvents();
+    }
+
+    bindMapMouseEvents() {
+        const svg = document.querySelector('#map-display svg');
+        const coordinatesDisplay = document.getElementById('coordinatesDisplay');
+        const coordinatesText = document.getElementById('coordinatesText');
+        
+        if (!svg || !coordinatesDisplay || !coordinatesText) return;
+
+        svg.addEventListener('mouseenter', () => {
+            coordinatesDisplay.style.display = 'block';
+        });
+
+        svg.addEventListener('mouseleave', () => {
+            coordinatesDisplay.style.display = 'none';
+        });
+
+        svg.addEventListener('mousemove', (e) => {
+            const svgRect = svg.getBoundingClientRect();
+            const svgBox = svg.viewBox.baseVal;
+            
+            const x = (e.clientX - svgRect.left) / svgRect.width * svgBox.width + svgBox.x;
+            const y = (e.clientY - svgRect.top) / svgRect.height * svgBox.height + svgBox.y;
+            
+            const coords = this.svgToLatLng(x, y);
+            if (coords) {
+                const latDir = coords.lat >= 0 ? 'N' : 'S';
+                const lngDir = coords.lng >= 0 ? 'E' : 'W';
+                coordinatesText.innerHTML = 
+                    `${Math.abs(coords.lat).toFixed(3)}° ${latDir}<br>${Math.abs(coords.lng).toFixed(3)}° ${lngDir}`;
+            }
+        });
+    }
+
+    svgToLatLng(x, y) {
+        const svgBounds = {
+            north: 38.7,
+            south: 33.0,
+            west: 124.5,
+            east: 131.9
+        };
+        
+        const svg = document.querySelector('#map-display svg');
+        if (!svg) return null;
+        
+        const viewBox = svg.viewBox.baseVal;
+        
+        const lat = svgBounds.north - (y / viewBox.height) * (svgBounds.north - svgBounds.south);
+        const lng = svgBounds.west + (x / viewBox.width) * (svgBounds.east - svgBounds.west);
+        
+        return { lat, lng };
     }
 
     bindSidoClickEvents() {
@@ -588,6 +641,18 @@ class MapManager {
                     </div>
                 </div>
             `;
+            
+            // 로그인하지 않은 사용자에게도 좌표 표시 영역 추가
+            const coordinatesDiv = document.createElement('div');
+            coordinatesDiv.className = 'coordinates-display';
+            coordinatesDiv.id = 'coordinatesDisplay';
+            coordinatesDiv.style.cssText = 'margin-top: 20px; font-size: 18px; font-weight: 500; color: #343a40; letter-spacing: 1px; display: none;';
+            coordinatesDiv.innerHTML = '<span id="coordinatesText">37.598° N<br>126.970° E</span>';
+            
+            container.appendChild(coordinatesDiv);
+            
+            // 좌표 표시 div가 생성된 후 마우스 이벤트 바인딩
+            this.bindMapMouseEvents();
             return;
         }
 
@@ -613,12 +678,23 @@ class MapManager {
                     <span class="number">${albumCount}</span><span class="label">Album</span>
              </div>
                 </div>
-</div>
             </div>
         `;
 
         console.log('Generated HTML:', statsHtml);
         container.innerHTML = statsHtml;
+        
+        // 좌표 표시 영역을 stats 밑에 별도로 추가
+        const coordinatesDiv = document.createElement('div');
+        coordinatesDiv.className = 'coordinates-display';
+        coordinatesDiv.id = 'coordinatesDisplay';
+        coordinatesDiv.style.cssText = 'margin-top: 20px; font-size: 18px; font-weight: 500; color: #343a40; letter-spacing: 1px; display: none;';
+        coordinatesDiv.innerHTML = '<span id="coordinatesText">37.598° N, 126.970° E</span>';
+        
+        container.appendChild(coordinatesDiv);
+        
+        // 좌표 표시 div가 생성된 후 마우스 이벤트 바인딩
+        this.bindMapMouseEvents();
     }
 
     // 객체 속성을 재귀적으로 검사하는 헬퍼 함수
