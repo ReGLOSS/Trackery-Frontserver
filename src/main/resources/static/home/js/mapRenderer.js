@@ -22,7 +22,26 @@ export class MapRenderer {
         const mapDisplay = document.getElementById('map-display');
         if (mapDisplay) {
             mapDisplay.innerHTML = svgContent;
+            
+            // SVG viewBox 및 클래스 동적 설정
+            this.setupSvgAttributes(svgPath);
             this.bindMapMouseEvents();
+        }
+    }
+    
+    // SVG 속성 설정
+    setupSvgAttributes(svgPath) {
+        const svg = document.querySelector('#map-display svg');
+        if (!svg) return;
+        
+        // viewBox 설정
+        svg.setAttribute('viewBox', '0 0 1100 1200');
+        
+        // 지도 타입별 클래스 추가
+        if (svgPath.includes('simpleSido.svg')) {
+            svg.classList.add('korea-map');
+        } else if (svgPath.includes('/sigungu/')) {
+            svg.classList.add('sigungu-map');
         }
     }
     
