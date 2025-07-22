@@ -89,7 +89,7 @@ export class StatsRenderer {
         const coordinatesDiv = document.createElement('div');
         coordinatesDiv.className = 'coordinates-display';
         coordinatesDiv.id = 'coordinatesDisplay';
-        coordinatesDiv.innerHTML = '<span id="coordinatesText">37.598° N<br>126.970° E</span>';
+        coordinatesDiv.innerHTML = '<span id="coordinatesText">37° 35′ 53″ N<br>126° 58′ 12″ E</span>';
         
         return coordinatesDiv;
     }

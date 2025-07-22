@@ -50,12 +50,23 @@ export class MapRenderer {
             
             const coords = this.svgToLatLng(x, y);
             if (coords) {
-                const latDir = coords.lat >= 0 ? 'N' : 'S';
-                const lngDir = coords.lng >= 0 ? 'E' : 'W';
-                coordinatesText.innerHTML = 
-                    `${Math.abs(coords.lat).toFixed(3)}° ${latDir}<br>${Math.abs(coords.lng).toFixed(3)}° ${lngDir}`;
+                const latDMS = this.convertDDToDMS(coords.lat, true);
+                const lngDMS = this.convertDDToDMS(coords.lng, false);
+                coordinatesText.innerHTML = `${latDMS}<br>${lngDMS}`;
             }
         });
+    }
+    
+    // 십진도를 도분시로 변환
+    convertDDToDMS(dd, isLatitude) {
+        const absolute = Math.abs(dd);
+        const degrees = Math.floor(absolute);
+        const minutes = Math.floor((absolute - degrees) * 60);
+        const seconds = Math.round(((absolute - degrees) * 60 - minutes) * 60);
+        
+        const direction = isLatitude ? (dd >= 0 ? 'N' : 'S') : (dd >= 0 ? 'E' : 'W');
+        
+        return `${degrees}° ${minutes}′ ${seconds}″ ${direction}`;
     }
     
     // SVG 좌표를 위경도로 변환
