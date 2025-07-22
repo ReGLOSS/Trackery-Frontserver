@@ -1,3 +1,4 @@
+/* ===== BASE LAYOUT ===== */
 .home-container {
     display: flex;
     flex-direction: row;
@@ -34,23 +35,30 @@
     background-color: #d3d9e8;
 }
 
-.stat-line {
-    display: flex;
-    align-items: baseline;
-    margin-bottom: 10px;
-    position: relative;
-    overflow: visible;
-    width: 100%;
-    gap: 30px;
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.label {
-    flex: 0 0 auto;
-    overflow: visible;
-    white-space: nowrap;
-    font-size: 80px;
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
+/* ===== MAP STYLES ===== */
 .map-container {
     width: 100%;
     height: 100%;
@@ -68,18 +76,38 @@
 .map-display {
     flex: 1;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
+    padding-top: 20px;
+    overflow: visible;
 }
 
 .map-display svg {
-    width: 100%;
-    height: 100%;
-    max-height: 100%;
     cursor: pointer;
     object-fit: contain;
 }
 
+/* 전국지도 스타일 */
+.map-display svg.korea-map {
+    height: 100%;
+    width: auto;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* 시군구지도 스타일 */
+.map-display svg.sigungu-map {
+    width: 90%;
+    height: 80vh;
+    max-width: 90%;
+    max-height: 80vh;
+}
+
+.map-display svg g {
+    transform-origin: center;
+}
+
+/* ===== REGION PATH STYLES ===== */
 .region-path {
     stroke: #333;
     transition: fill 0.3s ease, stroke-width 0.3s ease;
@@ -93,6 +121,10 @@
 .sigungu {
     stroke-width: 2;
     fill: #e0e0e0;
+}
+
+.map-display svg.sigungu-map .region-path.sigungu {
+    transition: fill 0.2s ease, stroke-width 0.2s ease;
 }
 
 .region-path:hover {
@@ -119,6 +151,7 @@
     stroke-width: 3px;
 }
 
+/* ===== CONTROLS ===== */
 #back-btn {
     transition: opacity 0.3s ease;
 }
@@ -136,6 +169,7 @@
     color: #6c757d;
 }
 
+/* ===== REGION DISPLAY ===== */
 .selected-region-display {
     background-color: #e7f3ff;
     border: 1px solid #b3d9ff;
@@ -156,17 +190,14 @@
     font-size: 16px;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.coordinates-display {
+    padding: 0 8vh 8vh;
+    font-size: 2rem;
+    color: #343a40;
+    letter-spacing: 0.063rem;
 }
 
+/* ===== USER STATS ===== */
 .user-stats-simple {
     padding: 8vh;
     animation: fadeIn 0.3s ease-in-out;
@@ -180,6 +211,16 @@
     overflow: visible;
 }
 
+.stat-line {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: visible;
+    width: 100%;
+    gap: 30px;
+}
+
 .number {
     margin-right: 1vh;
     font-size: 8rem;
@@ -191,6 +232,13 @@
 }
 
 .label {
+    flex: 0 0 auto;
+    overflow: visible;
+    white-space: nowrap;
+    font-size: 80px;
+}
+
+.stats-text .label {
     font-size: 5rem;
     text-align: left;
 }
@@ -202,7 +250,7 @@
     font-style: italic;
 }
 
-/* Login prompt styles */
+/* ===== LOGIN PROMPT ===== */
 .stats-login-prompt {
     text-align: center;
     padding: 24px;
@@ -236,7 +284,7 @@
     color: white;
 }
 
-/* Region Image Gallery Styles (앨범 스타일 기반) */
+/* ===== REGION IMAGE GALLERY ===== */
 .region-image-gallery {
     width: 100%;
     animation: fadeIn 0.3s ease-in-out;
@@ -353,7 +401,7 @@
     line-height: 1.5;
 }
 
-/* Image Detail Modal Styles */
+/* ===== MODAL STYLES ===== */
 .image-detail-modal {
     position: fixed;
     top: 0;
@@ -387,17 +435,6 @@
     display: flex;
     flex-direction: column;
     animation: modalSlideIn 0.3s ease;
-}
-
-@keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: scale(0.9) translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
 }
 
 .modal-header {
@@ -593,11 +630,4 @@
 
 .modal-footer .btn-primary:hover {
     background-color: #0056b3;
-}
-
-.coordinates-display {
-    padding: 0 8vh 8vh;
-    font-size: 2rem;
-    color: #343a40;
-    letter-spacing: 0.063rem;
 }
