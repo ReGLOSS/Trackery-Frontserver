@@ -70,7 +70,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 2vh;
+}
+
+.map-title {
+    font-size: 8.780vh;
 }
 
 .map-display {
@@ -78,7 +82,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding-top: 20px;
     overflow: visible;
 }
 
@@ -113,12 +116,12 @@
 }
 
 .sido {
-    stroke-width: 2;
+    stroke-width: 0.2%;
     fill: #e0e0e0;
 }
 
 .sigungu {
-    stroke-width: 2;
+    stroke-width: 0.2%;
     fill: #e0e0e0;
 }
 
@@ -128,12 +131,12 @@
 
 .region-path:hover {
     fill: #007bff !important;
-    stroke-width: 3px;
+    stroke-width: 0.2%;
 }
 
 .region-path.selected {
     fill: #dc3545 !important;
-    stroke-width: 3px;
+    stroke-width: 0.2%;
 }
 
 .region-path.has-images {
@@ -142,17 +145,20 @@
 
 .region-path.has-images:hover {
     fill: #007bff !important;
-    stroke-width: 3px;
+    stroke-width: 0.2%;
 }
 
 .region-path.has-images.selected {
     fill: #dc3545 !important;
-    stroke-width: 3px;
+    stroke-width: 0.2%;
 }
 
 /* ===== CONTROLS ===== */
 #back-btn {
-    transition: opacity 0.3s ease;
+    display: none;
+    width: 12vh;
+    height: 12vh;
+    cursor: pointer;
 }
 
 #back-btn:hover {
@@ -163,8 +169,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 400px;
-    font-size: 18px;
+    height: 50vh;
+    font-size: 2vh;
     color: #6c757d;
 }
 
@@ -191,7 +197,7 @@
 
 .coordinates-display {
     padding: 0 8vh 8vh;
-    font-size: 2rem;
+    font-size: 4vh;
     color: #343a40;
     letter-spacing: 0.063rem;
 }
@@ -213,17 +219,17 @@
 .stat-line {
     display: flex;
     align-items: baseline;
-    margin-bottom: 10px;
+    margin-bottom: 1.2vh;
     position: relative;
     overflow: visible;
     width: 100%;
-    gap: 30px;
+    gap: 8%;
 }
 
 .number {
     margin-right: 1vh;
-    font-size: 8rem;
-    line-height: 0.834;
+    font-size: 16vh;
+    line-height: 84%;
     text-align: right;
     flex: 0 0 auto;
     overflow: visible;
@@ -234,11 +240,7 @@
     flex: 0 0 auto;
     overflow: visible;
     white-space: nowrap;
-    font-size: 80px;
-}
-
-.stats-text .label {
-    font-size: 5rem;
+    font-size: 10vh;
     text-align: left;
 }
 
@@ -395,7 +397,7 @@
 }
 
 .no-images p {
-    font-size: 16px;
+    font-size: 2vh;
     margin: 0;
     line-height: 1.5;
 }
