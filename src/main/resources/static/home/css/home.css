@@ -168,23 +168,22 @@
 }
 
 .user-stats-simple {
-    padding: 60px;
+    padding: 8vh;
     animation: fadeIn 0.3s ease-in-out;
     overflow: visible;
 }
 
 .stats-text {
-    font-size: 18px;
     font-weight: 500;
     color: #343a40;
-    letter-spacing: 1px;
+    letter-spacing: 0.063rem;
     overflow: visible;
 }
 
 .number {
-    margin-right: 4px;
-    font-size: 120px;
-    line-height: 100px;
+    margin-right: 1vh;
+    font-size: 8rem;
+    line-height: 0.834;
     text-align: right;
     flex: 0 0 auto;
     overflow: visible;
@@ -192,7 +191,7 @@
 }
 
 .label {
-    font-size: 80px;
+    font-size: 5rem;
     text-align: left;
 }
 
@@ -597,10 +596,9 @@
 }
 
 .coordinates-display {
-    padding: 60px;
-    font-size: 18px;
+    padding: 0 8vh 8vh;
+    font-size: 30px;
     font-weight: 500;
     color: #343a40;
-    letter-spacing: 1px;
-    display: block;
+    letter-spacing: 0.063rem;
 }
