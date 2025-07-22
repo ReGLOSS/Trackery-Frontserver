@@ -35,7 +35,7 @@ export class MapRenderer {
         if (!svg) return;
         
         // viewBox 설정
-        svg.setAttribute('viewBox', '0 0 1400 800');
+        svg.setAttribute('viewBox', '0 -300 1150 1150');
         
         // 지도 타입별 클래스 추가
         if (svgPath.includes('simpleSido.svg')) {
