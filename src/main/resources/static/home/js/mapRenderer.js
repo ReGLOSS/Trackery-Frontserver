@@ -39,7 +39,6 @@ export class MapRenderer {
         });
         
         svg.addEventListener('mouseleave', () => {
-            coordinatesDisplay.style.display = 'none';
         });
         
         svg.addEventListener('mousemove', (e) => {
