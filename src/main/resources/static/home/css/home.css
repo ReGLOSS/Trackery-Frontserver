@@ -167,10 +167,8 @@
     }
 }
 
-/* User Stats Simple Styles */
 .user-stats-simple {
     padding: 60px;
-    margin-bottom: 20px;
     animation: fadeIn 0.3s ease-in-out;
     overflow: visible;
 }
@@ -598,58 +596,11 @@
     background-color: #0056b3;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .home-container {
-        flex-direction: column;
-    }
-    
-    .base-container, .detail-container {
-        width: 100%;
-        height: 50vh;
-    }
-    
-    .region-gallery-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .modal-content {
-        width: 95%;
-        max-height: 95vh;
-    }
-    
-    .modal-body .image-detail {
-        height: 200px;
-    }
-}
-
-@media (max-width: 480px) {
-    .region-gallery-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .region-image-card .image-info-text {
-        font-size: 10px;
-    }
-    
-    .region-image-card .image-date {
-        font-size: 9px;
-    }
-    
-    .modal-content {
-        width: 98%;
-        margin: 10px;
-    }
-    
-    .modal-body .image-detail {
-        height: 180px;
-    }
-    
-    .modal-footer {
-        flex-direction: column;
-    }
-    
-    .modal-footer .btn {
-        width: 100%;
-    }
+.coordinates-display {
+    padding: 60px;
+    font-size: 18px;
+    font-weight: 500;
+    color: #343a40;
+    letter-spacing: 1px;
+    display: block;
 }
