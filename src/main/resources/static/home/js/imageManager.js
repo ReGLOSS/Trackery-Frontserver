@@ -105,8 +105,9 @@ export class ImageManager {
         imageCards.forEach(card => {
             card.addEventListener('click', (e) => {
                 const imageId = card.dataset.imageId;
+                const thumbnailUrl = card.querySelector('img').src;
                 if (this.modalManager) {
-                    this.modalManager.showImageDetail(imageId);
+                    this.modalManager.showImageDetail(imageId, thumbnailUrl);
                 }
             });
         });

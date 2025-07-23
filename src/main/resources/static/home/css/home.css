@@ -371,13 +371,33 @@
     display: block;
 }
 
-.modal-body .image-detail {
-    width: auto;
-    height: 36vh;
-    object-fit: contain;
-    border-radius: 0.8vh;
-    margin: 0 auto 2vh;
+.modal-body .image-container {
+    position: relative;
     display: block;
+    margin: 0 auto 2vh;
+    cursor: pointer;
+}
+
+.modal-body .image-container .image-detail {
+    width: auto !important;
+    height: 36vh !important;
+    object-fit: contain !important;
+    border-radius: 0.8vh !important;
+    display: block;
+}
+
+.modal-body .image-container .image-detail.fullsize {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: auto;
+    height: 80vh;
+    max-height: 90vh;
+    object-fit: contain;
+    z-index: 10000;
+    border-radius: 0.8vh;
+    cursor: zoom-out;
 }
 
 .modal-body .description-area,

@@ -44,9 +44,10 @@ export class ModalManager {
     }
     
     // 이미지 상세 보기
-    async showImageDetail(imageId) {
+    async showImageDetail(imageId, galleryThumbnailUrl = null) {
         console.log('=== SHOWING IMAGE DETAIL ===');
         console.log('Image ID:', imageId);
+        console.log('Gallery Thumbnail URL:', galleryThumbnailUrl);
         
         try {
             // 원본 이미지 상세 정보를 API에서 가져오기
@@ -67,6 +68,11 @@ export class ModalManager {
             
             console.log('Fetched image data:', imageData);
             
+            // 갤러리에서 전달받은 썸네일 URL이 있으면 사용
+            if (galleryThumbnailUrl) {
+                imageData.galleryThumbnailUrl = galleryThumbnailUrl;
+            }
+            
             // 모달에 원본 이미지 데이터 채우기
             this.populateImageModal(imageData);
             
@@ -86,8 +92,16 @@ export class ModalManager {
         // 이미지
         const modalImage = document.getElementById('modalImage');
         if (modalImage) {
-            modalImage.src = imageData.imageUrl || '/images/default-image4.webp';
+            // 이전 이미지 제거를 위해 빈 이미지로 초기화
+            modalImage.src = '';
+            // 갤러리에서 전달받은 썸네일 URL을 우선 사용, 없으면 API의 thumbnailUrl, 마지막으로 imageUrl 사용
+            const thumbnailSrc = imageData.galleryThumbnailUrl || imageData.thumbnailUrl || imageData.imageUrl || '/images/default-image4.webp';
+            modalImage.src = thumbnailSrc;
             modalImage.alt = imageData.imageName || '이미지';
+            modalImage.className = 'image-detail';
+            modalImage.dataset.originalUrl = imageData.imageUrl || thumbnailSrc;
+            modalImage.dataset.thumbnailUrl = thumbnailSrc;
+            this.bindImageClickEvents();
         }
         
         // 설명
@@ -1345,6 +1359,36 @@ export class ModalManager {
         }
         if (modalMapPickSubmitBtn) {
             modalMapPickSubmitBtn.disabled = true;
+        }
+    }
+    
+    // 이미지 클릭 이벤트 바인딩
+    bindImageClickEvents() {
+        const modalImage = document.getElementById('modalImage');
+        
+        if (modalImage) {
+            modalImage.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleImageFullscreen();
+            });
+        }
+    }
+    
+    // 이미지 전체화면 토글
+    toggleImageFullscreen() {
+        const modalImage = document.getElementById('modalImage');
+        if (!modalImage) return;
+        
+        if (modalImage.classList.contains('fullsize')) {
+            // 썸네일로 복원
+            modalImage.src = modalImage.dataset.thumbnailUrl || modalImage.dataset.originalUrl;
+            modalImage.classList.remove('fullsize');
+            modalImage.classList.add('thumbnail');
+        } else {
+            // 원본으로 변경
+            modalImage.src = modalImage.dataset.originalUrl;
+            modalImage.classList.remove('thumbnail');
+            modalImage.classList.add('fullsize');
         }
     }
 }
