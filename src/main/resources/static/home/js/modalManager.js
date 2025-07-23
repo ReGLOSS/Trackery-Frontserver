@@ -35,12 +35,19 @@ export class ModalManager {
         const modalCancelEditBtn = document.getElementById('modalCancelEditBtn');
         const modalSaveBtn = document.getElementById('modalSaveBtn');
         const modalContent = document.querySelector('#imageDetailModal .modal-content');
-        
+        const modalImage = document.getElementById('modalImage');
+
         if (modalEditBtn) modalEditBtn.addEventListener('click', () => this.enterEditMode());
         if (modalDeleteBtn) modalDeleteBtn.addEventListener('click', () => this.deleteImage());
         if (modalCancelEditBtn) modalCancelEditBtn.addEventListener('click', () => this.cancelEditMode());
         if (modalSaveBtn) modalSaveBtn.addEventListener('click', () => this.saveImageChanges());
         if (modalContent) modalContent.addEventListener('click', (e) => e.stopPropagation());
+        if (modalImage) {
+            modalImage.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleImageFullscreen();
+            });
+        }
     }
     
     // 이미지 상세 보기
@@ -98,10 +105,9 @@ export class ModalManager {
             const thumbnailSrc = imageData.galleryThumbnailUrl || imageData.thumbnailUrl || imageData.imageUrl || '/images/default-image4.webp';
             modalImage.src = thumbnailSrc;
             modalImage.alt = imageData.imageName || '이미지';
-            modalImage.className = 'image-detail';
+            modalImage.className = 'image-detail thumbnail';
             modalImage.dataset.originalUrl = imageData.imageUrl || thumbnailSrc;
             modalImage.dataset.thumbnailUrl = thumbnailSrc;
-            this.bindImageClickEvents();
         }
         
         // 설명
@@ -1362,31 +1368,35 @@ export class ModalManager {
         }
     }
     
-    // 이미지 클릭 이벤트 바인딩
-    bindImageClickEvents() {
-        const modalImage = document.getElementById('modalImage');
-        
-        if (modalImage) {
-            modalImage.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.toggleImageFullscreen();
-            });
-        }
-    }
+    
     
     // 이미지 전체화면 토글
     toggleImageFullscreen() {
         const modalImage = document.getElementById('modalImage');
         if (!modalImage) return;
         
+        const originalUrl = modalImage.dataset.originalUrl;
+        const thumbnailUrl = modalImage.dataset.thumbnailUrl;
+        
+        // URL이 없는 경우 클릭 이벤트 무시
+        if (!originalUrl || !thumbnailUrl) {
+            console.warn('Image URLs not properly set');
+            return;
+        }
+        
         if (modalImage.classList.contains('fullsize')) {
             // 썸네일로 복원
-            modalImage.src = modalImage.dataset.thumbnailUrl || modalImage.dataset.originalUrl;
+            modalImage.src = thumbnailUrl;
             modalImage.classList.remove('fullsize');
             modalImage.classList.add('thumbnail');
         } else {
+            // 원본과 썸네일이 같으면 토글하지 않음
+            if (originalUrl === thumbnailUrl) {
+                console.log('Original and thumbnail URLs are the same, no toggle needed');
+                return;
+            }
             // 원본으로 변경
-            modalImage.src = modalImage.dataset.originalUrl;
+            modalImage.src = originalUrl;
             modalImage.classList.remove('thumbnail');
             modalImage.classList.add('fullsize');
         }

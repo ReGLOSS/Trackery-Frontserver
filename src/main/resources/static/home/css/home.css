@@ -374,16 +374,18 @@
 .modal-body .image-container {
     position: relative;
     display: block;
-    margin: 0 auto 2vh;
     cursor: pointer;
+    width: auto;
+    height: 31vh;
 }
 
-.modal-body .image-container .image-detail {
-    width: auto !important;
-    height: 36vh !important;
-    object-fit: contain !important;
-    border-radius: 0.8vh !important;
+.modal-body .image-container .image-detail.thumbnail {
+    object-fit: contain;
+    border-radius: 0.8vh;
     display: block;
+    height: 100%;
+    width: 100%;
+    margin: 0 auto;
 }
 
 .modal-body .image-container .image-detail.fullsize {
@@ -405,7 +407,7 @@
 .modal-body .location-area,
 .modal-body .date-area,
 .modal-body .checkbox-area {
-    margin-bottom: 16px;
+    margin-bottom: 1.5vh;
 }
 
 .modal-body .description-area label,
@@ -416,39 +418,51 @@
     display: block;
     font-weight: 600;
     color: #495057;
-    margin-bottom: 6px;
-    font-size: 14px;
+    margin-bottom: 0.6vh;
+    font-size: 2vh;
+}
+
+.location-box,
+.date-box {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.text-muted {
+    padding-top: 1vh;
 }
 
 .modal-body .form-control {
-    border: 1px solid #ced4da;
-    border-radius: 6px;
-    padding: 8px 12px;
-    font-size: 14px;
+    border: 0.1vh solid #ced4da;
+    border-radius: 0.6vh;
+    padding: 0.75vh 1.13vh;
+    font-size: 1.4vh;
     background-color: #f8f9fa;
 }
 
 .modal-body .tag-box {
-    background-color: darkgray;
+    background-color: #f8f9fa;
     padding: 1%;
-    border-radius: 8px;
+    border: 0.1vh solid #ced4da;
+    border-radius: 0.6vh;
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 0.75vh;
     align-items: center;
-    min-height: 32px;
 }
 
 .modal-body .tag {
     background-color: #dbe7ff;
     color: #495057;
-    padding: 6px 10px;
-    border-radius: 12px;
-    font-size: 0.85rem;
+    padding: 0.75vh 1.13vh;
+    border-radius: 1.2vh;
+    font-size: 1.4vh;
     position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 0.56vh;
     font-weight: 500;
 }
 
