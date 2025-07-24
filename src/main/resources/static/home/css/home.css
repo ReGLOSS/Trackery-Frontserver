@@ -99,10 +99,9 @@
 
 /* 시군구지도 스타일 */
 .map-display svg.sigungu-map {
-    width: 90%;
-    height: 80vh;
-    max-width: 90%;
-    max-height: 80vh;
+    height: 100%;
+    width: auto;
+    max-height: 100%;
 }
 
 .map-display svg g {
@@ -408,8 +407,7 @@
 .modal-body .description-area,
 .modal-body .tag-area,
 .modal-body .location-area,
-.modal-body .date-area,
-.modal-body .checkbox-area {
+.modal-body .date-area {
     margin-bottom: 1vh;
 }
 
@@ -474,8 +472,8 @@
 .modal-body .tag-add {
     background-color: #ddd;
     border: none;
-    width: 2.47vh;
-    height: 2.47vh;
+    width: 2.2vh;
+    height: 2.2vh;
     border-radius: 0.6vh;
     font-size: 2vh;
     cursor: pointer;
@@ -544,6 +542,8 @@
 
 .modal-body .checkbox-area input[type="checkbox"] {
     margin: 0;
+    width: 1.4vh;
+    height: 1.4vh;
 }
 
 .modal-footer {
