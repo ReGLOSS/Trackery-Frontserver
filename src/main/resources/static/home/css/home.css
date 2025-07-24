@@ -343,7 +343,8 @@
 .modal-header {
     display: flex;
     justify-content: flex-end;
-    padding-right: 1vh;
+    min-height: 4vh;
+    padding: 0 1vh 0 2vh;
 }
 
 .modal-close {
@@ -361,7 +362,7 @@
 }
 
 .modal-body {
-    padding: 0 2vh 2vh;
+    padding: 0 2vh 0 2vh;
     flex: 1;
     overflow-y: auto;
     min-height: 0;
@@ -376,7 +377,7 @@
     display: block;
     cursor: pointer;
     width: auto;
-    height: 31vh;
+    height: 34vh;
 }
 
 .modal-body .image-container .image-detail.thumbnail {
@@ -388,37 +389,54 @@
     margin: 0 auto;
 }
 
-.modal-body .image-container .image-detail.fullsize {
-    position: fixed;
-    top: 50%;
-    left: 50%;
+/* 전체화면 이미지 오버레이 */
+.fullSize-image-overlay {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
     transform: translate(-50%, -50%);
-    width: auto;
-    height: 80vh;
-    max-height: 90vh;
-    object-fit: contain;
-    z-index: 10000;
-    border-radius: 0.8vh;
-    cursor: zoom-out;
+    width: 90vw !important;
+    height: 95vh !important;
+    z-index: 999999 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: zoom-out !important;
+    margin: 0 auto;
 }
 
+.fullSize-image-overlay .image-detail.fullSize {
+    position: relative !important;
+    width: auto !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    border-radius: 0.8vh !important;
+    cursor: zoom-out !important;
+    transform: none !important;
+    top: auto !important;
+    left: auto !important;
+    z-index: auto !important;
+}
+
+.modal-body .image-container,
 .modal-body .description-area,
 .modal-body .tag-area,
 .modal-body .location-area,
 .modal-body .date-area,
 .modal-body .checkbox-area {
-    margin-bottom: 1.5vh;
+    margin-bottom: 1vh;
 }
 
 .modal-body .description-area label,
 .modal-body .tag-area label,
 .modal-body .location-area label,
 .modal-body .date-area label,
-.modal-body .checkbox-area label {
+.modal-body .checkbox-area label,
+ .modal-body .public-area label {
     display: block;
     font-weight: 600;
     color: #495057;
-    margin-bottom: 0.6vh;
+    margin-bottom: 0.5vh;
     font-size: 2vh;
 }
 
@@ -432,6 +450,7 @@
 
 .text-muted {
     padding-top: 1vh;
+    font-size: 1.32vh;
 }
 
 .modal-body .form-control {
@@ -469,14 +488,11 @@
 .modal-body .tag-add {
     background-color: #ddd;
     border: none;
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    font-size: 1.2rem;
+    width: 2.8vh;
+    height: 2.8vh;
+    border-radius: 0.6vh;
+    font-size: 1.8vh;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     transition: background-color 0.2s ease;
 }
 
@@ -487,11 +503,10 @@
 .modal-body .tag-input {
     background-color: white;
     border: 1px solid #ccc;
-    padding: 6px 10px;
-    border-radius: 12px;
-    font-size: 0.85rem;
+    padding: 0.56vh 0.94vh;
+    border-radius: 1.2vh;
+    font-size: 1.2vh;
     outline: none;
-    min-width: 120px;
 }
 
 .modal-body .tag-input:focus {
@@ -503,11 +518,10 @@
     color: white;
     border: none;
     border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    font-size: 12px;
+    width: 1.7vh;
+    height: 1.7vh;
+    font-size: 1.1vh;
     cursor: pointer;
-    display: flex;
     justify-content: center;
     align-items: center;
     padding: 0;
@@ -523,8 +537,21 @@
 .modal-body .checkbox-area label {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 0.75vh;
     cursor: not-allowed;
+    font-size: 1.5vh;
+    margin-bottom: 0;
+    font-weight: 400;
+}
+
+.modal-body .public-status {
+    display: flex;
+    align-items: center;
+    gap: 0.75vh;
+    cursor: not-allowed;
+    font-size: 1.5vh;
+    margin-bottom: 0;
+    font-weight: 400;
 }
 
 .modal-body .checkbox-area input[type="checkbox"] {
@@ -534,19 +561,19 @@
 .modal-footer {
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
-    padding: 16px 20px;
-    border-top: 1px solid #e9ecef;
+    gap: 1.2vh;
+    padding: 1.5vh 1.8vh;
+    border-top: 0.1vh solid #e9ecef;
     background-color: #f8f9fa;
 }
 
 .modal-footer .btn {
-    padding: 8px 16px;
-    border-radius: 6px;
+    padding: 0.75vh 1.5vh;
+    border-radius:0.56vh;
     border: none;
     cursor: pointer;
     font-weight: 500;
-    font-size: 14px;
+    font-size: 1.3vh;
     transition: all 0.2s ease;
 }
 

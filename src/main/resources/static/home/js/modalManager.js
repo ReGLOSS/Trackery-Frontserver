@@ -1384,21 +1384,41 @@ export class ModalManager {
             return;
         }
         
-        if (modalImage.classList.contains('fullsize')) {
-            // 썸네일로 복원
-            modalImage.src = thumbnailUrl;
-            modalImage.classList.remove('fullsize');
-            modalImage.classList.add('thumbnail');
+        // 기존 전체화면 오버레이가 있는지 확인
+        let existingOverlay = document.querySelector('.fullSize-image-overlay');
+        
+        if (existingOverlay) {
+            // 전체화면 오버레이만 제거 (모달 이미지는 썸네일 그대로 유지)
+            existingOverlay.remove();
         } else {
             // 원본과 썸네일이 같으면 토글하지 않음
             if (originalUrl === thumbnailUrl) {
                 console.log('Original and thumbnail URLs are the same, no toggle needed');
                 return;
             }
-            // 원본으로 변경
-            modalImage.src = originalUrl;
-            modalImage.classList.remove('thumbnail');
-            modalImage.classList.add('fullsize');
+            
+            // 전체화면 오버레이 생성
+            const overlay = document.createElement('div');
+            overlay.className = 'fullSize-image-overlay';
+            
+            // 전체화면 이미지 생성
+            const fullSizeImage = document.createElement('img');
+            fullSizeImage.src = originalUrl;
+            fullSizeImage.className = 'image-detail fullSize';
+            fullSizeImage.alt = modalImage.alt;
+            
+            // 클릭 시 오버레이 제거
+            overlay.addEventListener('click', () => {
+                overlay.remove();
+            });
+            
+            // 오버레이에 이미지 추가하고 body에 삽입
+            overlay.appendChild(fullSizeImage);
+            document.body.appendChild(overlay);
+            
+            // 모달 이미지는 항상 썸네일로 유지
+            modalImage.classList.remove('fullSize');
+            modalImage.classList.add('thumbnail');
         }
     }
 }
