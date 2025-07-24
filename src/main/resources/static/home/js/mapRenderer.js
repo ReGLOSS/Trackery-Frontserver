@@ -34,13 +34,12 @@ export class MapRenderer {
         const svg = document.querySelector('#map-display svg');
         if (!svg) return;
         
-        // viewBox 설정
-        svg.setAttribute('viewBox', '0 -300 1150 1150');
-        
-        // 지도 타입별 클래스 추가
+        // 지도 타입별 viewBox 및 클래스 설정
         if (svgPath.includes('simpleSido.svg')) {
+            svg.setAttribute('viewBox', '0 -300 1150 1150');
             svg.classList.add('korea-map');
         } else if (svgPath.includes('/sigungu/')) {
+            svg.setAttribute('viewBox', '0 0 1150 850');
             svg.classList.add('sigungu-map');
         }
     }
