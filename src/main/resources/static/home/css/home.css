@@ -183,7 +183,7 @@
 .stats-text {
     font-weight: 500;
     color: #343a40;
-    letter-spacing: 0.063rem;
+    letter-spacing: 0.11vh;
     overflow: visible;
 }
 
@@ -193,14 +193,14 @@
     margin-bottom: 1.2vh;
     position: relative;
     overflow: visible;
-    width: 100%;
-    gap: 8%;
+    width: 53.5vh;
+    gap: 4vh;
 }
 
 .number {
     margin-right: 1vh;
     font-size: 16vh;
-    line-height: 84%;
+    line-height: 14vh;
     text-align: right;
     flex: 0 0 auto;
     overflow: visible;
