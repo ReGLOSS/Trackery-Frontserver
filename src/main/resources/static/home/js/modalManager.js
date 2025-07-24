@@ -408,19 +408,22 @@ export class ModalManager {
         const modalDeleteBtn = document.getElementById('modalDeleteBtn');
         const modalCancelEditBtn = document.getElementById('modalCancelEditBtn');
         const modalSaveBtn = document.getElementById('modalSaveBtn');
+        const modalClose = document.getElementById('modalClose');
         
         if (this.isEditMode) {
-            // 편집 모드: 삭제, 수정 취소, 저장 버튼 표시
+            // 편집 모드: 삭제, 수정 취소, 저장 버튼 표시, 닫기 버튼 숨김
             if (modalEditBtn) modalEditBtn.style.display = 'none';
             if (modalDeleteBtn) modalDeleteBtn.style.display = 'inline-block';
             if (modalCancelEditBtn) modalCancelEditBtn.style.display = 'inline-block';
             if (modalSaveBtn) modalSaveBtn.style.display = 'inline-block';
+            if (modalClose) modalClose.style.display = 'none';
         } else {
-            // 읽기 모드: 수정 버튼만 표시
+            // 읽기 모드: 수정 버튼과 닫기 버튼 표시
             if (modalEditBtn) modalEditBtn.style.display = 'inline-block';
             if (modalDeleteBtn) modalDeleteBtn.style.display = 'none';
             if (modalCancelEditBtn) modalCancelEditBtn.style.display = 'none';
             if (modalSaveBtn) modalSaveBtn.style.display = 'none';
+            if (modalClose) modalClose.style.display = 'inline-block';
         }
     }
     
@@ -916,7 +919,7 @@ export class ModalManager {
         // 태그 추가 버튼 표시
         const tagAddButton = document.getElementById('modalTagAddButton');
         if (tagAddButton) {
-            tagAddButton.style.display = 'block';
+            tagAddButton.style.display = 'flex';
         }
     }
     
@@ -966,7 +969,7 @@ export class ModalManager {
                 tagInput.value = '';
             }
             tagInput.style.display = 'none';
-            tagAddButton.style.display = 'block';
+            tagAddButton.style.display = 'flex';
         }
     }
     

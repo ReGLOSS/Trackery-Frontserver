@@ -347,20 +347,6 @@
     padding: 0 1vh 0 2vh;
 }
 
-.modal-close {
-    background: none;
-    border: none;
-    font-size: 2.3vh;
-    color: #666;
-    border-radius: 50%;
-    transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.modal-close:hover {
-    background-color: #f0f0f0;
-    color: #333;
-}
-
 .modal-body {
     padding: 0 2vh 0 2vh;
     flex: 1;
@@ -378,11 +364,11 @@
     cursor: pointer;
     width: auto;
     height: 34vh;
+    overflow: hidden;
 }
 
 .modal-body .image-container .image-detail.thumbnail {
     object-fit: contain;
-    border-radius: 0.8vh;
     display: block;
     height: 100%;
     width: 100%;
@@ -488,12 +474,14 @@
 .modal-body .tag-add {
     background-color: #ddd;
     border: none;
-    width: 2.8vh;
-    height: 2.8vh;
+    width: 2.47vh;
+    height: 2.47vh;
     border-radius: 0.6vh;
-    font-size: 1.8vh;
+    font-size: 2vh;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    align-items: center;
+    justify-content: center;
 }
 
 .modal-body .tag-add:hover {
