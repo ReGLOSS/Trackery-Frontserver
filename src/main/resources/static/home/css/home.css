@@ -175,7 +175,7 @@
 
 /* ===== USER STATS ===== */
 .user-stats-simple {
-    padding: 8vh;
+    padding: 8vh 0 8vh 0;
     animation: fadeIn 0.3s ease-in-out;
     overflow: visible;
 }
