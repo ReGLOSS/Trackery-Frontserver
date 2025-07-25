@@ -9,7 +9,7 @@
 }
 
 .navbar-expand-lg {
-    width: 20rem !important;
+    width: clamp(250px, 16.68vw, 350px) !important;
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
@@ -20,6 +20,8 @@
     overflow-y: auto !important;
     padding: 0 !important;
     scrollbar-width: none;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
 }
 
 .navbar-expand-lg .navbar-collapse {

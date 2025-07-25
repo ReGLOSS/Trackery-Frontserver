@@ -15,12 +15,17 @@ html, body {
     flex-direction: row;
 }
 
-.layout-content {
-    padding: 0;
-    width: 100%;
-    margin-left: 20rem;
+.layout-container .layout-sidebar {
+    width: clamp(250px, 16.68vw, 350px);
+    flex-shrink: 0;
 }
-.base-container {
+
+.layout-container .layout-content {
+    padding: 0;
+    flex: 1;
+}
+
+.layout-container .layout-content .base-container {
     height: 100vh;
     overflow-y: auto;
     scrollbar-width: none;
