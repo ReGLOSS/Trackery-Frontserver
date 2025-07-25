@@ -1,13 +1,7 @@
-body {
-    background-color: #d8e0e6;
-}
-
 .base-container {
     visibility: hidden;
     padding-left: 4vw;
     padding-top: 2.5vw;
-    display: flex;
-    flex-direction: column;
     gap: 3.5vw;
 }
 
