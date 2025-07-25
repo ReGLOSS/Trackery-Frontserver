@@ -17,9 +17,10 @@ import org.springframework.web.bind.annotation.GetMapping;
  * 25. 02. 26.        narilee       경로 수정
  * 25. 03. 27.		  durururuk     인증 정보에 따른 리다이렉션 추가
  * 25. 03. 27.		  narilee    	사이드바 유저 정보 GlobalModelAttributeController로 이관
+ * 25. 07. 25.		  narilee    	홈 위치 수정 및 이름 변경
  */
 @Controller
-public class LandingController {
+public class homeController {
 
 	/**
 	 * 유저가 접속시 최초로 보게 되는 기본 페이지 입니다.
@@ -37,11 +38,11 @@ public class LandingController {
 		if (accessToken != null) {
 			return "redirect:/home";
 		}
-		return "landing";
+		return "home/landing";
 	}
 
 	@GetMapping("/home")
 	public String mainPage() {
-		return "home";
+		return "home/home";
 	}
 }
