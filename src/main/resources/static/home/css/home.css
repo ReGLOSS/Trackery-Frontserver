@@ -420,7 +420,7 @@
   align-items: center;
 }
 
-.text-muted {
+.location-box .text-muted {
     padding-top: 1vh;
     font-size: 1.32vh;
 }

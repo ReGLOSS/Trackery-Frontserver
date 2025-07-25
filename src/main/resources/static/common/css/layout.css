@@ -16,7 +16,7 @@ html, body {
 }
 
 .layout-container .layout-sidebar {
-    width: clamp(250px, 16.68vw, 350px);
+    width: clamp(250px, 16.68vw, 40vh);
     flex-shrink: 0;
 }
 

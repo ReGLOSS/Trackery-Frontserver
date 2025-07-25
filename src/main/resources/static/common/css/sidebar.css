@@ -9,7 +9,7 @@
 }
 
 .navbar-expand-lg {
-    width: clamp(250px, 16.68vw, 350px) !important;
+    width: clamp(250px, 16.68vw, 40vh) !important;
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
@@ -29,14 +29,15 @@
 }
 
 .navbar-brand {
-    margin-bottom: 2.5rem;
+    margin-bottom: 3.4vh;
+    margin-left: 1.6vh;
     justify-content: left !important;
-    padding-left: 1rem !important;
+    padding: 2vh 0 2vh 1.6vh !important;
 }
 
 .navbar-brand-image {
     filter: brightness(0) invert(1);
-    width: 3.5rem;
+    width: 7vh;
     height: auto;
 }
 
@@ -45,58 +46,56 @@
     align-items: stretch;
     display: flex;
     width: auto;
-    overflow-y: auto;
-    max-height: calc(100vh - 20rem); /* 프로필과 업로드 버튼 공간을 제외한 높이 */
-    padding-right: 0.5rem;
 }
 
 .navbar-nav {
-    margin-bottom: 2rem;
     font-weight: bold;
     flex-grow: 0 !important;
 }
 
 .nav-link {
     color: white;
-    font-size: 2.4rem;
-    padding: 1.2rem 1.2rem 1.2rem 2rem !important;
+    font-size: 3.5vh;
+    padding: 1.8vh 1.8vh 1.8vh 2vh !important;
     transition: all 0.3s;
-    margin: 0.5rem !important;
+    margin: 1.6vh !important;
     justify-content: left !important;
 }
 
 .nav-link:hover {
     color: white;
     background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 5px;
+    border-radius: 5vh;
 }
 
 .nav-link.active {
     color: #FF5B3E !important;
     background-color: rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
+    border-radius: 5vh;
 }
 
 .user-info {
-    font-size: 1.4rem;
+    font-size: 3vh;
+}
+
+.user-info p {
+    margin-bottom: 0.1vh !important;
 }
 
 .user-info .text-muted {
     color: rgba(255, 255, 255, 0.5) !important;
-}
-
-.user-profile {
-    margin-bottom: 5rem;
+    font-size: 2.5vh;
 }
 
 .user-avatar {
-    width: 6.3rem;
+    width: 12vh;
     height: auto;
+    aspect-ratio: 1/1;
+    margin-bottom: 2vh;
 }
 
 .photo-upload-btn {
-    margin: 2rem 3rem 5rem;
-
+    margin: 3vh 3.6vh 5vh;
 }
 
 /* 업로드 버튼 커스텀 스타일 */
@@ -106,8 +105,10 @@
     font-weight: bold;
     border: none;
     transition: background-color 0.3s;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+    padding: 1.5vh 1.8vh;
+    border-radius: 15vh;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 1.6vh;
 }
 
 #photoUploadBtn:hover {
