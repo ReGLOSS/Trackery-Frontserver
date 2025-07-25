@@ -188,19 +188,19 @@
     overflow: visible;
 }
 
-.stat-line {
+.stats-text .stat-line {
     display: flex;
     align-items: baseline;
     margin-bottom: 1.2vh;
     position: relative;
     overflow: visible;
-    width: 53.5vh;
-    gap: 4vh;
+    width: 45.4vh;
+    gap: clamp(10px, 2vw, 4vh);
 }
 
-.number {
+.stats-text .stat-line .number {
     margin-right: 1vh;
-    font-size: 16vh;
+    font-size: clamp(20px, 9vw, 16vh);
     line-height: 14vh;
     text-align: right;
     flex: 0 0 auto;
@@ -208,21 +208,21 @@
     white-space: nowrap;
 }
 
-.label {
+.stats-text .stat-line .label {
     flex: 0 0 auto;
     overflow: visible;
     white-space: nowrap;
-    font-size: 10vh;
+    font-size: clamp(10px, 5vw, 10vh);
     text-align: left;
 }
 
 .coordinates-display {
     position: absolute;
     left: 50%;
-    top: 0;
+    top: 100%;
     transform: translateX(-50%);
     padding: 0;
-    font-size: clamp(20px, 3vw, 3vh);
+    font-size: clamp(10px, 3vw, 3vh);
     color: #6c757d;
     letter-spacing: 0.1vh;
     font-weight: 500;
