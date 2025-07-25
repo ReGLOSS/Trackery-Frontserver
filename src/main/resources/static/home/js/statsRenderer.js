@@ -29,25 +29,6 @@ export class StatsRenderer {
     renderUserStats(container, userStats) {
         console.log('renderUserStats called with userStats:', userStats);
         
-        if (!userStats) {
-            // 로그인하지 않은 사용자에게는 로그인 안내 메시지 표시
-            container.innerHTML = `
-                <div class="user-stats-simple">
-                    <div class="stats-text">
-                        <a href="/login" class="login-link">로그인하여 통계 보기</a>
-                    </div>
-                </div>
-            `;
-            
-            // 로그인하지 않은 사용자에게도 좌표 표시 영역 추가
-            const coordinatesDiv = this.createCoordinatesDisplay();
-            container.appendChild(coordinatesDiv);
-            
-            // 좌표 표시 div가 생성된 후 마우스 이벤트 바인딩
-            this.bindMapMouseEventsIfNeeded();
-            return;
-        }
-        
         // 디버깅을 위한 로그
         console.log('albumCount:', userStats.albumCount);
         console.log('imageCount:', userStats.imageCount);
@@ -76,71 +57,25 @@ export class StatsRenderer {
         console.log('Generated HTML:', statsHtml);
         container.innerHTML = statsHtml;
         
-        // 좌표 표시 영역을 stats 밑에 별도로 추가
-        const coordinatesDiv = this.createCoordinatesDisplay();
-        container.appendChild(coordinatesDiv);
-        
         // 좌표 표시 div가 생성된 후 마우스 이벤트 바인딩
         this.bindMapMouseEventsIfNeeded();
     }
     
-    // 좌표 표시 영역 생성
-    createCoordinatesDisplay() {
-        const coordinatesDiv = document.createElement('div');
-        coordinatesDiv.className = 'coordinates-display';
-        coordinatesDiv.id = 'coordinatesDisplay';
-        coordinatesDiv.innerHTML = '<span id="coordinatesText">37° 35′ 53″ N<br>126° 58′ 12″ E</span>';
-        
-        return coordinatesDiv;
+    // 좌표 표시 영역 초기화 (map-header 내의 coordinates-display 사용)
+    initializeCoordinatesDisplay() {
+        const coordinatesDisplay = document.querySelector('.map-header .coordinates-display');
+        if (coordinatesDisplay) {
+            coordinatesDisplay.innerHTML = '<span id="coordinatesText">37° 35′ 53″ N 126° 58′ 12″ E</span>';
+        }
     }
     
     // 마우스 이벤트 바인딩 (renderer가 있는 경우에만)
     bindMapMouseEventsIfNeeded() {
+        // 좌표 표시 영역 초기화
+        this.initializeCoordinatesDisplay();
+        
         if (this.renderer) {
             this.renderer.bindMapMouseEvents();
         }
-    }
-    
-    // 객체 속성을 재귀적으로 검사하는 헬퍼 함수
-    inspectObjectProperties(obj, indent = '') {
-        if (!obj || typeof obj !== 'object') {
-            console.log(`${indent}(primitive value)`);
-            return;
-        }
-        
-        Object.keys(obj).forEach(key => {
-            const value = obj[key];
-            const type = Array.isArray(value) ? 'array' : typeof value;
-            
-            if (value && typeof value === 'object' && !Array.isArray(value)) {
-                console.log(`${indent}${key}: (object)`);
-                // 무한 루프를 피하기 위해 너무 깊게 재귀하지 않음
-                if (indent.length < 8) {
-                    this.inspectObjectProperties(value, indent + '  ');
-                }
-            } else {
-                console.log(`${indent}${key}: (${type})`, value);
-            }
-        });
-    }
-    
-    // 중첩된 객체 경로에서 값을 추출하는 헬퍼 함수
-    extractValue(obj, paths, defaultValue = null) {
-        for (const path of paths) {
-            const value = this.getNestedValue(obj, path);
-            if (value !== null && value !== undefined && value !== '') {
-                return value;
-            }
-        }
-        return defaultValue;
-    }
-    
-    // 경로 문자열로 중첩된 객체 값을 가져오는 헬퍼 함수
-    getNestedValue(obj, path) {
-        if (!obj || typeof obj !== 'object') return null;
-        
-        return path.split('.').reduce((current, key) => {
-            return (current && current[key] !== undefined) ? current[key] : null;
-        }, obj);
     }
 }

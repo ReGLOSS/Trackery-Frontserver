@@ -35,18 +35,26 @@ export class ModalManager {
         const modalCancelEditBtn = document.getElementById('modalCancelEditBtn');
         const modalSaveBtn = document.getElementById('modalSaveBtn');
         const modalContent = document.querySelector('#imageDetailModal .modal-content');
-        
+        const modalImage = document.getElementById('modalImage');
+
         if (modalEditBtn) modalEditBtn.addEventListener('click', () => this.enterEditMode());
         if (modalDeleteBtn) modalDeleteBtn.addEventListener('click', () => this.deleteImage());
         if (modalCancelEditBtn) modalCancelEditBtn.addEventListener('click', () => this.cancelEditMode());
         if (modalSaveBtn) modalSaveBtn.addEventListener('click', () => this.saveImageChanges());
         if (modalContent) modalContent.addEventListener('click', (e) => e.stopPropagation());
+        if (modalImage) {
+            modalImage.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleImageFullscreen();
+            });
+        }
     }
     
     // 이미지 상세 보기
-    async showImageDetail(imageId) {
+    async showImageDetail(imageId, galleryThumbnailUrl = null) {
         console.log('=== SHOWING IMAGE DETAIL ===');
         console.log('Image ID:', imageId);
+        console.log('Gallery Thumbnail URL:', galleryThumbnailUrl);
         
         try {
             // 원본 이미지 상세 정보를 API에서 가져오기
@@ -67,6 +75,11 @@ export class ModalManager {
             
             console.log('Fetched image data:', imageData);
             
+            // 갤러리에서 전달받은 썸네일 URL이 있으면 사용
+            if (galleryThumbnailUrl) {
+                imageData.galleryThumbnailUrl = galleryThumbnailUrl;
+            }
+            
             // 모달에 원본 이미지 데이터 채우기
             this.populateImageModal(imageData);
             
@@ -86,8 +99,15 @@ export class ModalManager {
         // 이미지
         const modalImage = document.getElementById('modalImage');
         if (modalImage) {
-            modalImage.src = imageData.imageUrl || '/images/default-image4.webp';
+            // 이전 이미지 제거를 위해 빈 이미지로 초기화
+            modalImage.src = '';
+            // 갤러리에서 전달받은 썸네일 URL을 우선 사용, 없으면 API의 thumbnailUrl, 마지막으로 imageUrl 사용
+            const thumbnailSrc = imageData.galleryThumbnailUrl || imageData.thumbnailUrl || imageData.imageUrl || '/images/default-image4.webp';
+            modalImage.src = thumbnailSrc;
             modalImage.alt = imageData.imageName || '이미지';
+            modalImage.className = 'image-detail thumbnail';
+            modalImage.dataset.originalUrl = imageData.imageUrl || thumbnailSrc;
+            modalImage.dataset.thumbnailUrl = thumbnailSrc;
         }
         
         // 설명
@@ -388,19 +408,22 @@ export class ModalManager {
         const modalDeleteBtn = document.getElementById('modalDeleteBtn');
         const modalCancelEditBtn = document.getElementById('modalCancelEditBtn');
         const modalSaveBtn = document.getElementById('modalSaveBtn');
+        const modalClose = document.getElementById('modalClose');
         
         if (this.isEditMode) {
-            // 편집 모드: 삭제, 수정 취소, 저장 버튼 표시
+            // 편집 모드: 삭제, 수정 취소, 저장 버튼 표시, 닫기 버튼 숨김
             if (modalEditBtn) modalEditBtn.style.display = 'none';
             if (modalDeleteBtn) modalDeleteBtn.style.display = 'inline-block';
             if (modalCancelEditBtn) modalCancelEditBtn.style.display = 'inline-block';
             if (modalSaveBtn) modalSaveBtn.style.display = 'inline-block';
+            if (modalClose) modalClose.style.display = 'none';
         } else {
-            // 읽기 모드: 수정 버튼만 표시
+            // 읽기 모드: 수정 버튼과 닫기 버튼 표시
             if (modalEditBtn) modalEditBtn.style.display = 'inline-block';
             if (modalDeleteBtn) modalDeleteBtn.style.display = 'none';
             if (modalCancelEditBtn) modalCancelEditBtn.style.display = 'none';
             if (modalSaveBtn) modalSaveBtn.style.display = 'none';
+            if (modalClose) modalClose.style.display = 'inline-block';
         }
     }
     
@@ -896,7 +919,7 @@ export class ModalManager {
         // 태그 추가 버튼 표시
         const tagAddButton = document.getElementById('modalTagAddButton');
         if (tagAddButton) {
-            tagAddButton.style.display = 'block';
+            tagAddButton.style.display = 'flex';
         }
     }
     
@@ -946,7 +969,7 @@ export class ModalManager {
                 tagInput.value = '';
             }
             tagInput.style.display = 'none';
-            tagAddButton.style.display = 'block';
+            tagAddButton.style.display = 'flex';
         }
     }
     
@@ -1345,6 +1368,60 @@ export class ModalManager {
         }
         if (modalMapPickSubmitBtn) {
             modalMapPickSubmitBtn.disabled = true;
+        }
+    }
+    
+    
+    
+    // 이미지 전체화면 토글
+    toggleImageFullscreen() {
+        const modalImage = document.getElementById('modalImage');
+        if (!modalImage) return;
+        
+        const originalUrl = modalImage.dataset.originalUrl;
+        const thumbnailUrl = modalImage.dataset.thumbnailUrl;
+        
+        // URL이 없는 경우 클릭 이벤트 무시
+        if (!originalUrl || !thumbnailUrl) {
+            console.warn('Image URLs not properly set');
+            return;
+        }
+        
+        // 기존 전체화면 오버레이가 있는지 확인
+        let existingOverlay = document.querySelector('.fullSize-image-overlay');
+        
+        if (existingOverlay) {
+            // 전체화면 오버레이만 제거 (모달 이미지는 썸네일 그대로 유지)
+            existingOverlay.remove();
+        } else {
+            // 원본과 썸네일이 같으면 토글하지 않음
+            if (originalUrl === thumbnailUrl) {
+                console.log('Original and thumbnail URLs are the same, no toggle needed');
+                return;
+            }
+            
+            // 전체화면 오버레이 생성
+            const overlay = document.createElement('div');
+            overlay.className = 'fullSize-image-overlay';
+            
+            // 전체화면 이미지 생성
+            const fullSizeImage = document.createElement('img');
+            fullSizeImage.src = originalUrl;
+            fullSizeImage.className = 'image-detail fullSize';
+            fullSizeImage.alt = modalImage.alt;
+            
+            // 클릭 시 오버레이 제거
+            overlay.addEventListener('click', () => {
+                overlay.remove();
+            });
+            
+            // 오버레이에 이미지 추가하고 body에 삽입
+            overlay.appendChild(fullSizeImage);
+            document.body.appendChild(overlay);
+            
+            // 모달 이미지는 항상 썸네일로 유지
+            modalImage.classList.remove('fullSize');
+            modalImage.classList.add('thumbnail');
         }
     }
 }

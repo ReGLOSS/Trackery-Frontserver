@@ -121,12 +121,12 @@ export class MapManager {
                 }
             }
             
+            // 제목을 먼저 업데이트하여 즉각적인 피드백 제공
+            this.renderer.updateMapTitle(sidoName);
+            
             // SVG 로드
             const svgPath = this.getSigunguSvgPath(sidoId);
             await this.renderer.loadSvgMap(svgPath);
-            
-            // UI 업데이트
-            this.renderer.updateMapTitle(sidoName);
             this.updateBackButton();
             this.updateDetailContainerClass();
             this.statsRenderer.updateStatsDisplay(this.currentView, this.userStats);
@@ -173,12 +173,12 @@ export class MapManager {
                 }
             }
             
+            // 제목을 먼저 업데이트하여 즉각적인 피드백 제공
+            this.renderer.updateMapTitle(sidoName);
+            
             // SVG 로드
             const svgPath = this.getSigunguSvgPath(sidoId);
             await this.renderer.loadSvgMap(svgPath);
-            
-            // UI 업데이트
-            this.renderer.updateMapTitle(sidoName);
             this.updateBackButton();
             this.updateDetailContainerClass();
             this.statsRenderer.updateStatsDisplay(this.currentView, this.userStats);
@@ -276,9 +276,6 @@ export class MapManager {
                 
                 const sidoId = e.target.id;
                 if (sidoId) {
-                    // 시도 정보를 찾아서 이름 표시
-                    const sidoName = this.getSidoName(sidoId);
-                    this.renderer.updateMapTitle(sidoName);
                     this.loadSigunguView(sidoId);
                     
                     // 시도 클릭 시 해당 시도의 이미지들 로드

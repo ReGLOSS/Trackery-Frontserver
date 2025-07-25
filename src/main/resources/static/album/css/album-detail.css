@@ -130,8 +130,9 @@
     overflow: hidden;
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
-    border: 0.1875rem solid transparent; /* 3px */
+    border: 0.2rem solid transparent; /* 3px */
     box-sizing: border-box;
+    position: relative;
 }
 
 .gallery-card img, .my-image-card img {
@@ -388,9 +389,8 @@
 
 /* 갤러리 섹션 스타일 */
 .gallery-section {
-    margin-bottom: 1.25rem; /* 20px */
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
+    margin-bottom: 2.5vh;
+    border: 0.2vh solid #e9ecef;
     overflow: hidden;
 }
 
@@ -500,4 +500,3 @@
 .pagination .page-item-title {
     display: none;
 }
-

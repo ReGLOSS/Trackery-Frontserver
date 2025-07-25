@@ -18,9 +18,9 @@
     <div class="base-container">
         <div class="map-container">
             <div class="map-header">
-                <h2 id="map-title" style="font-size: 72px"></h2>
-                <img id="back-btn" src="/icons/common/up.svg" alt="돌아가기"
-                style="display: none; width: 100px; height: 100px; cursor: pointer;">
+                <h2 class="map-title" id="map-title"></h2>
+                <div class="coordinates-display" id="coordinatesDisplay" style="display: none;">37° 35′ 53″ N, 126° 58′ 12″ E</div>
+                <img id="back-btn" src="/icons/common/up.svg" alt="돌아가기">
             </div>
             <div id="map-display" class="map-display">
                 <!-- SVG maps will be loaded here -->
@@ -35,15 +35,17 @@
         <div class="modal-overlay" id="modalOverlay"></div>
         <div class="modal-content">
             <div class="modal-header">
-                <button class="modal-close" id="modalClose">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="image-selected">
-                    <img src="/images/default-image4.webp" class="image-detail" alt="선택된 이미지" id="modalImage">
+                    <div class="image-container">
+                        <img src="/images/default-image4.webp" class="image-detail thumbnail" alt="선택된 이미지" id="modalImage">
+                    </div>
 
                     <div class="description-area">
                         <label for="modalDescription">설명</label>
-                        <textarea id="modalDescription" class="form-control" rows="5" placeholder="여기에 설명을 입력하세요..."
+                        <textarea id="modalDescription" class="form-control" rows="5"
+                        placeholder="여기에 설명을 입력하세요. (이미지 설명은 500자를 초과할 수 없습니다.)"
                                   style="resize:none;" readonly></textarea>
                     </div>
 
@@ -55,16 +57,16 @@
                     </div>
 
                     <div class="location-area">
-                        <label for="modalLocationBox">위치</label>
                         <div class="location-box">
+                            <label for="modalLocationBox">위치</label>
                             <a href="#" class="text-muted" id="modalEditLocationBtn" style="display: none;">여기가 아닌가요?</a>
                             <input id="modalLocationBox" class="form-control" type="text" value="" readonly/>
                         </div>
                     </div>
 
                     <div class="date-area">
-                        <label for="modalDateBox">날짜</label>
                         <div class="date-box">
+                        <label for="modalDateBox">날짜</label>
                             <a href="#" class="text-muted" id="modalEditDateBtn" style="display: none;">다른 날 다녀오셨나요?</a>
                             <input id="modalDateBox" class="form-control" type="text" value="" readonly/>
                         </div>
@@ -75,7 +77,7 @@
                         <div class="public-status" id="modalPublicStatus">비공개</div>
                         <div class="checkbox-area" id="modalPublicCheckboxArea" style="display: none;">
                             <label for="modalPublic">
-                                공개 사진
+                                공개 여부
                                 <input type="checkbox" id="modalPublic"/>
                             </label>
                         </div>
@@ -84,9 +86,10 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-primary" id="modalEditBtn">수정</button>
+                <button class="btn btn-success" id="modalSaveBtn" style="display: none;">저장</button>
                 <button class="btn btn-danger" id="modalDeleteBtn" style="display: none;">삭제</button>
                 <button class="btn btn-secondary" id="modalCancelEditBtn" style="display: none;">취소</button>
-                <button class="btn btn-success" id="modalSaveBtn" style="display: none;">저장</button>
+                <button class="btn btn-secondary" id="modalClose">닫기</button>
             </div>
         </div>
     </div>

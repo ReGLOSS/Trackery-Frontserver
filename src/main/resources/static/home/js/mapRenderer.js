@@ -22,39 +22,65 @@ export class MapRenderer {
         const mapDisplay = document.getElementById('map-display');
         if (mapDisplay) {
             mapDisplay.innerHTML = svgContent;
+            
+            // SVG viewBox 및 클래스 동적 설정
+            this.setupSvgAttributes(svgPath);
             this.bindMapMouseEvents();
+        }
+    }
+    
+    // SVG 속성 설정
+    setupSvgAttributes(svgPath) {
+        const svg = document.querySelector('#map-display svg');
+        if (!svg) return;
+        
+        // 지도 타입별 viewBox 및 클래스 설정
+        if (svgPath.includes('simpleSido.svg')) {
+            svg.setAttribute('viewBox', '0 -300 1150 1150');
+            svg.classList.add('korea-map');
+            this.showCoordinatesDisplay(true);
+        } else if (svgPath.includes('/sigungu/')) {
+            svg.setAttribute('viewBox', '0 0 1150 850');
+            svg.classList.add('sigungu-map');
+            this.showCoordinatesDisplay(false);
         }
     }
     
     // 지도 마우스 이벤트 바인딩
     bindMapMouseEvents() {
         const svg = document.querySelector('#map-display svg');
-        const coordinatesDisplay = document.getElementById('coordinatesDisplay');
-        const coordinatesText = document.getElementById('coordinatesText');
+        const coordinatesDisplay = document.querySelector('.map-header .coordinates-display');
+        const coordinatesText = document.getElementById('coordinatesText') || document.getElementById('coordinatesDisplay');
         
-        if (!svg || !coordinatesDisplay || !coordinatesText) return;
+        if (!svg || !coordinatesDisplay) return;
         
-        svg.addEventListener('mouseenter', () => {
-            coordinatesDisplay.style.display = 'block';
-        });
-        
-        svg.addEventListener('mouseleave', () => {
-        });
-        
-        svg.addEventListener('mousemove', (e) => {
-            const svgRect = svg.getBoundingClientRect();
-            const svgBox = svg.viewBox.baseVal;
+        // 좌표 표시가 활성화된 경우에만 이벤트 바인딩
+        if (coordinatesDisplay.style.display !== 'none') {
+            svg.addEventListener('mouseenter', () => {
+                if (coordinatesDisplay.style.display !== 'none') {
+                    coordinatesDisplay.style.visibility = 'visible';
+                }
+            });
             
-            const x = (e.clientX - svgRect.left) / svgRect.width * svgBox.width + svgBox.x;
-            const y = (e.clientY - svgRect.top) / svgRect.height * svgBox.height + svgBox.y;
-            
-            const coords = this.svgToLatLng(x, y);
-            if (coords) {
-                const latDMS = this.convertDDToDMS(coords.lat, true);
-                const lngDMS = this.convertDDToDMS(coords.lng, false);
-                coordinatesText.innerHTML = `${latDMS}<br>${lngDMS}`;
+            if (coordinatesText) {
+                svg.addEventListener('mousemove', (e) => {
+                    if (coordinatesDisplay.style.display !== 'none') {
+                        const svgRect = svg.getBoundingClientRect();
+                        const svgBox = svg.viewBox.baseVal;
+                        
+                        const x = (e.clientX - svgRect.left) / svgRect.width * svgBox.width + svgBox.x;
+                        const y = (e.clientY - svgRect.top) / svgRect.height * svgBox.height + svgBox.y;
+                        
+                        const coords = this.svgToLatLng(x, y);
+                        if (coords) {
+                            const latDMS = this.convertDDToDMS(coords.lat, true);
+                            const lngDMS = this.convertDDToDMS(coords.lng, false);
+                            coordinatesText.innerHTML = `${latDMS} ${lngDMS}`;
+                        }
+                    }
+                });
             }
-        });
+        }
     }
     
     // 십진도를 도분시로 변환
@@ -95,6 +121,20 @@ export class MapRenderer {
         const mapTitle = document.getElementById('map-title');
         if (mapTitle) {
             mapTitle.textContent = '';
+        }
+    }
+    
+    // 좌표 표시 제어
+    showCoordinatesDisplay(show) {
+        const coordinatesDisplay = document.querySelector('.map-header .coordinates-display');
+        if (coordinatesDisplay) {
+            if (show) {
+                coordinatesDisplay.style.display = 'block';
+                coordinatesDisplay.style.visibility = 'hidden'; // 초기에는 숨김
+            } else {
+                coordinatesDisplay.style.display = 'none';
+                coordinatesDisplay.style.visibility = 'hidden';
+            }
         }
     }
     
