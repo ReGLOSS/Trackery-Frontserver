@@ -1,4 +1,4 @@
-import {tagManager} from "/module/tags/TagManager.js";
+import {tagManager} from "../../module/tags/TagManager.js";
 
 /**
  * 이미지 상세 모달 관리, 편집 모드, 태그/날짜/위치 편집을 담당하는 클래스
@@ -57,7 +57,7 @@ export class ModalManager {
         console.log('=== SHOWING IMAGE DETAIL ===');
         console.log('Image ID:', imageId);
         console.log('Gallery Thumbnail URL:', galleryThumbnailUrl);
-        
+
         try {
             // 원본 이미지 상세 정보를 API에서 가져오기
             const response = await fetch(`/api/images/${imageId}`, {
@@ -1174,10 +1174,10 @@ export class ModalManager {
             const newLocationData = {
                 sdName: null,
                 sggName: null,
-                regionalTags: newLocationTags
+                regionalTags: []
             };
             
-            // newLocationTags에서 sdName과 sggName 추출
+            // newLocationTags에서 sdName과 sggName 추출하고 나머지는 regionalTags에 추가
             if (newLocationTags && Array.isArray(newLocationTags)) {
                 newLocationTags.forEach(tag => {
                     const tagName = typeof tag === 'object' ? tag.tagName : tag;
@@ -1187,10 +1187,13 @@ export class ModalManager {
                         newLocationData.sdName = tagName;
                     } else if (tagId === 'sggName') {
                         newLocationData.sggName = tagName;
+                    } else {
+                        // sdName, sggName이 아닌 나머지 태그들만 regionalTags에 추가
+                        newLocationData.regionalTags.push(tag);
                     }
                 });
             }
-            
+
             // TagManager를 사용하여 위치 변경 처리
             let updatedTags = tagManager.handleLocationChange(existingTags, newLocationData);
             
@@ -1200,7 +1203,7 @@ export class ModalManager {
                 const seasonTags = await tagManager.apiService.fetchSeasonTags(currentDate);
                 updatedTags = tagManager.handleSeasonChange(updatedTags, seasonTags);
             }
-            
+
             // UI 업데이트
             this.updateModalTagsFromTagArray(updatedTags);
             
@@ -1238,29 +1241,6 @@ export class ModalManager {
         } catch (error) {
             console.error('Error updating seasonal tags in modal:', error);
         }
-    }
-    
-    // 태그 분류 함수
-    classifyTagType(tagName) {
-        if (!tagName) return 'unknown';
-        
-        // 계절 태그
-        if (tagName.includes('봄') || tagName.includes('여름') || tagName.includes('가을') || tagName.includes('겨울')) {
-            return 'seasonal';
-        }
-        
-        // 시도 태그
-        if (tagName.includes('시') || tagName.includes('도') || tagName.includes('특별시') || 
-            tagName.includes('광역시') || tagName.includes('특별자치시')) {
-            return 'sido';
-        }
-        
-        // 시군구 태그
-        if (tagName.includes('군') || tagName.includes('구') || tagName.includes('시')) {
-            return 'sigungu';
-        }
-        
-        return 'custom';
     }
     
     // 태그 배열로부터 모달 태그 UI 업데이트 (헬퍼 함수)
@@ -1314,9 +1294,7 @@ export class ModalManager {
             modalMapPickSubmitBtn.disabled = true;
         }
     }
-    
-    
-    
+
     // 이미지 전체화면 토글
     toggleImageFullscreen() {
         const modalImage = document.getElementById('modalImage');
