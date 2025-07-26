@@ -1,4 +1,4 @@
-import {tagManager} from "../../module/tags/TagManager.js";
+import {tagManager} from "../../module/tags/tagManager.js";
 
 /**
  * 이미지 상세 모달 관리, 편집 모드, 태그/날짜/위치 편집을 담당하는 클래스
@@ -731,7 +731,7 @@ export class ModalManager {
         this.setupMapPickerIntegration();
     }
     
-    // MapPickerModal.js와의 통합 설정
+    // mapPickerModal.js와의 통합 설정
     setupMapPickerIntegration() {
         const modalMapPickerModal = document.getElementById('modalMapPickerModal');
         if (!modalMapPickerModal) return;

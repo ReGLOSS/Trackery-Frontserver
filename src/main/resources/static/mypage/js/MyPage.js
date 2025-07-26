@@ -1,8 +1,8 @@
-import {loadModal} from "/module/modal/ModalUtil.js";
+import {loadModal} from "../../module/modal/modalUtil.js";
 
 document.addEventListener("DOMContentLoaded", async function () {
     try {
-        await loadModal("/mypage/update-user-info-modal", document.getElementsByClassName("update-user-info-modal-container")[0], "/mypage/js/UpdateUserInfo.js");
+        await loadModal("/mypage/update-user-info-modal", document.getElementsByClassName("update-user-info-modal-container")[0], "/mypage/js/updateUserInfo.js");
     } catch (error) {
         console.error("모달 로딩 중 오류 발생:", error)
     }

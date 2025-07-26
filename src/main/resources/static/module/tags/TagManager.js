@@ -3,7 +3,7 @@
  * 위치 태그, 계절 태그, 커스텀 태그의 생성, 업데이트, 병합 로직을 담당
  */
 
-import { TagApiService } from './TagApiService.js';
+import { TagApiService } from './tagApiService.js';
 
 export class TagManager {
     constructor() {

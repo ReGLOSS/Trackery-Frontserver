@@ -1,6 +1,6 @@
-import {tagManager} from "../../module/tags/TagManager.js";
-import {UiHelpers} from "../../module/common/UiHelpers.js";
-import {ValidationService} from "../../module/common/ValidationService.js";
+import {tagManager} from "../../module/tags/tagManager.js";
+import {UiHelpers} from "../../module/common/uiHelpers.js";
+import {ValidationService} from "../../module/common/validationService.js";
 
 // 홈 페이지와 업로드 페이지 모두 지원하도록 동적으로 선택
 const mapPickerModal = document.querySelector('#mapPickerModal') || document.querySelector('#modalMapPickerModal');
