@@ -28,9 +28,9 @@ export class TagManager {
             newLocationTags = [...newLocationTags, ...regionalTags];
         }
 
-        // 기존 위치 태그와 새로운 위치 태그 비교
+        // 기존 위치 태그와 새로운 위치 태그 비교 (태그명으로 판별)
         const existingLocationTags = existingTags.filter(tag => 
-            tag.tagId === 'sdName' || tag.tagId === 'sggName'
+            this.isLocationTag(tag.tagName)
         );
         
         const isLocationChanged = !this.isLocationTagsSame(existingLocationTags, newLocationTags);
@@ -38,7 +38,7 @@ export class TagManager {
         if (isLocationChanged) {
             // 위치가 변경된 경우: 기존 위치 태그 제거하고 새 위치 태그 추가
             const nonLocationTags = existingTags.filter(tag => 
-                tag.tagId !== 'sdName' && tag.tagId !== 'sggName'
+                !this.isLocationTag(tag.tagName)
             );
             return [...newLocationTags, ...nonLocationTags];
         } else {
@@ -104,83 +104,76 @@ export class TagManager {
     }
 
     /**
+     * 위치 태그인지 판별
+     * @param {string} tagName - 태그명
+     * @returns {boolean} 위치 태그 여부
+     */
+    isLocationTag(tagName) {
+        if (!tagName) return false;
+        
+        // 시도 태그 (특별시, 광역시, 도)
+        if (tagName.includes('특별시') || tagName.includes('광역시') || 
+            tagName.includes('특별자치시') || tagName.includes('도')) {
+            return true;
+        }
+        
+        // 시군구 태그 (구, 시, 군)
+        if (tagName.endsWith('구') || tagName.endsWith('시') || tagName.endsWith('군')) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
      * 위치 태그가 동일한지 비교
      * @param {Array} existingLocationTags - 기존 위치 태그
      * @param {Array} newLocationTags - 새로운 위치 태그
      * @returns {boolean} 동일 여부
      */
     isLocationTagsSame(existingLocationTags, newLocationTags) {
-        // sdName, sggName만 비교 (regionalTags는 제외)
-        const existingMain = existingLocationTags.filter(tag => 
-            tag.tagId === 'sdName' || tag.tagId === 'sggName'
-        );
-        const newMain = newLocationTags.filter(tag => 
-            tag.tagId === 'sdName' || tag.tagId === 'sggName'
-        );
+        // 새로운 위치 태그에서 sdName, sggName 추출
+        const newSdName = newLocationTags.find(tag => tag.tagId === 'sdName')?.tagName;
+        const newSggName = newLocationTags.find(tag => tag.tagId === 'sggName')?.tagName;
         
-        if (existingMain.length !== newMain.length) {
-            return false;
-        }
+        // 기존 태그에서 시도, 시군구 태그 찾기
+        const existingSdName = existingLocationTags.find(tag => 
+            tag.tagName && (tag.tagName.includes('특별시') || tag.tagName.includes('광역시') || 
+                           tag.tagName.includes('특별자치시') || tag.tagName.includes('도')))?.tagName;
+        const existingSggName = existingLocationTags.find(tag => 
+            tag.tagName && (tag.tagName.endsWith('구') || tag.tagName.endsWith('시') || tag.tagName.endsWith('군')))?.tagName;
         
-        // 각 태그 비교
-        for (const newTag of newMain) {
-            const exists = existingMain.some(existingTag => 
-                existingTag.tagId === newTag.tagId && existingTag.tagName === newTag.tagName
-            );
-            if (!exists) {
-                return false;
+        // 태그명으로 비교
+        return existingSdName === newSdName && existingSggName === newSggName;
+    }
+
+
+    /**
+     * 태그 배열에서 위치명 추출
+     * @param {Array} tags - 태그 배열
+     * @returns {string} 위치명 (시도 + 시군구)
+     */
+    extractLocationName(tags) {
+        // tagId 기반 우선 검색 (새로 생성된 태그)
+        const locationTags = tags.filter(tag => tag.tagId === 'sdName' || tag.tagId === 'sggName');
+        let sdName = locationTags.find(tag => tag.tagId === 'sdName')?.tagName || '';
+        let sggName = locationTags.find(tag => tag.tagId === 'sggName')?.tagName || '';
+        
+        // tagId가 없는 경우 tagName 패턴으로 검색 (기존 DB 태그)
+        if (!sdName || !sggName) {
+            const locationTagsByName = tags.filter(tag => this.isLocationTag(tag.tagName));
+            if (!sdName) {
+                sdName = locationTagsByName.find(tag => 
+                    tag.tagName && (tag.tagName.includes('특별시') || tag.tagName.includes('광역시') || 
+                                   tag.tagName.includes('특별자치시') || tag.tagName.includes('도')))?.tagName || '';
+            }
+            if (!sggName) {
+                sggName = locationTagsByName.find(tag => 
+                    tag.tagName && (tag.tagName.endsWith('구') || tag.tagName.endsWith('시') || tag.tagName.endsWith('군')))?.tagName || '';
             }
         }
         
-        return true;
-    }
-
-    /**
-     * 커스텀 태그 추가
-     * @param {Array} existingTags - 기존 태그 배열
-     * @param {string} customTagName - 추가할 커스텀 태그명
-     * @returns {Array} 업데이트된 태그 배열
-     */
-    addCustomTag(existingTags, customTagName) {
-        if (!customTagName || customTagName.trim() === '') {
-            return existingTags;
-        }
-
-        const trimmedName = customTagName.trim();
-        
-        // 중복 체크
-        const isDuplicate = existingTags.some(tag => tag.tagName === trimmedName);
-        if (isDuplicate) {
-            throw new Error('이미 추가된 태그입니다.');
-        }
-
-        // 새 커스텀 태그 추가
-        const newTag = {
-            tagName: trimmedName,
-            tagId: 'custom-' + Date.now(),
-            isCustom: true
-        };
-
-        return [...existingTags, newTag];
-    }
-
-    /**
-     * 태그 제거
-     * @param {Array} existingTags - 기존 태그 배열  
-     * @param {string} tagToRemove - 제거할 태그명
-     * @returns {Array} 업데이트된 태그 배열
-     */
-    removeTag(existingTags, tagToRemove) {
-        return existingTags.filter(tag => tag.tagName !== tagToRemove);
-    }
-
-    /**
-     * 태그 배열을 백엔드 API 형식으로 변환
-     * @param {Array} tags - 태그 배열
-     * @returns {Array} 태그명만 포함된 배열
-     */
-    convertTagsForApi(tags) {
-        return tags.map(tag => tag.tagName);
+        return `${sdName} ${sggName}`.trim();
     }
 
     /**
