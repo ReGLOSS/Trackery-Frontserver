@@ -6,14 +6,13 @@
         <div class="container-fluid">
             <div class="navbar-brand">
                 <a href="/home">
-                    <img
-                            src="/icons/common/map-pin.svg"
-                            class="navbar-brand-image"
-                            alt="Trackery"/>
+                    <img src="/icons/common/map-pin.svg"
+                         class="navbar-brand-image"
+                         alt="Trackery"/>
                 </a>
             </div>
             <div class="navbar-custom" id="sidebar-menu">
-                <ul class="navbar-nav pt-lg-3">
+                <ul class="navbar-nav">
                     <li class="nav-item">
                         <a class="nav-link" href="/home">
                             <span class="nav-link-map"> 지도 </span>
@@ -39,27 +38,24 @@
 
             <!-- 업로드 버튼 -->
             <div class="photo-upload-btn">
-                <a href="/image-upload" id="photoUploadBtn" class="btn btn-primary btn-pill w-100" role="button">
+                <a href="/image-upload" id="photoUploadBtn" class="btn btn-primary" role="button">
                     사진 업로드
                 </a>
             </div>
 
             <!-- 사용자 프로필 -->
             <div class="user-profile text-center">
-                <div class="mx-auto mb-2">
-                    <a href="mypage">
-                        <img
-                                th:src="${userProfile != null && userProfile.userProfile != null ?
-                          userProfile.userProfile : '/images/profile.jpg'}"
-                                class="rounded-circle user-avatar"
-                                alt="사용자 아바타"
-                                onerror="this.src='/images/profile.jpg'">
-                    </a>
-                </div>
+                <a href="mypage">
+                    <img th:src="${userProfile != null && userProfile.userProfile != null ?
+                         userProfile.userProfile : '/images/profile.jpg'}"
+                         class="rounded-circle user-avatar"
+                         alt="사용자 아바타"
+                         onerror="this.src='/images/profile.jpg'">
+                </a>
                 <div class="user-info">
-                    <p class="m-0 fw-bold text-white" th:text="${userProfile != null ? userProfile.nickname : '유저명'}">
+                    <p class="fw-bold text-white" th:text="${userProfile != null ? userProfile.nickname : '유저명'}">
                         유저명</p>
-                    <p class="m-0 fw-bold text-muted"
+                    <p class="fw-bold text-muted"
                        th:text="${userProfile != null ? '@' + userProfile.userName : '@USER'}">@USER</p>
                 </div>
             </div>

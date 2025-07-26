@@ -1,15 +1,17 @@
-/* 사이드바 추가 스타일 */
+/* 사이드바 스타일 */
 
+/* 사이드바 컨테이너 */
 .navbar-vertical {
-    height: 100vh;
-    background-color: #2a2a36;
-    display: flex;
-    flex-direction: column;
+    height: 100vh !important;
+    background-color: #2a2a36 !important;
+    display: flex !important;
+    flex-direction: column !important;
     box-shadow: inset calc(-1 * var(--tblr-navbar-border-width)) 0 0 0 #2a2a36 !important;
 }
 
+/* 사이드바 기본 레이아웃 */
 .navbar-expand-lg {
-    width: 20rem !important;
+    width: clamp(150px, 16.68vw, 30vh) !important;
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
@@ -20,94 +22,132 @@
     overflow-y: auto !important;
     padding: 0 !important;
     scrollbar-width: none;
+    flex-direction: column !important;
+}
+
+.navbar-expand-lg .container-fluid {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    align-items: stretch !important;
+    min-height: 100% !important;
+    justify-content: flex-start !important;
+    flex-wrap: nowrap !important;
 }
 
 .navbar-expand-lg .navbar-collapse {
     display: flex !important;
+    flex-basis: auto !important;
+    flex-grow: 1 !important;
 }
 
+.navbar-expand-lg .navbar-toggler {
+    display: none !important;
+}
+
+/* 브랜드 로고 */
 .navbar-brand {
-    margin-bottom: 2.5rem;
+    margin-bottom: 3.4vh !important;
+    margin-left: 1.6vh !important;
     justify-content: left !important;
-    padding-left: 1rem !important;
+    padding: 2vh 0 2vh 1.6vh !important;
 }
 
 .navbar-brand-image {
-    filter: brightness(0) invert(1);
-    width: 3.5rem;
-    height: auto;
+    filter: brightness(0) invert(1) !important;
+    width: 7vh !important;
+    height: auto !important;
 }
 
+/* 네비게이션 메뉴 */
 .navbar-custom {
-    flex-direction: column;
-    align-items: stretch;
-    display: flex;
-    width: auto;
-    overflow-y: auto;
-    max-height: calc(100vh - 20rem); /* 프로필과 업로드 버튼 공간을 제외한 높이 */
-    padding-right: 0.5rem;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    display: flex !important;
+    width: auto !important;
 }
 
 .navbar-nav {
-    margin-bottom: 2rem;
-    font-weight: bold;
+    font-weight: bold !important;
     flex-grow: 0 !important;
+    flex-direction: column !important;
+    width: 100% !important;
 }
 
+/* 네비게이션 링크 */
 .nav-link {
-    color: white;
-    font-size: 2.4rem;
-    padding: 1.2rem 1.2rem 1.2rem 2rem !important;
-    transition: all 0.3s;
-    margin: 0.5rem !important;
+    color: white !important;
+    font-size: 3.5vh !important;
+    padding: 1.8vh 1.8vh 1.8vh 2vh !important;
+    transition: all 0.3s !important;
+    margin: 1.6vh !important;
     justify-content: left !important;
 }
 
 .nav-link:hover {
-    color: white;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 5px;
+    color: white !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 0.5vh !important;
 }
 
 .nav-link.active {
     color: #FF5B3E !important;
-    background-color: rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    border-radius: 0.5vh !important;
 }
 
-.user-info {
-    font-size: 1.4rem;
-}
-
-.user-info .text-muted {
-    color: rgba(255, 255, 255, 0.5) !important;
-}
-
-.user-profile {
-    margin-bottom: 5rem;
-}
-
-.user-avatar {
-    width: 6.3rem;
-    height: auto;
-}
-
+/* 사진 업로드 버튼 */
 .photo-upload-btn {
-    margin: 2rem 3rem 5rem;
-
+    margin: 3vh 3.6vh 5vh !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
 }
 
-/* 업로드 버튼 커스텀 스타일 */
 #photoUploadBtn {
     background-color: #d3d9e8 !important;
-    color: black;
-    font-weight: bold;
-    border: none;
-    transition: background-color 0.3s;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+    color: black !important;
+    font-weight: bold !important;
+    border: none !important;
+    transition: background-color 0.3s !important;
+    padding: 1.5vh 1.8vh !important;
+    border-radius: 15vh !important;
+    font-family: 'Noto Sans KR', sans-serif !important;
+    font-size: 1.6vh !important;
+    width: 100% !important;
 }
 
 #photoUploadBtn:hover {
     background-color: #d8d9dd !important;
+}
+
+/* 사용자 프로필 */
+.user-profile {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.user-avatar {
+    width: 12vh !important;
+    height: auto !important;
+    aspect-ratio: 1/1 !important;
+    margin-bottom: 2vh !important;
+}
+
+.user-info {
+    font-size: 3vh !important;
+}
+
+.user-info p {
+    margin-bottom: 0.1vh !important;
+}
+
+.user-info .text-muted {
+    color: rgba(255, 255, 255, 0.5) !important;
+    font-size: 2.5vh !important;
 }
