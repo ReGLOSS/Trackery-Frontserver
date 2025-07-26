@@ -1,4 +1,5 @@
 import {parseExif} from "./ExifParser.js";
+import {tagManager} from "/module/tags/TagManager.js";
 
 // DOM 엘리먼트 관련 상수들
 const DOM = {
@@ -59,7 +60,7 @@ const ImageProcessor = {
 
 // API 통신 관련 함수들
 const ApiService = {
-    // 위치 정보 가져오기
+    // 위치 정보 가져오기 (TagManager 사용)
     async fetchLocation(file) {
         const exif = await parseExif(file);
 
@@ -70,6 +71,7 @@ const ApiService = {
                 dateTime: '',
                 latitude: null,
                 longitude: null,
+                tags: []
             };
         }
 
@@ -83,67 +85,37 @@ const ApiService = {
                 location: '',
                 dateTime: formattedDateTime,
                 latitude: null,
-                longitude: null
+                longitude: null,
+                tags: []
             };
         }
 
         try {
-            // 병렬로 두 API 요청 실행
-            const [locationResponse, tagsResponse] = await Promise.all([
-                fetch("/api/location/name", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    credentials: "include",
-                    body: JSON.stringify({latitude, longitude})
-                }),
-                fetch("/api/tags/season", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    credentials: "include",
-                    body: JSON.stringify({
-                        date: formattedDateTime
-                    })
-                })
-            ]);
-
-            const locationData = await locationResponse.json();
-            const tagsData = await tagsResponse.json();
-
-            console.log('Location API Response:', locationData);
-            console.log('Tags API Response:', tagsData);
-
-            const location = locationData.data;
-            const displayLocationName = `${location.sdName} ${location.sggName}`.trim();
-
-            // 태그 정보 병합: sdName, sggName을 최우선으로 추가
-            let combinedTags = [];
-            if (location.sdName) combinedTags.push({ tagName: location.sdName, tagId: 'sdName' });
-            if (location.sggName) combinedTags.push({ tagName: location.sggName, tagId: 'sggName' });
-
-            if (location.regionalTags && Array.isArray(location.regionalTags)) {
-                combinedTags = [...combinedTags, ...location.regionalTags];
-            }
-
-            if (tagsResponse.status === 200 && tagsData.code === 200 && Array.isArray(tagsData.data)) {
-                combinedTags = [...combinedTags, ...tagsData.data];
-            }
+            // TagManager를 사용하여 태그 생성
+            const tags = await tagManager.fetchAndCreateTags(latitude, longitude, formattedDateTime);
+            
+            // 위치명 생성 (태그에서 추출)
+            const locationTags = tags.filter(tag => tag.tagId === 'sdName' || tag.tagId === 'sggName');
+            const sdName = locationTags.find(tag => tag.tagId === 'sdName')?.tagName || '';
+            const sggName = locationTags.find(tag => tag.tagId === 'sggName')?.tagName || '';
+            const displayLocationName = `${sdName} ${sggName}`.trim();
 
             return {
                 location: displayLocationName,
                 dateTime: formattedDateTime,
                 latitude,
                 longitude,
-                tags: combinedTags
+                tags: tags
             };
         } catch (err) {
             console.error("위치 정보 요청 실패 (CORS 오류 또는 네트워크 오류):", err);
             console.warn("좌표는 있지만 대한민국 범위 밖이거나 네트워크 오류로 인해 위치 정보를 가져올 수 없습니다. EXIF 정보 없음과 동일하게 처리합니다.");
-            // CORS 오류나 네트워크 오류 발생 시 EXIF 정보 없음과 동일하게 처리
             return {
                 location: '',
                 dateTime: formattedDateTime,
                 latitude: null,
                 longitude: null,
+                tags: []
             };
         }
     },
@@ -536,41 +508,19 @@ const EventHandlers = {
         DOM.publicCheckbox.checked = isPublic === "true";
 
         // 태그 정보 로드 및 UI 업데이트
-        DOM.tagBox.querySelectorAll('.tag:not(.tag-add)').forEach(tag => tag.remove()); // Clear all tags first
-
         if (tags) {
             try {
                 const parsedTags = JSON.parse(tags);
-                parsedTags.forEach(tag => {
-                    if (tag.isCustom) {
-                        UiHelpers.addCustomTag(tag.tagName);
-                    } else {
-                        const tagElement = document.createElement('span');
-                        tagElement.classList.add('tag', 'regional-tag');
-                        tagElement.textContent = tag.tagName;
-                        tagElement.dataset.tagId = tag.tagId || '';
-                        tagElement.dataset.tagName = tag.tagName;
-
-                        const deleteButton = document.createElement('button');
-                        deleteButton.classList.add('tag-delete');
-                        deleteButton.innerHTML = '×';
-                        deleteButton.title = '태그 삭제';
-                        deleteButton.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            tagElement.remove();
-                            const selectedImage = document.querySelector(".gallery-image.selected");
-                            if (selectedImage) {
-                                UiHelpers.updateSelectedImageTags();
-                            }
-                        });
-                        tagElement.appendChild(deleteButton);
-                        const tagAddButton = DOM.tagBox.querySelector('.tag-add');
-                        DOM.tagBox.insertBefore(tagElement, tagAddButton);
-                    }
-                });
+                // 일관성을 위해 UiHelpers.addTags() 함수 사용
+                UiHelpers.addTags(parsedTags);
             } catch (error) {
                 console.error('태그 파싱 오류:', error);
+                // 오류 시 빈 태그로 초기화
+                UiHelpers.addTags([]);
             }
+        } else {
+            // 태그가 없을 때도 기존 태그 제거
+            UiHelpers.addTags([]);
         }
 
         if (DOM.dateBox.value === "") {
@@ -609,76 +559,42 @@ const EventHandlers = {
     async onDateChange() {
         ValidationService.validateLocationAndDate();
         
-        // 날짜 변경 시 계절 태그 업데이트
+        // 날짜 변경 시 계절 태그 업데이트 (TagManager 사용)
         const selectedImage = document.querySelector(".gallery-image.selected");
         if (selectedImage) {
             await EventHandlers.updateSeasonalTags(selectedImage);
         }
     },
     
-    // 계절 태그 업데이트 헬퍼 함수 (위치태그 유지)
+    // 계절 태그 업데이트 헬퍼 함수 (TagManager 사용)
     async updateSeasonalTags(selectedImage) {
         const dateTime = selectedImage.dataset.dateTime;
-        const latitude = selectedImage.dataset.latitude;
-        const longitude = selectedImage.dataset.longitude;
         
         if (!dateTime) {
             return;
         }
         
         try {
-            const response = await fetch("/api/tags/season", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                credentials: "include",
-                body: JSON.stringify({
-                    date: dateTime
-                })
-            });
-            
-            if (response.ok) {
-                const seasonData = await response.json();
-                if (seasonData.code === 200 && Array.isArray(seasonData.data)) {
-                    // 1. 기존 계절태그만 제거 (다른 태그는 보존)
-                    DOM.tagBox.querySelectorAll('.tag.regional-tag').forEach(tag => {
-                        const tagName = tag.dataset.tagName;
-                        if (tagName && (tagName.includes('봄') || tagName.includes('여름') || 
-                                      tagName.includes('가을') || tagName.includes('겨울'))) {
-                            tag.remove();
-                        }
-                    });
-
-                    // 2. 새로운 계절태그만 추가
-                    const tagAddButton = DOM.tagBox.querySelector('.tag-add');
-                    seasonData.data.forEach(tag => {
-                        const tagElement = document.createElement('span');
-                        tagElement.classList.add('tag', 'regional-tag');
-                        tagElement.textContent = tag.tagName;
-                        tagElement.dataset.tagId = tag.tagId || '';
-                        tagElement.dataset.tagName = tag.tagName;
-
-                        // 태그 삭제 버튼 추가
-                        const deleteButton = document.createElement('button');
-                        deleteButton.classList.add('tag-delete');
-                        deleteButton.innerHTML = '×';
-                        deleteButton.title = '태그 삭제';
-                        deleteButton.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            tagElement.remove();
-                            const selectedImage = document.querySelector(".gallery-image.selected");
-                            if (selectedImage) {
-                                UiHelpers.updateSelectedImageTags();
-                            }
-                        });
-
-                        tagElement.appendChild(deleteButton);
-                        DOM.tagBox.insertBefore(tagElement, tagAddButton);
-                    });
-                    
-                    // 3. 선택된 이미지의 태그 정보 업데이트
-                    UiHelpers.updateSelectedImageTags();
-                }
+            // 기존 태그 정보 가져오기
+            let existingTags = [];
+            try {
+                existingTags = JSON.parse(selectedImage.dataset.tags || '[]');
+            } catch (error) {
+                console.error('기존 태그 파싱 오류:', error);
             }
+            
+            // 새로운 계절 태그 가져오기
+            const seasonTags = await tagManager.apiService.fetchSeasonTags(dateTime);
+            
+            // TagManager를 사용하여 계절 태그 업데이트
+            const updatedTags = tagManager.handleSeasonChange(existingTags, seasonTags);
+            
+            // UI 업데이트
+            UiHelpers.addTags(updatedTags);
+            
+            // 선택된 이미지의 태그 정보 업데이트
+            selectedImage.dataset.tags = JSON.stringify(updatedTags);
+            
         } catch (error) {
             console.error('계절 태그 업데이트 중 오류:', error);
         }
@@ -814,7 +730,7 @@ function initialize() {
 
                 ValidationService.validateLocationAndDate();
                 
-                // 날짜 변경 시 계절 태그 업데이트
+                // 날짜 변경 시 계절 태그 업데이트 (TagManager 사용)
                 await EventHandlers.updateSeasonalTags(selectedImage);
             }
         }

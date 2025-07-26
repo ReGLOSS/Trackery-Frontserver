@@ -1,3 +1,5 @@
+import {tagManager} from "/module/tags/TagManager.js";
+
 /**
  * 이미지 상세 모달 관리, 편집 모드, 태그/날짜/위치 편집을 담당하는 클래스
  */
@@ -1150,107 +1152,64 @@ export class ModalManager {
         }
     }
     
-    // 위치 변경시 태그 실시간 업데이트
-    async updateModalTagsFromLocationChange(newTags) {
+    // 위치 변경시 태그 실시간 업데이트 (TagManager 사용)
+    async updateModalTagsFromLocationChange(newLocationTags) {
         if (!this.isEditMode) return;
         
         const modalTagBox = document.getElementById('modalTagBox');
         const modalDateBox = document.getElementById('modalDateBox');
         if (!modalTagBox) return;
         
-        // 현재 날짜 정보 가져오기
-        const currentDate = modalDateBox ? modalDateBox.value : '';
-        
-        let seasonalTags = [];
-        // 날짜 정보가 있으면 계절 태그도 함께 가져오기
-        if (currentDate) {
-            try {
-                const response = await fetch("/api/tags/season", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    credentials: "include",
-                    body: JSON.stringify({ date: currentDate })
-                });
-                
-                if (response.ok) {
-                    const tagsData = await response.json();
-                    if (tagsData.code === 200 && Array.isArray(tagsData.data)) {
-                        seasonalTags = tagsData.data;
-                    }
-                }
-            } catch (error) {
-                console.error('Error fetching seasonal tags during location change:', error);
-            }
-        }
-        
-        // 기존 커스텀 태그 보존
-        const existingTags = modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)');
-        const customTags = [];
-        
-        existingTags.forEach(tag => {
-            const tagName = tag.dataset.tagName;
-            const tagType = this.classifyTagType(tagName);
-            
-            // 커스텀 태그만 보존
-            if (tagType === 'custom') {
-                customTags.push({
+        try {
+            // 기존 태그 정보 수집
+            let existingTags = [];
+            modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)').forEach(tag => {
+                existingTags.push({
                     tagId: tag.dataset.tagId,
                     tagName: tag.dataset.tagName
                 });
-            }
-            tag.remove();
-        });
-        
-        // 새로운 위치 기반 태그들 추가
-        if (newTags && newTags.length > 0) {
-            newTags.forEach(tag => {
-                const tagElement = this.createTagElement({
-                    tagId: (typeof tag === 'object' ? tag.tagId : null) || 'location-' + Date.now(),
-                    tagName: typeof tag === 'object' ? (tag.tagName || tag.name || tag) : tag
-                });
-                
-                const deleteButton = tagElement.querySelector('.tag-delete');
-                if (deleteButton) {
-                    deleteButton.style.display = this.isEditMode ? 'flex' : 'none';
-                }
-                
-                const tagAddButton = document.getElementById('modalTagAddButton');
-                modalTagBox.insertBefore(tagElement, tagAddButton);
             });
-        }
-        
-        // 계절 태그들 추가
-        if (seasonalTags && seasonalTags.length > 0) {
-            seasonalTags.forEach(tag => {
-                const tagElement = this.createTagElement({
-                    tagId: (typeof tag === 'object' ? tag.tagId : null) || 'season-' + Date.now(),
-                    tagName: typeof tag === 'object' ? (tag.tagName || tag.name || tag) : tag
+            
+            // 새로운 위치 데이터 구성
+            const newLocationData = {
+                sdName: null,
+                sggName: null,
+                regionalTags: newLocationTags
+            };
+            
+            // newLocationTags에서 sdName과 sggName 추출
+            if (newLocationTags && Array.isArray(newLocationTags)) {
+                newLocationTags.forEach(tag => {
+                    const tagName = typeof tag === 'object' ? tag.tagName : tag;
+                    const tagId = typeof tag === 'object' ? tag.tagId : null;
+                    
+                    if (tagId === 'sdName') {
+                        newLocationData.sdName = tagName;
+                    } else if (tagId === 'sggName') {
+                        newLocationData.sggName = tagName;
+                    }
                 });
-                
-                const deleteButton = tagElement.querySelector('.tag-delete');
-                if (deleteButton) {
-                    deleteButton.style.display = this.isEditMode ? 'flex' : 'none';
-                }
-                
-                const tagAddButton = document.getElementById('modalTagAddButton');
-                modalTagBox.insertBefore(tagElement, tagAddButton);
-            });
-        }
-        
-        // 보존한 커스텀 태그들 다시 추가
-        customTags.forEach(tag => {
-            const tagElement = this.createTagElement(tag);
-            const deleteButton = tagElement.querySelector('.tag-delete');
-            if (deleteButton) {
-                deleteButton.style.display = this.isEditMode ? 'flex' : 'none';
             }
             
-            const tagAddButton = document.getElementById('modalTagAddButton');
-            modalTagBox.insertBefore(tagElement, tagAddButton);
-        });
+            // TagManager를 사용하여 위치 변경 처리
+            let updatedTags = tagManager.handleLocationChange(existingTags, newLocationData);
+            
+            // 현재 날짜 정보가 있으면 계절 태그도 함께 처리
+            const currentDate = modalDateBox ? modalDateBox.value : '';
+            if (currentDate) {
+                const seasonTags = await tagManager.apiService.fetchSeasonTags(currentDate);
+                updatedTags = tagManager.handleSeasonChange(updatedTags, seasonTags);
+            }
+            
+            // UI 업데이트
+            this.updateModalTagsFromTagArray(updatedTags);
+            
+        } catch (error) {
+            console.error('Error updating modal tags from location change:', error);
+        }
     }
     
-    // 모달에서 날짜 변경 시 계절 태그 업데이트
+    // 모달에서 날짜 변경 시 계절 태그 업데이트 (TagManager 사용)
     async updateSeasonalTagsInModal(dateStr) {
         if (!this.isEditMode) return;
         
@@ -1258,63 +1217,24 @@ export class ModalManager {
         if (!modalTagBox) return;
         
         try {
-            const response = await fetch("/api/tags/season", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                credentials: "include",
-                body: JSON.stringify({ date: dateStr })
+            // 기존 태그 정보 수집
+            let existingTags = [];
+            modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)').forEach(tag => {
+                existingTags.push({
+                    tagId: tag.dataset.tagId,
+                    tagName: tag.dataset.tagName
+                });
             });
             
-            if (response.ok) {
-                const tagsData = await response.json();
-                if (tagsData.code === 200 && Array.isArray(tagsData.data)) {
-                    // 기존 위치태그 유지 (계절태그가 아닌 것들)
-                    const existingLocationTags = [];
-                    modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)').forEach(tag => {
-                        const tagName = tag.dataset.tagName;
-                        // 계절태그가 아닌 경우만 유지
-                        if (tagName && !tagName.includes('봄') && !tagName.includes('여름') && 
-                            !tagName.includes('가을') && !tagName.includes('겨울')) {
-                            existingLocationTags.push({
-                                tagId: tag.dataset.tagId,
-                                tagName: tagName
-                            });
-                        }
-                    });
-                    
-                    // 모든 기존 태그 제거
-                    const existingTags = modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)');
-                    existingTags.forEach(tag => tag.remove());
-                    
-                    // 기존 위치태그 다시 추가
-                    existingLocationTags.forEach(tag => {
-                        const tagElement = this.createTagElement(tag);
-                        const deleteButton = tagElement.querySelector('.tag-delete');
-                        if (deleteButton) {
-                            deleteButton.style.display = this.isEditMode ? 'flex' : 'none';
-                        }
-                        
-                        const tagAddButton = document.getElementById('modalTagAddButton');
-                        modalTagBox.insertBefore(tagElement, tagAddButton);
-                    });
-                    
-                    // 새로운 계절태그 추가
-                    tagsData.data.forEach(tag => {
-                        const tagElement = this.createTagElement({
-                            tagId: (typeof tag === 'object' ? tag.tagId : null) || 'season-' + Date.now(),
-                            tagName: typeof tag === 'object' ? (tag.tagName || tag.name || tag) : tag
-                        });
-                        
-                        const deleteButton = tagElement.querySelector('.tag-delete');
-                        if (deleteButton) {
-                            deleteButton.style.display = this.isEditMode ? 'flex' : 'none';
-                        }
-                        
-                        const tagAddButton = document.getElementById('modalTagAddButton');
-                        modalTagBox.insertBefore(tagElement, tagAddButton);
-                    });
-                }
-            }
+            // 새로운 계절 태그 가져오기
+            const seasonTags = await tagManager.apiService.fetchSeasonTags(dateStr);
+            
+            // TagManager를 사용하여 계절 태그 업데이트
+            const updatedTags = tagManager.handleSeasonChange(existingTags, seasonTags);
+            
+            // UI 업데이트
+            this.updateModalTagsFromTagArray(updatedTags);
+            
         } catch (error) {
             console.error('Error updating seasonal tags in modal:', error);
         }
@@ -1341,6 +1261,30 @@ export class ModalManager {
         }
         
         return 'custom';
+    }
+    
+    // 태그 배열로부터 모달 태그 UI 업데이트 (헬퍼 함수)
+    updateModalTagsFromTagArray(tags) {
+        const modalTagBox = document.getElementById('modalTagBox');
+        if (!modalTagBox) return;
+        
+        // 기존 태그들 제거 (추가 버튼과 입력 필드는 유지)
+        const existingTags = modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)');
+        existingTags.forEach(tag => tag.remove());
+        
+        // 새로운 태그들 추가
+        if (tags && tags.length > 0) {
+            tags.forEach(tag => {
+                const tagElement = this.createTagElement(tag);
+                const deleteButton = tagElement.querySelector('.tag-delete');
+                if (deleteButton) {
+                    deleteButton.style.display = this.isEditMode ? 'flex' : 'none';
+                }
+                
+                const tagAddButton = document.getElementById('modalTagAddButton');
+                modalTagBox.insertBefore(tagElement, tagAddButton);
+            });
+        }
     }
     
     // 편집 모드에서 위치/날짜 편집 버튼 표시/숨김

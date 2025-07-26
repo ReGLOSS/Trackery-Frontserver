@@ -1,3 +1,5 @@
+import {tagManager} from "/module/tags/TagManager.js";
+
 // 홈 페이지와 업로드 페이지 모두 지원하도록 동적으로 선택
 const mapPickerModal = document.querySelector('#mapPickerModal') || document.querySelector('#modalMapPickerModal');
 const modalToggleButton = document.querySelector('#editLocationBtn') || document.querySelector('#modalEditLocationBtn');
@@ -231,6 +233,7 @@ let foundLocationData = {longitude: 0, latitude: 0, locationName: "", tags: []}
 // 전역 변수로 내보내기 (map.js에서 사용)
 window.foundLocationData = foundLocationData;
 
+
 function fetchLocationName(utmkcoor) {
     const utmk = utmkcoor;
     const wgs84 = convertUTMKtoWGS84(utmk.x, utmk.y);
@@ -297,7 +300,7 @@ function fetchLocationName(utmkcoor) {
                 mapPickSubmitBtn.disabled = false;
             }
 
-            // 기존 태그 유지하면서 새로운 위치태그만 추가
+            // 기존 태그 가져오기
             let existingTags = [];
             const selectedImage = document.querySelector(".gallery-image.selected");
             if (selectedImage && selectedImage.dataset.tags) {
@@ -308,22 +311,9 @@ function fetchLocationName(utmkcoor) {
                 }
             }
 
-            // 새로운 위치태그 구성: sdName, sggName을 최우선으로 추가
-            let newLocationTags = [];
-            if (sdName) newLocationTags.push({ tagName: sdName, tagId: 'sdName' });
-            if (sggName) newLocationTags.push({ tagName: sggName, tagId: 'sggName' });
-
-            if (regionalTags && Array.isArray(regionalTags)) {
-                newLocationTags = [...newLocationTags, ...regionalTags];
-            }
-
-            // 중복 제거: 기존 태그와 새로운 위치태그 비교
-            const uniqueLocationTags = newLocationTags.filter(newTag => 
-                !existingTags.some(existingTag => existingTag.tagName === newTag.tagName)
-            );
-
-            // 기존 태그 + 새로운 위치태그(중복 제거) 결합
-            const combinedTags = [...existingTags, ...uniqueLocationTags];
+            // TagManager를 사용하여 위치 변경 처리
+            const newLocationData = { sdName, sggName, regionalTags };
+            const combinedTags = tagManager.handleLocationChange(existingTags, newLocationData);
 
             foundLocationData = {
                 longitude: wgs84.longitude,
@@ -334,7 +324,7 @@ function fetchLocationName(utmkcoor) {
                 tags: combinedTags
             };
             window.foundLocationData = foundLocationData;
-            console.log('Final foundLocationData (계절태그 유지):', foundLocationData);
+            console.log('Final foundLocationData (TagManager 사용):', foundLocationData);
         } else {
             console.error('API Error - Status:', locationResponse.status, 'Data:', locationData);
             alert(locationData.message);
