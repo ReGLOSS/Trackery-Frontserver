@@ -1,4 +1,6 @@
-import {tagManager} from "/module/tags/TagManager.js";
+import {tagManager} from "../../module/tags/TagManager.js";
+import {UiHelpers} from "../../module/common/UiHelpers.js";
+import {ValidationService} from "../../module/common/ValidationService.js";
 
 // 홈 페이지와 업로드 페이지 모두 지원하도록 동적으로 선택
 const mapPickerModal = document.querySelector('#mapPickerModal') || document.querySelector('#modalMapPickerModal');
@@ -370,15 +372,13 @@ mapPickSubmitBtn?.addEventListener('click', function () {
         }
     }
     
-    // 지역 태그 업데이트
-    if (window.UiHelpers && foundLocationData.tags) {
-        window.UiHelpers.addTags(foundLocationData.tags);
+    // 지역 태그 업데이트 (업로드 페이지에서만)
+    if (foundLocationData.tags && !document.getElementById('modalMapPickerModal')) {
+        UiHelpers.addTags(foundLocationData.tags);
     }
 
-    if (window.ValidationService) {
-        window.ValidationService.validateLocationAndDate();
-        window.ValidationService.updateUploadButtonState();
-    }
+    ValidationService.validateLocationAndDate();
+    ValidationService.updateUploadButtonState();
     
     mapPickerModal.classList.remove('show');
     resetVariations();
