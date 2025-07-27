@@ -1,5 +1,7 @@
-import {parseExif} from "./ExifParser.js";
-import {tagManager} from "/module/tags/TagManager.js";
+import {parseExif} from "./exifParser.js";
+import {tagManager} from "../../module/tags/tagManager.js";
+import {UiHelpers} from "../../module/common/uiHelpers.js";
+import {ValidationService} from "../../module/common/validationService.js";
 
 // DOM 엘리먼트 관련 상수들
 const DOM = {
@@ -94,11 +96,8 @@ const ApiService = {
             // TagManager를 사용하여 태그 생성
             const tags = await tagManager.fetchAndCreateTags(latitude, longitude, formattedDateTime);
             
-            // 위치명 생성 (태그에서 추출)
-            const locationTags = tags.filter(tag => tag.tagId === 'sdName' || tag.tagId === 'sggName');
-            const sdName = locationTags.find(tag => tag.tagId === 'sdName')?.tagName || '';
-            const sggName = locationTags.find(tag => tag.tagId === 'sggName')?.tagName || '';
-            const displayLocationName = `${sdName} ${sggName}`.trim();
+            // 위치명 생성 (TagManager 사용)
+            const displayLocationName = tagManager.extractLocationName(tags);
 
             return {
                 location: displayLocationName,
@@ -210,199 +209,6 @@ const ApiService = {
             throw error;
         }
     }
-};
-
-// 이미지 유효성 검증 및 UI 업데이트 관련 함수들
-const ValidationService = {
-    // 위치 및 날짜 유효성 검증
-    validateLocationAndDate() {
-        const selectedImage = document.querySelector(".gallery-image.selected");
-        if (!selectedImage) return;
-
-        const hasLocationAndDate = DOM.locationBox.value.trim() !== "" && DOM.dateBox.value.trim() !== "";
-
-        if (hasLocationAndDate) {
-            selectedImage.classList.remove("invalid");
-            selectedImage.classList.add("valid");
-        } else {
-            selectedImage.classList.remove("valid");
-            selectedImage.classList.add("invalid");
-        }
-    },
-
-    // 업로드 버튼 상태 업데이트
-    updateUploadButtonState() {
-        const images = document.querySelectorAll(".gallery-image");
-
-        // 이미지가 없는 경우 버튼 비활성화
-        if (images.length === 0) {
-            DOM.imageUploadBtn.disabled = true;
-            return;
-        }
-
-        // 모든 이미지가 valid인지 확인
-        const allValid = Array.from(images).every(image => image.classList.contains('valid'));
-
-        // 모든 이미지가 valid일 때만 버튼 활성화
-        DOM.imageUploadBtn.disabled = !allValid;
-    },
-
-    // 유효성 검증 리스너 설정
-    setupValidationListeners() {
-        const observer = new MutationObserver(mutations => {
-            for (const mutation of mutations) {
-                const isClassChange = mutation.type === 'attributes' && mutation.attributeName === 'class';
-                const isChildrenChange = mutation.type === 'childList';
-
-                if (isClassChange || isChildrenChange) {
-                    this.updateUploadButtonState();
-                }
-            }
-        });
-
-        // gallery의 변화 감지
-        observer.observe(DOM.gallery, {
-            childList: true,
-            attributes: true,
-            attributeFilter: ['class'],
-            subtree: true
-        });
-
-        this.updateUploadButtonState();
-    }
-};
-
-// UI 관련 헬퍼 함수들
-const UiHelpers = {
-    async hideUploadingBlockAndShowResultBlock() {
-        DOM.uploadingBlock.style.display = "none";
-        DOM.resultInfoBlock.style.display = "flex";
-    },
-
-    async addFailedImage(failedImageUUIDs = []) {
-        if (failedImageUUIDs.length === 0) {
-            DOM.failedUploadInfoGroup.style.display = "none";
-            return;
-        }
-
-        failedImageUUIDs.forEach(uuid => {
-            const failedImage = document.querySelector(`.gallery-image[data-uuid="${uuid}"]`);
-            if (failedImage) {
-                const img = document.createElement("img");
-                img.src = failedImage.src;
-                img.classList.add("uploading-modal-gallery-image");
-                img.alt = "업로드 실패한 이미지";
-
-                DOM.modalGallery.appendChild(img);
-            }
-        });
-    },
-
-    async indicateResult(successImageUUIDs = [], failedImageUUIDs = []) {
-        DOM.uploadedImageCount.textContent = successImageUUIDs.length + "장의 이미지를 성공적으로 업로드했습니다.";
-        DOM.uploadFailedImageCount.textContent = failedImageUUIDs.length + "장의 이미지는 업로드에 실패했습니다.";
-    },
-
-    // 태그 영역에 지역 태그 추가
-    addTags(tags) {
-        const existingTags = DOM.tagBox.querySelectorAll('.tag:not(.tag-add)');
-        existingTags.forEach(tag => {
-            if (tag.classList.contains('regional-tag')) {
-                tag.remove();
-            }
-        });
-
-        const tagAddButton = DOM.tagBox.querySelector('.tag-add');
-
-        tags.forEach(tag => {
-            const tagElement = document.createElement('span');
-            tagElement.classList.add('tag', 'regional-tag');
-            tagElement.textContent = tag.tagName;
-            tagElement.dataset.tagId = tag.tagId || '';
-            tagElement.dataset.tagName = tag.tagName;
-
-            // 태그 삭제 버튼 추가
-            const deleteButton = document.createElement('button');
-            deleteButton.classList.add('tag-delete');
-            deleteButton.innerHTML = '×';
-            deleteButton.title = '태그 삭제';
-            deleteButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                tagElement.remove();
-                // 선택된 이미지의 태그 정보 즉시 업데이트
-                const selectedImage = document.querySelector(".gallery-image.selected");
-                if (selectedImage) {
-                    this.updateSelectedImageTags();
-                }
-            });
-
-            tagElement.appendChild(deleteButton);
-            DOM.tagBox.insertBefore(tagElement, tagAddButton);
-        });
-    },
-
-    // 커스텀 태그 추가
-    addCustomTag(tagName) {
-        if (!tagName || tagName.trim() === '') return;
-
-        // 중복 태그 체크
-        const existingTags = DOM.tagBox.querySelectorAll('.tag:not(.tag-add)');
-        const isDuplicate = Array.from(existingTags).some(tag =>
-            tag.textContent.replace('×', '').trim() === tagName.trim()
-        );
-
-        if (isDuplicate) {
-            alert('이미 추가된 태그입니다.');
-            return;
-        }
-
-        const tagElement = document.createElement('span');
-        tagElement.classList.add('tag', 'regional-tag');
-        tagElement.textContent = tagName.trim();
-        tagElement.dataset.tagId = 'custom-' + Date.now(); // 임시 ID
-        tagElement.dataset.tagName = tagName.trim();
-
-        // 태그 삭제 버튼 추가
-        const deleteButton = document.createElement('button');
-        deleteButton.classList.add('tag-delete');
-        deleteButton.innerHTML = '×';
-        deleteButton.title = '태그 삭제';
-        deleteButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            tagElement.remove();
-            // 선택된 이미지의 태그 정보 즉시 업데이트
-            const selectedImage = document.querySelector(".gallery-image.selected");
-            if (selectedImage) {
-                this.updateSelectedImageTags();
-            }
-        });
-
-        tagElement.appendChild(deleteButton);
-
-        const tagAddButton = DOM.tagBox.querySelector('.tag-add');
-        DOM.tagBox.insertBefore(tagElement, tagAddButton);
-
-        // 선택된 이미지의 태그 정보 업데이트
-        const selectedImage = document.querySelector(".gallery-image.selected");
-        if (selectedImage) {
-            this.updateSelectedImageTags();
-        }
-    },
-
-    // 선택된 이미지의 태그 정보 업데이트
-    updateSelectedImageTags() {
-        const selectedImage = document.querySelector(".gallery-image.selected");
-        if (!selectedImage) return;
-
-        const currentTags = DOM.tagBox.querySelectorAll('.tag.regional-tag');
-        const updatedTags = Array.from(currentTags).map(tag => ({
-            tagId: tag.dataset.tagId,
-            tagName: tag.dataset.tagName
-        }));
-
-        selectedImage.dataset.tags = JSON.stringify(updatedTags);
-    },
-
 };
 
 // 이벤트 핸들러 모음
@@ -765,6 +571,3 @@ function initialize() {
 
 // DOM이 로드된 후 초기화
 document.addEventListener('DOMContentLoaded', initialize);
-
-// 전역으로 노출 (맵 피커 모달에서 사용)
-window.UiHelpers = UiHelpers;
