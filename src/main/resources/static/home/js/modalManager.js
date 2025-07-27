@@ -18,16 +18,14 @@ export class ModalManager {
         // 의존성
         this.mapManager = null;
         this.imageManager = null;
-        this.statsRenderer = null;
         
         this.bindModalEventsOnce();
     }
     
     // 의존성 주입
-    setDependencies({ mapManager, imageManager, statsRenderer }) {
+    setDependencies({ mapManager, imageManager }) {
         this.mapManager = mapManager;
         this.imageManager = imageManager;
-        this.statsRenderer = statsRenderer;
     }
     
     // 모달 이벤트 바인딩 (한 번만)
@@ -289,7 +287,6 @@ export class ModalManager {
     
     // 모달 이벤트 바인딩 (각 모달마다)
     bindModalEvents() {
-        const modal = document.getElementById('imageDetailModal');
         const modalOverlay = document.getElementById('modalOverlay');
         const modalClose = document.getElementById('modalClose');
         
@@ -486,7 +483,6 @@ export class ModalManager {
     collectUpdateData() {
         const modalDescription = document.getElementById('modalDescription');
         const modalPublic = document.getElementById('modalPublic');
-        const modalLocationBox = document.getElementById('modalLocationBox');
         const modalDateBox = document.getElementById('modalDateBox');
         
         const updateData = {};
