@@ -1,5 +1,9 @@
+import { TagUIManager } from '../tags/tagUiManager.js';
+
 // UI 관련 헬퍼 함수들
 export const UiHelpers = {
+    // TagUIManager 인스턴스 캐시
+    _tagManagers: new Map(),
     async hideUploadingBlockAndShowResultBlock() {
         const uploadingBlock = document.querySelector('#uploadingBlock');
         const resultInfoBlock = document.querySelector('#resultInfoBlock');
@@ -42,120 +46,66 @@ export const UiHelpers = {
         }
     },
 
-    // 태그 영역에 지역 태그 추가
-    addTags(tags, tagBoxSelector = '.tag-box') {
-        const tagBox = document.querySelector(tagBoxSelector);
-        if (!tagBox) return;
-        
-        const existingTags = tagBox.querySelectorAll('.tag:not(.tag-add)');
-        existingTags.forEach(tag => {
-            if (tag.classList.contains('regional-tag')) {
-                tag.remove();
-            }
-        });
-
-        const tagAddButton = tagBox.querySelector('.tag-add');
-
-        tags.forEach(tag => {
-            const tagElement = document.createElement('span');
-            tagElement.classList.add('tag', 'regional-tag');
-            tagElement.textContent = tag.tagName;
-            tagElement.dataset.tagId = tag.tagId || '';
-            tagElement.dataset.tagName = tag.tagName;
-
-            // 태그 삭제 버튼 추가
-            const deleteButton = document.createElement('button');
-            deleteButton.classList.add('tag-delete');
-            deleteButton.innerHTML = '×';
-            deleteButton.title = '태그 삭제';
-            deleteButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                tagElement.remove();
-                // 선택된 이미지의 태그 정보 즉시 업데이트
-                const selectedImage = document.querySelector(".gallery-image.selected");
-                if (selectedImage) {
-                    this.updateSelectedImageTags(tagBoxSelector);
-                }
-            });
-
-            tagElement.appendChild(deleteButton);
-            if (tagAddButton) {
-                tagBox.insertBefore(tagElement, tagAddButton);
-            } else {
-                tagBox.appendChild(tagElement);
-            }
-        });
-    },
-
-    // 커스텀 태그 추가
-    addCustomTag(tagName, tagBoxSelector = '.tag-box') {
-        if (!tagName || tagName.trim() === '') return;
-
-        const tagBox = document.querySelector(tagBoxSelector);
-        if (!tagBox) return;
-
-        // 중복 태그 체크
-        const existingTags = tagBox.querySelectorAll('.tag:not(.tag-add)');
-        const isDuplicate = Array.from(existingTags).some(tag =>
-            tag.textContent.replace('×', '').trim() === tagName.trim()
-        );
-
-        if (isDuplicate) {
-            alert('이미 추가된 태그입니다.');
-            return;
+    /**
+     * TagUIManager 인스턴스 가져오기 또는 생성
+     * @param {string} containerSelector - 태그 컨테이너 선택자
+     * @param {Object} options - TagUIManager 옵션
+     * @returns {TagUIManager} TagUIManager 인스턴스
+     */
+    getTagManager(containerSelector, options = {}) {
+        // DOM 엘리먼트 존재 확인
+        const container = document.querySelector(containerSelector);
+        if (!container) {
+            return null;
         }
 
-        const tagElement = document.createElement('span');
-        tagElement.classList.add('tag', 'regional-tag');
-        tagElement.textContent = tagName.trim();
-        tagElement.dataset.tagId = 'custom-' + Date.now(); // 임시 ID
-        tagElement.dataset.tagName = tagName.trim();
+        if (!this._tagManagers.has(containerSelector)) {
+            try {
+                const manager = new TagUIManager(containerSelector, {
+                    editMode: true,
+                    allowCustomTags: true,
+                    onTagsChange: (tags) => {
+                        // 선택된 이미지의 태그 정보 업데이트
+                        const selectedImage = document.querySelector(".gallery-image.selected");
+                        if (selectedImage) {
+                            selectedImage.dataset.tags = JSON.stringify(tags);
+                        }
+                    },
+                    ...options
+                });
+                this._tagManagers.set(containerSelector, manager);
+            } catch (error) {
+                console.warn(`TagUIManager 생성 실패: ${error.message}`);
+                return null;
+            }
+        }
+        return this._tagManagers.get(containerSelector);
+    },
 
-        // 태그 삭제 버튼 추가
-        const deleteButton = document.createElement('button');
-        deleteButton.classList.add('tag-delete');
-        deleteButton.innerHTML = '×';
-        deleteButton.title = '태그 삭제';
-        deleteButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            tagElement.remove();
-            // 선택된 이미지의 태그 정보 즉시 업데이트
+    /**
+     * 태그 표시 (새로운 TagUIManager 사용)
+     * @param {Array} tags - 표시할 태그 배열
+     * @param {string} containerSelector - 태그 컨테이너 선택자
+     */
+    addTags(tags, containerSelector = '.tag-box') {
+        const tagManager = this.getTagManager(containerSelector);
+        if (tagManager) {
+            tagManager.displayTags(tags);
+        }
+    },
+
+    /**
+     * 선택된 이미지의 태그 정보 업데이트
+     * @param {string} containerSelector - 태그 컨테이너 선택자
+     */
+    updateSelectedImageTags(containerSelector = '.tag-box') {
+        const tagManager = this.getTagManager(containerSelector);
+        if (tagManager) {
+            const currentTags = tagManager.getCurrentTags();
             const selectedImage = document.querySelector(".gallery-image.selected");
             if (selectedImage) {
-                this.updateSelectedImageTags(tagBoxSelector);
+                selectedImage.dataset.tags = JSON.stringify(currentTags);
             }
-        });
-
-        tagElement.appendChild(deleteButton);
-
-        const tagAddButton = tagBox.querySelector('.tag-add');
-        if (tagAddButton) {
-            tagBox.insertBefore(tagElement, tagAddButton);
-        } else {
-            tagBox.appendChild(tagElement);
         }
-
-        // 선택된 이미지의 태그 정보 업데이트
-        const selectedImage = document.querySelector(".gallery-image.selected");
-        if (selectedImage) {
-            this.updateSelectedImageTags(tagBoxSelector);
-        }
-    },
-
-    // 선택된 이미지의 태그 정보 업데이트
-    updateSelectedImageTags(tagBoxSelector = '.tag-box') {
-        const selectedImage = document.querySelector(".gallery-image.selected");
-        if (!selectedImage) return;
-
-        const tagBox = document.querySelector(tagBoxSelector);
-        if (!tagBox) return;
-
-        const currentTags = tagBox.querySelectorAll('.tag.regional-tag');
-        const updatedTags = Array.from(currentTags).map(tag => ({
-            tagId: tag.dataset.tagId,
-            tagName: tag.dataset.tagName
-        }));
-
-        selectedImage.dataset.tags = JSON.stringify(updatedTags);
     },
 };

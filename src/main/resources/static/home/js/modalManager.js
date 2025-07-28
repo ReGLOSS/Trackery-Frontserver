@@ -1,4 +1,5 @@
 import {tagManager} from "../../module/tags/tagManager.js";
+import {TagUIManager} from "../../module/tags/tagUiManager.js";
 
 /**
  * 이미지 상세 모달 관리, 편집 모드, 태그/날짜/위치 편집을 담당하는 클래스
@@ -14,6 +15,9 @@ export class ModalManager {
         
         // 모달 맵 픽커 데이터
         this.modalFoundLocationData = {longitude: 0, latitude: 0, sdName: "", sggName: "", locationName: ""};
+        
+        // 태그 UI 관리자
+        this.tagUIManager = null;
         
         // 의존성
         this.mapManager = null;
@@ -96,6 +100,8 @@ export class ModalManager {
     
     // 모달에 이미지 데이터 채우기
     populateImageModal(imageData) {
+        // 현재 이미지 데이터 저장
+        this.currentImageData = imageData;
         // 이미지
         const modalImage = document.getElementById('modalImage');
         if (modalImage) {
@@ -196,51 +202,50 @@ export class ModalManager {
         this.initViewOnMapButton();
     }
     
-    // 태그 영역 채우기
+    // 태그 영역 채우기 (TagUIManager 사용)
     populateModalTags(tags) {
         const modalTagBox = document.getElementById('modalTagBox');
         if (!modalTagBox) return;
         
-        modalTagBox.innerHTML = '';
-        
-        // 태그 추가 버튼과 입력 필드 생성
-        const tagAddButton = document.createElement('button');
-        tagAddButton.className = 'tag-add';
-        tagAddButton.textContent = '+';
-        tagAddButton.style.display = 'none';
-        tagAddButton.id = 'modalTagAddButton';
-        
-        const tagInput = document.createElement('input');
-        tagInput.type = 'text';
-        tagInput.className = 'tag-input';
-        tagInput.placeholder = '태그 입력 후 Enter';
-        tagInput.style.display = 'none';
-        tagInput.id = 'modalTagInput';
-        
-        // 이벤트 리스너
-        tagAddButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.showTagInput();
-        });
-        
-        tagInput.addEventListener('keydown', (e) => {
-            this.handleTagInputKeydown(e);
-        });
-        
-        // 기존 태그들 추가
-        if (tags && tags.length > 0) {
-            tags.forEach(tag => {
-                const tagElement = this.createTagElement(tag);
-                modalTagBox.appendChild(tagElement);
-            });
+        // 기존 TagUIManager가 있다면 정리
+        if (this.tagUIManager) {
+            this.tagUIManager.destroy();
         }
         
-        // 태그 추가 버튼과 입력 필드를 마지막에 추가
-        modalTagBox.appendChild(tagInput);
-        modalTagBox.appendChild(tagAddButton);
+        // 컨테이너 초기화
+        modalTagBox.innerHTML = '';
+        
+        try {
+            // 새로운 TagUIManager 인스턴스 생성
+            this.tagUIManager = new TagUIManager('#modalTagBox', {
+                editMode: false,
+                allowCustomTags: true,
+                onTagsChange: (currentTags) => {
+                    // 태그 변경 시 현재 이미지 데이터 업데이트
+                    if (this.currentImageData) {
+                        this.currentImageData.tags = currentTags;
+                    }
+                    
+                    // 편집 모드일 때 실시간으로 모달 데이터 반영
+                    if (this.isEditMode && this.originalModalData) {
+                        // 원본 데이터는 유지하되, 현재 편집 중인 태그 상태를 별도로 추적
+                        this.currentEditingTags = [...currentTags];
+                    }
+                    
+                    console.log('Modal tags changed:', currentTags);
+                }
+            });
+            
+            // 태그 표시
+            this.tagUIManager.displayTags(tags);
+            
+        } catch (error) {
+            console.error('TagUIManager 초기화 실패:', error);
+        }
     }
     
-    // 태그 요소 생성
+    
+    // 태그 요소 생성 (폴백용)
     createTagElement(tag) {
         const tagElement = document.createElement('span');
         tagElement.className = 'tag';
@@ -539,6 +544,16 @@ export class ModalManager {
         if (updateData.imageDate) {
             this.originalModalData.imageDate = updateData.imageDate;
         }
+        
+        // 태그 정보가 변경된 경우 원본 데이터도 업데이트
+        if (updateData.tagsToRemove !== undefined || updateData.tagsToAdd !== undefined) {
+            // 현재 TagUIManager에서 최신 태그 상태 가져오기
+            if (this.tagUIManager) {
+                const currentTags = this.tagUIManager.getCurrentTags();
+                this.originalModalData.tags = [...currentTags];
+                console.log('Updated originalModalData.tags:', this.originalModalData.tags);
+            }
+        }
     }
     
     // 관련 데이터 새로고침
@@ -560,7 +575,7 @@ export class ModalManager {
         }
         
         // 태그가 변경된 경우
-        if (updateData.tagsToRemove !== undefined) {
+        if (updateData.tagsToRemove !== undefined || updateData.tagsToAdd !== undefined) {
             await this.refreshCurrentModalImageData(imageId);
         }
         
@@ -905,153 +920,45 @@ export class ModalManager {
     
     // 태그 관리 메서드들
     enableTagEditMode() {
-        const modalTagBox = document.getElementById('modalTagBox');
-        if (!modalTagBox) return;
-        
-        // 모든 태그의 삭제 버튼 표시
-        const deleteButtons = modalTagBox.querySelectorAll('.tag-delete');
-        deleteButtons.forEach(button => {
-            button.style.display = 'flex';
-        });
-        
-        // 태그 추가 버튼 표시
-        const tagAddButton = document.getElementById('modalTagAddButton');
-        if (tagAddButton) {
-            tagAddButton.style.display = 'flex';
+        if (this.tagUIManager) {
+            this.tagUIManager.enableEditMode();
         }
     }
     
     disableTagEditMode() {
-        const modalTagBox = document.getElementById('modalTagBox');
-        if (!modalTagBox) return;
-        
-        // 모든 태그의 삭제 버튼 숨김
-        const deleteButtons = modalTagBox.querySelectorAll('.tag-delete');
-        deleteButtons.forEach(button => {
-            button.style.display = 'none';
-        });
-        
-        // 태그 추가 버튼과 입력 필드 숨김
-        const tagAddButton = document.getElementById('modalTagAddButton');
-        const tagInput = document.getElementById('modalTagInput');
-        
-        if (tagAddButton) {
-            tagAddButton.style.display = 'none';
-        }
-        
-        if (tagInput) {
-            tagInput.style.display = 'none';
-            tagInput.value = '';
+        if (this.tagUIManager) {
+            this.tagUIManager.disableEditMode();
         }
     }
     
-    showTagInput() {
-        const tagAddButton = document.getElementById('modalTagAddButton');
-        const tagInput = document.getElementById('modalTagInput');
-        
-        if (tagAddButton && tagInput) {
-            tagAddButton.style.display = 'none';
-            tagInput.style.display = 'inline-block';
-            tagInput.focus();
-        }
-    }
-    
-    hideTagInput() {
-        const tagAddButton = document.getElementById('modalTagAddButton');
-        const tagInput = document.getElementById('modalTagInput');
-        
-        if (tagAddButton && tagInput) {
-            const tagName = tagInput.value.trim();
-            if (tagName) {
-                this.addCustomTag(tagName);
-                tagInput.value = '';
-            }
-            tagInput.style.display = 'none';
-            tagAddButton.style.display = 'flex';
-        }
-    }
-    
-    handleTagInputKeydown(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            this.hideTagInput();
-        } else if (e.key === 'Escape') {
-            const tagInput = document.getElementById('modalTagInput');
-            if (tagInput) {
-                tagInput.value = '';
-            }
-            this.hideTagInput();
-        }
-    }
-    
-    addCustomTag(tagName) {
-        if (!tagName || tagName.trim() === '') return;
-        
-        const modalTagBox = document.getElementById('modalTagBox');
-        if (!modalTagBox) return;
-        
-        // 중복 태그 체크
-        const existingTags = modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton)');
-        const isDuplicate = Array.from(existingTags).some(tag => 
-            tag.textContent.replace('×', '').trim() === tagName.trim()
-        );
-        
-        if (isDuplicate) {
-            alert('이미 추가된 태그입니다.');
-            return;
-        }
-        
-        // 새 태그 요소 생성
-        const tagElement = this.createTagElement({
-            tagId: 'custom-' + Date.now(),
-            tagName: tagName.trim()
-        });
-        
-        // 삭제 버튼 표시 (편집 모드)
-        const deleteButton = tagElement.querySelector('.tag-delete');
-        if (deleteButton) {
-            deleteButton.style.display = this.isEditMode ? 'flex' : 'none';
-        }
-        
-        // 태그 추가 버튼 앞에 삽입
-        const tagAddButton = document.getElementById('modalTagAddButton');
-        modalTagBox.insertBefore(tagElement, tagAddButton);
-    }
     
     restoreOriginalTags() {
-        const modalTagBox = document.getElementById('modalTagBox');
-        if (!modalTagBox || !this.originalModalData) return;
+        if (!this.originalModalData) return;
         
-        // 기존 태그들 제거 (추가 버튼과 입력 필드는 유지)
-        const existingTags = modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)');
-        existingTags.forEach(tag => tag.remove());
-        
-        // 원본 태그들 다시 추가
-        if (this.originalModalData.tags && this.originalModalData.tags.length > 0) {
-            this.originalModalData.tags.forEach(tag => {
-                const tagElement = this.createTagElement(tag);
-                const tagAddButton = document.getElementById('modalTagAddButton');
-                modalTagBox.insertBefore(tagElement, tagAddButton);
-            });
+        if (this.tagUIManager) {
+            // TagUIManager를 사용하여 원본 태그 복원
+            console.log('Restoring original tags:', this.originalModalData.tags);
+            this.tagUIManager.displayTags(this.originalModalData.tags);
+            
+            // 편집 모드 상태를 명시적으로 비활성화
+            this.tagUIManager.disableEditMode();
         }
     }
     
     getTagChanges() {
         // 태그 변경사항을 분석하여 추가/삭제할 태그 목록 반환
-        const modalTagBox = document.getElementById('modalTagBox');
         const tagsToRemove = [];
         const tagsToAdd = [];
         
-        if (!modalTagBox || !this.originalModalData) {
+        if (!this.originalModalData) {
             return { tagsToRemove, tagsToAdd };
         }
         
-        // 현재 태그 목록 가져오기
-        const currentTags = Array.from(modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)'))
-            .map(tag => ({
-                tagId: tag.dataset.tagId,
-                tagName: tag.dataset.tagName
-            }));
+        // 현재 태그 목록 가져오기 (TagUIManager 사용하여 실시간 상태 반영)
+        const currentTags = this.tagUIManager ? this.tagUIManager.getCurrentTags() : [];
+        
+        console.log('Original tags:', this.originalModalData.tags);
+        console.log('Current tags:', currentTags);
         
         // 삭제된 태그 찾기
         if (this.originalModalData.tags) {
@@ -1081,6 +988,9 @@ export class ModalManager {
             }
         });
         
+        console.log('Tags to remove:', tagsToRemove);
+        console.log('Tags to add:', tagsToAdd);
+        
         return { tagsToRemove, tagsToAdd };
     }
     
@@ -1102,18 +1012,32 @@ export class ModalManager {
             const responseData = await response.json();
             const updatedImageData = responseData.data;
             
-            // 서버에서 태그가 비어있으면 현재 모달의 태그를 유지
-            if (!updatedImageData.tags || updatedImageData.tags.length === 0) {
-                console.log('Server returned empty tags, keeping current modal tags');
-            } else {
-                // 태그 정보만 업데이트
-                this.updateModalTags(updatedImageData.tags);
+            // 현재 TagUIManager에서 태그 상태를 가져와서 우선 사용
+            let currentModalTags = [];
+            if (this.tagUIManager) {
+                currentModalTags = this.tagUIManager.getCurrentTags();
+            }
+            
+            // 서버에서 받은 태그와 현재 모달의 태그를 비교하여 최신 상태 결정
+            const tagsToUse = updatedImageData.tags && updatedImageData.tags.length > 0 ? 
+                              updatedImageData.tags : currentModalTags;
+            
+            if (tagsToUse.length > 0) {
+                // 태그 정보 업데이트
+                this.updateModalTags(tagsToUse);
                 
                 // 원본 데이터도 업데이트
                 if (this.originalModalData) {
-                    this.originalModalData.tags = updatedImageData.tags;
+                    this.originalModalData.tags = tagsToUse;
+                }
+                
+                // currentImageData도 업데이트
+                if (this.currentImageData) {
+                    this.currentImageData.tags = tagsToUse;
                 }
             }
+            
+            console.log('Modal image data refreshed with tags:', tagsToUse);
             
         } catch (error) {
             console.error('Error refreshing modal image data:', error);
@@ -1122,29 +1046,11 @@ export class ModalManager {
     
     // 모달의 태그 정보만 업데이트
     updateModalTags(newTags) {
-        const modalTagBox = document.getElementById('modalTagBox');
-        if (!modalTagBox) return;
-        
-        // 기존 태그들 제거 (추가 버튼과 입력 필드는 유지)
-        const existingTags = modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)');
-        existingTags.forEach(tag => tag.remove());
-        
-        // 새로운 태그들 추가
-        if (newTags && newTags.length > 0) {
-            newTags.forEach(tag => {
-                const tagElement = this.createTagElement(tag);
-                const deleteButton = tagElement.querySelector('.tag-delete');
-                if (deleteButton) {
-                    deleteButton.style.display = 'none'; // 새로고침 후에는 편집 모드가 해제되므로 숨김
-                }
-                
-                const tagAddButton = document.getElementById('modalTagAddButton');
-                if (tagAddButton) {
-                    modalTagBox.insertBefore(tagElement, tagAddButton);
-                } else {
-                    modalTagBox.appendChild(tagElement);
-                }
-            });
+        if (this.tagUIManager) {
+            // TagUIManager를 사용하여 태그 업데이트
+            this.tagUIManager.displayTags(newTags);
+            // 편집 모드가 아니므로 편집 모드 비활성화
+            this.tagUIManager.disableEditMode();
         }
     }
     
@@ -1239,27 +1145,18 @@ export class ModalManager {
         }
     }
     
-    // 태그 배열로부터 모달 태그 UI 업데이트 (헬퍼 함수)
+    // 태그 배열로부터 모달 태그 UI 업데이트 (TagUIManager 사용)
     updateModalTagsFromTagArray(tags) {
-        const modalTagBox = document.getElementById('modalTagBox');
-        if (!modalTagBox) return;
-        
-        // 기존 태그들 제거 (추가 버튼과 입력 필드는 유지)
-        const existingTags = modalTagBox.querySelectorAll('.tag:not(#modalTagAddButton):not(#modalTagInput)');
-        existingTags.forEach(tag => tag.remove());
-        
-        // 새로운 태그들 추가
-        if (tags && tags.length > 0) {
-            tags.forEach(tag => {
-                const tagElement = this.createTagElement(tag);
-                const deleteButton = tagElement.querySelector('.tag-delete');
-                if (deleteButton) {
-                    deleteButton.style.display = this.isEditMode ? 'flex' : 'none';
-                }
-                
-                const tagAddButton = document.getElementById('modalTagAddButton');
-                modalTagBox.insertBefore(tagElement, tagAddButton);
-            });
+        if (this.tagUIManager) {
+            // TagUIManager를 사용하여 태그 업데이트 - 이렇게 하면 실시간 반영됨
+            this.tagUIManager.displayTags(tags);
+            
+            // 편집 모드 상태 맞추기
+            if (this.isEditMode) {
+                this.tagUIManager.enableEditMode();
+            } else {
+                this.tagUIManager.disableEditMode();
+            }
         }
     }
     

@@ -3,28 +3,242 @@ import {tagManager} from "../../module/tags/tagManager.js";
 import {UiHelpers} from "../../module/common/uiHelpers.js";
 import {ValidationService} from "../../module/common/validationService.js";
 
-// DOM 엘리먼트 관련 상수들
+// DOM 엘리먼트 관리자
 const DOM = {
-    fileInput: document.getElementById("imageInput"),
-    addImageButton: document.querySelector(".add-image"),
-    gallery: document.querySelector(".gallery"),
-    imageNotSelectedBlock: document.querySelector(".image-not-selected"),
-    imageSelectedBlock: document.querySelector(".image-selected"),
-    imageUploadBtn: document.querySelector("#imageUploadBtn"),
-    locationBox: document.getElementById("locationBox"),
-    dateBox: document.getElementById("dateBox"),
-    description: document.getElementById("description"),
-    publicCheckbox: document.getElementById("public"),
-    uploadedImageCount: document.querySelector('#uploadedImageCount'),
-    uploadFailedImageCount: document.querySelector('#uploadFailedImageCount'),
-    modalGallery: document.querySelector(".uploading-modal-gallery"),
-    failedUploadInfoGroup: document.querySelector("#failedUploadInfoGroup"),
-    whileUploadingModal: document.querySelector('.while-uploading-modal'),
-    uploadingBlock: document.querySelector('#uploadingBlock'),
-    resultInfoBlock: document.querySelector('#resultInfoBlock'),
-    tagBox: document.querySelector('.tag-box'),
-    tagInput: document.querySelector('.tag-input'),
-    tagAddButton: document.querySelector('.tag-add'),
+    // 안전한 DOM 조회를 위한 getter 함수들
+    get fileInput() { return document.getElementById("imageInput"); },
+    get addImageButton() { return document.querySelector(".add-image"); },
+    get gallery() { return document.querySelector(".gallery"); },
+    get imageNotSelectedBlock() { return document.querySelector(".image-not-selected"); },
+    get imageSelectedBlock() { return document.querySelector(".image-selected"); },
+    get imageUploadBtn() { return document.querySelector("#imageUploadBtn"); },
+    get locationBox() { return document.getElementById("locationBox"); },
+    get dateBox() { return document.getElementById("dateBox"); },
+    get description() { return document.getElementById("description"); },
+    get publicCheckbox() { return document.getElementById("public"); },
+    get whileUploadingModal() { return document.querySelector('.while-uploading-modal'); },
+    get tagInput() { return document.querySelector('.tag-input'); },
+    get tagAddButton() { return document.querySelector('.tag-add'); },
+    
+    // 필수 엘리먼트 검증 함수
+    validateRequiredElements() {
+        const required = ['fileInput', 'addImageButton', 'gallery', 'imageNotSelectedBlock', 
+                         'imageSelectedBlock', 'description', 'locationBox', 'dateBox'];
+        const missing = [];
+        
+        for (const elementName of required) {
+            if (!this[elementName]) {
+                missing.push(elementName);
+            }
+        }
+        
+        if (missing.length > 0) {
+            console.error('필수 DOM 엘리먼트가 없습니다:', missing);
+            return false;
+        }
+        return true;
+    }
+};
+
+// 메모리 관리를 위한 Object URL 추적
+const ObjectURLManager = {
+    objectUrls: new Set(),
+    
+    create(file) {
+        const url = URL.createObjectURL(file);
+        this.objectUrls.add(url);
+        return url;
+    },
+    
+    revoke(url) {
+        if (this.objectUrls.has(url)) {
+            URL.revokeObjectURL(url);
+            this.objectUrls.delete(url);
+        }
+    },
+    
+    revokeAll() {
+        this.objectUrls.forEach(url => URL.revokeObjectURL(url));
+        this.objectUrls.clear();
+    }
+};
+
+// 사용자 친화적 알림 시스템
+const NotificationManager = {
+    // 알림 엘리먼트 생성
+    createNotification(message, type = 'error') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <div class="notification-content">
+                <span class="notification-icon">${this.getIcon(type)}</span>
+                <span class="notification-message">${message}</span>
+                <button class="notification-close" aria-label="닫기">&times;</button>
+            </div>
+        `;
+        
+        // 스타일 적용
+        this.applyStyles(notification, type);
+        
+        // 닫기 버튼 이벤트
+        const closeBtn = notification.querySelector('.notification-close');
+        closeBtn.addEventListener('click', () => {
+            this.removeNotification(notification);
+        });
+        
+        return notification;
+    },
+    
+    // 타입별 아이콘 반환
+    getIcon(type) {
+        const icons = {
+            error: '⚠️',
+            success: '✅',
+            warning: '⚠️',
+            info: 'ℹ️'
+        };
+        return icons[type] || icons.error;
+    },
+    
+    // 알림 스타일 적용
+    applyStyles(notification, type) {
+        const baseStyles = {
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            minWidth: '300px',
+            maxWidth: '400px',
+            padding: '16px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            zIndex: '10000',
+            fontSize: '14px',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            transform: 'translateX(100%)',
+            transition: 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out',
+            opacity: '0'
+        };
+        
+        const typeStyles = {
+            error: { backgroundColor: '#fee', border: '1px solid #fcc', color: '#c33' },
+            success: { backgroundColor: '#efe', border: '1px solid #cfc', color: '#363' },
+            warning: { backgroundColor: '#fff3cd', border: '1px solid #ffeaa7', color: '#856404' },
+            info: { backgroundColor: '#e7f3ff', border: '1px solid #b3d9ff', color: '#0c5460' }
+        };
+        
+        Object.assign(notification.style, baseStyles, typeStyles[type]);
+        
+        // 컨텐츠 스타일
+        const content = notification.querySelector('.notification-content');
+        Object.assign(content.style, {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+        });
+        
+        // 아이콘 스타일
+        const icon = notification.querySelector('.notification-icon');
+        Object.assign(icon.style, {
+            fontSize: '16px',
+            flexShrink: '0'
+        });
+        
+        // 메시지 스타일
+        const message = notification.querySelector('.notification-message');
+        Object.assign(message.style, {
+            flex: '1',
+            lineHeight: '1.4'
+        });
+        
+        // 닫기 버튼 스타일
+        const closeBtn = notification.querySelector('.notification-close');
+        Object.assign(closeBtn.style, {
+            background: 'none',
+            border: 'none',
+            fontSize: '18px',
+            cursor: 'pointer',
+            padding: '0',
+            marginLeft: '8px',
+            opacity: '0.7',
+            flexShrink: '0'
+        });
+        
+        closeBtn.addEventListener('mouseenter', () => {
+            closeBtn.style.opacity = '1';
+        });
+        
+        closeBtn.addEventListener('mouseleave', () => {
+            closeBtn.style.opacity = '0.7';
+        });
+    },
+    
+    // 알림 표시
+    showNotification(message, type = 'error', duration = 5000) {
+        const notification = this.createNotification(message, type);
+        document.body.appendChild(notification);
+        
+        // 기존 알림들과 겹치지 않도록 위치 조정
+        this.adjustPosition(notification);
+        
+        // 애니메이션으로 표시
+        requestAnimationFrame(() => {
+            notification.style.transform = 'translateX(0)';
+            notification.style.opacity = '1';
+        });
+        
+        // 자동 제거
+        if (duration > 0) {
+            setTimeout(() => {
+                this.removeNotification(notification);
+            }, duration);
+        }
+        
+        return notification;
+    },
+    
+    // 알림 위치 조정
+    adjustPosition(newNotification) {
+        const existingNotifications = document.querySelectorAll('.notification');
+        let totalHeight = 20; // 초기 top 여백
+        
+        existingNotifications.forEach(notification => {
+            if (notification !== newNotification) {
+                totalHeight += notification.offsetHeight + 10; // 알림 간격
+            }
+        });
+        
+        newNotification.style.top = totalHeight + 'px';
+    },
+    
+    // 알림 제거
+    removeNotification(notification) {
+        notification.style.transform = 'translateX(100%)';
+        notification.style.opacity = '0';
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+                // 남은 알림들 위치 재조정
+                this.repositionNotifications();
+            }
+        }, 300);
+    },
+    
+    // 남은 알림들 위치 재조정
+    repositionNotifications() {
+        const notifications = document.querySelectorAll('.notification');
+        let totalHeight = 20;
+        
+        notifications.forEach(notification => {
+            notification.style.top = totalHeight + 'px';
+            totalHeight += notification.offsetHeight + 10;
+        });
+    },
+    
+    // 편의 메서드들
+    showError(message, duration = 5000) {
+        return this.showNotification(message, 'error', duration);
+    }
 };
 
 // 이미지 처리 관련 함수들
@@ -221,61 +435,119 @@ const EventHandlers = {
     // 파일 입력 변경 핸들러
     async onFileInputChange(event) {
         const file = event.target.files[0];
-
         if (!file) return;
 
-        const fileExtension = file.name.split(".").pop().toLowerCase();
-
         try {
-            ImageProcessor.extensionToMimeType(fileExtension);
+            // 파일 검증
+            const fileExtension = EventHandlers.validateFile(file);
+            
+            // EXIF 데이터 파싱 및 위치 정보 요청
+            const parsedData = await ApiService.fetchLocation(file);
+            
+            // UI 요소 생성 및 추가
+            const imageData = EventHandlers.createImageData(file, fileExtension, parsedData);
+            const imageElement = EventHandlers.createImageElement(imageData);
+            const wrapper = EventHandlers.createImageWrapper(imageElement, imageData.uuid);
+            
+            DOM.gallery.appendChild(wrapper);
         } catch (error) {
-            alert(error.message);
-            return;
+            NotificationManager.showError(error.message);
+        }
+    },
+
+    // 파일 검증
+    validateFile(file) {
+        // 파일 크기 검증 (100MB 제한)
+        const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+        if (file.size > MAX_FILE_SIZE) {
+            throw new Error(`파일 크기가 너무 큽니다. 최대 ${MAX_FILE_SIZE / 1024 / 1024}MB까지 업로드 가능합니다.`);
         }
 
-        // EXIF 파싱 + 위치 요청
-        const parsedData = await ApiService.fetchLocation(file);
+        // 파일 타입 검증
+        const fileExtension = file.name.split(".").pop().toLowerCase();
+        ImageProcessor.extensionToMimeType(fileExtension); // throws error if invalid
+
+        // MIME 타입 검증 (실제 파일 내용 확인)
+        const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!allowedMimeTypes.includes(file.type)) {
+            throw new Error("허용되지 않는 파일 형식입니다. JPG, PNG, WebP 파일만 업로드 가능합니다.");
+        }
+
+        // 파일명 검증 (보안)
+        const fileName = file.name;
+        if (fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
+            throw new Error("허용되지 않는 파일명입니다.");
+        }
+
+        // 파일명 길이 검증
+        if (fileName.length > 255) {
+            throw new Error("파일명이 너무 깁니다. 255자 이하로 제한됩니다.");
+        }
+
+        return fileExtension;
+    },
+
+    // 이미지 데이터 객체 생성
+    createImageData(file, fileExtension, parsedData) {
         const {location = '', dateTime = '', tags = []} = parsedData;
+        const objectUrl = ObjectURLManager.create(file);
+        const uuid = crypto.randomUUID();
 
-        const objectUrl = URL.createObjectURL(file);
+        return {
+            objectUrl,
+            uuid,
+            fileExtension,
+            location,
+            dateTime,
+            tags,
+            latitude: parsedData.latitude,
+            longitude: parsedData.longitude
+        };
+    },
 
-        // 이미지 UI 추가
+    // 이미지 엘리먼트 생성
+    createImageElement(imageData) {
         const img = document.createElement("img");
-        img.src = objectUrl;
+        img.src = imageData.objectUrl;
         img.classList.add("gallery-image");
         img.alt = "추가된 이미지";
 
-        img.dataset.preview = objectUrl;
-        img.dataset.location = location;
-        img.dataset.dateTime = dateTime;
+        // 데이터셋 설정
+        img.dataset.preview = imageData.objectUrl;
+        img.dataset.location = imageData.location;
+        img.dataset.dateTime = imageData.dateTime;
         img.dataset.description = "";
         img.dataset.public = "false";
-        img.dataset.uuid = crypto.randomUUID();
-        img.dataset.fileExtension = fileExtension;
-        img.dataset.latitude = parsedData.latitude;
-        img.dataset.longitude = parsedData.longitude;
-        img.dataset.tags = JSON.stringify(tags);
+        img.dataset.uuid = imageData.uuid;
+        img.dataset.fileExtension = imageData.fileExtension;
+        img.dataset.latitude = imageData.latitude;
+        img.dataset.longitude = imageData.longitude;
+        img.dataset.tags = JSON.stringify(imageData.tags);
 
-        if (dateTime && location) {
+        // 유효성에 따른 CSS 클래스 추가
+        if (imageData.dateTime && imageData.location) {
             img.classList.add("valid");
-        }
-
-        if (!dateTime || !location) {
+        } else {
             img.classList.add("invalid");
         }
 
+        return img;
+    },
+
+    // 이미지 래퍼 생성
+    createImageWrapper(imageElement, uuid) {
         const imageWrapper = document.createElement("div");
         imageWrapper.classList.add("image-wrapper");
-        imageWrapper.dataset.uuid = img.dataset.uuid; // Propagate uuid to wrapper
+        imageWrapper.dataset.uuid = uuid;
 
         const closeButton = document.createElement("button");
         closeButton.classList.add("close-button");
-        closeButton.innerHTML = "&times;"; // 'x' mark
+        closeButton.innerHTML = "&times;";
         closeButton.title = "업로드 취소";
 
-        imageWrapper.appendChild(img);
+        imageWrapper.appendChild(imageElement);
         imageWrapper.appendChild(closeButton);
-        DOM.gallery.appendChild(imageWrapper);
+        return imageWrapper;
     },
 
     // 갤러리 이미지 클릭 핸들러
@@ -436,8 +708,8 @@ const EventHandlers = {
 
         await UiHelpers.indicateResult(successImageUUIDs, failedImageUUIDs);
 
-        await console.log("성공한 이미지 : {}", successImageUUIDs);
-        await console.log("실패한 이미지 : {}", failedImageUUIDs);
+        console.log("성공한 이미지 : {}", successImageUUIDs);
+        console.log("실패한 이미지 : {}", failedImageUUIDs);
 
         await UiHelpers.addFailedImage(failedImageUUIDs);
 
@@ -460,6 +732,12 @@ const EventHandlers = {
         const imageWrapper = button.closest(".image-wrapper");
         if (imageWrapper) {
             const img = imageWrapper.querySelector(".gallery-image");
+            
+            // Object URL 메모리 정리
+            if (img && img.dataset.preview) {
+                ObjectURLManager.revoke(img.dataset.preview);
+            }
+            
             if (img && img.classList.contains("selected")) {
                 // If the deleted image was selected, clear the detail view
                 DOM.imageSelectedBlock.style.display = "none";
@@ -476,46 +754,40 @@ const EventHandlers = {
         }
     },
 
-    // 태그 추가 버튼 클릭 핸들러
+    // 태그 추가 버튼 클릭 핸들러 (TagUIManager로 위임)
     onTagAddClick() {
-        DOM.tagInput.style.display = 'inline-block';
-        DOM.tagAddButton.style.display = 'none';
-        DOM.tagInput.focus();
+        const tagManager = UiHelpers.getTagManager('.tag-box');
+        if (tagManager) {
+            tagManager.showTagInput();
+        }
     },
 
-    // 태그 입력 Enter 키 핸들러
+    // 태그 입력 Enter 키 핸들러 (TagUIManager로 위임)
     onTagInputKeydown(event) {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            const tagName = DOM.tagInput.value.trim();
-            if (tagName) {
-                UiHelpers.addCustomTag(tagName);
-                DOM.tagInput.value = '';
-            }
-            DOM.tagInput.style.display = 'none';
-            DOM.tagAddButton.style.display = 'block';
-        } else if (event.key === 'Escape') {
-            DOM.tagInput.value = '';
-            DOM.tagInput.style.display = 'none';
-            DOM.tagAddButton.style.display = 'block';
+        const tagManager = UiHelpers.getTagManager('.tag-box');
+        if (tagManager) {
+            tagManager.handleTagInputKeydown(event);
         }
     },
 
-    // 태그 입력 블러 핸들러
+    // 태그 입력 블러 핸들러 (TagUIManager로 위임)
     onTagInputBlur() {
-        const tagName = DOM.tagInput.value.trim();
-        if (tagName) {
-            UiHelpers.addCustomTag(tagName);
-            DOM.tagInput.value = '';
+        const tagManager = UiHelpers.getTagManager('.tag-box');
+        if (tagManager) {
+            tagManager.hideTagInput();
         }
-        DOM.tagInput.style.display = 'none';
-        DOM.tagAddButton.style.display = 'block';
     },
 
 };
 
 // 초기화 함수
 function initialize() {
+    // 필수 DOM 엘리먼트 검증
+    if (!DOM.validateRequiredElements()) {
+        console.error('초기화 실패: 필수 DOM 엘리먼트가 누락되었습니다.');
+        return;
+    }
+    
     // 유효성 검증 리스너 설정
     ValidationService.setupValidationListeners();
 
@@ -542,32 +814,40 @@ function initialize() {
         }
     });
 
-    // 이벤트 리스너 등록
-    document.getElementById('show-datepicker').addEventListener('click', e => {
-        e.preventDefault();
-        fp.open();
-    });
+    // 이벤트 리스너 등록 (안전한 방식으로)
+    const showDatepicker = document.getElementById('show-datepicker');
+    if (showDatepicker) {
+        showDatepicker.addEventListener('click', e => {
+            e.preventDefault();
+            fp.open();
+        });
+    }
 
-    // 이미지 관련 이벤트 리스너
-    DOM.addImageButton.addEventListener("click", EventHandlers.onAddImageClick);
-    DOM.fileInput.addEventListener("change", EventHandlers.onFileInputChange);
+    // 이미지 관련 이벤트 리스너 (null 체크 포함)
+    if (DOM.addImageButton) DOM.addImageButton.addEventListener("click", EventHandlers.onAddImageClick);
+    if (DOM.fileInput) DOM.fileInput.addEventListener("change", EventHandlers.onFileInputChange);
     document.addEventListener("click", EventHandlers.onGalleryImageClick);
     document.addEventListener("click", (event) => {
         if (event.target.classList.contains("close-button")) {
             EventHandlers.onCloseButtonClick(event);
         }
     });
-    DOM.description.addEventListener("input", EventHandlers.onDescriptionInput);
-    DOM.publicCheckbox.addEventListener("change", EventHandlers.onPublicChange);
-    DOM.locationBox.addEventListener("change", EventHandlers.onLocationChange);
-    DOM.dateBox.addEventListener("change", EventHandlers.onDateChange);
-    DOM.imageUploadBtn.addEventListener("click", EventHandlers.onImageUploadClick);
+    if (DOM.description) DOM.description.addEventListener("input", EventHandlers.onDescriptionInput);
+    if (DOM.publicCheckbox) DOM.publicCheckbox.addEventListener("change", EventHandlers.onPublicChange);
+    if (DOM.locationBox) DOM.locationBox.addEventListener("change", EventHandlers.onLocationChange);
+    if (DOM.dateBox) DOM.dateBox.addEventListener("change", EventHandlers.onDateChange);
+    if (DOM.imageUploadBtn) DOM.imageUploadBtn.addEventListener("click", EventHandlers.onImageUploadClick);
     
-    // 태그 관련 이벤트 리스너
-    DOM.tagAddButton.addEventListener("click", EventHandlers.onTagAddClick);
-    DOM.tagInput.addEventListener("keydown", EventHandlers.onTagInputKeydown);
-    DOM.tagInput.addEventListener("blur", EventHandlers.onTagInputBlur);
+    // 태그 관련 이벤트 리스너 (null 체크 포함)
+    if (DOM.tagAddButton) DOM.tagAddButton.addEventListener("click", EventHandlers.onTagAddClick);
+    if (DOM.tagInput) DOM.tagInput.addEventListener("keydown", EventHandlers.onTagInputKeydown);
+    if (DOM.tagInput) DOM.tagInput.addEventListener("blur", EventHandlers.onTagInputBlur);
 }
 
 // DOM이 로드된 후 초기화
 document.addEventListener('DOMContentLoaded', initialize);
+
+// 페이지 이탈 시 메모리 정리
+window.addEventListener('beforeunload', () => {
+    ObjectURLManager.revokeAll();
+});
