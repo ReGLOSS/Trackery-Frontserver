@@ -32,7 +32,7 @@ if (modalToggleButton && modalToggleButton.id === 'editLocationBtn') {
             window.dispatchEvent(new Event('resize'));
             
             // 선택된 이미지의 기존 좌표가 있으면 지도에 표시
-            const selectedImage = document.querySelector('.gallery-image.selected');
+            const selectedImage = document.querySelector('.gallery-image.selected') || document.querySelector('.gallery-card.selected');
             if (selectedImage && selectedImage.dataset.latitude && selectedImage.dataset.longitude) {
                 const latitude = parseFloat(selectedImage.dataset.latitude);
                 const longitude = parseFloat(selectedImage.dataset.longitude);
@@ -258,7 +258,7 @@ function fetchLocationName(utmkcoor) {
 
     // 선택된 이미지의 날짜 정보 사용 (없으면 현재 날짜 사용)
     let dateToUse = '';
-    const selectedImage = document.querySelector(".gallery-image.selected");
+    const selectedImage = document.querySelector(".gallery-image.selected") || document.querySelector(".gallery-card.selected");
     if (selectedImage && selectedImage.dataset.dateTime) {
         dateToUse = selectedImage.dataset.dateTime;
     } else {
@@ -304,7 +304,7 @@ function fetchLocationName(utmkcoor) {
 
             // 기존 태그 가져오기
             let existingTags = [];
-            const selectedImage = document.querySelector(".gallery-image.selected");
+            const selectedImage = document.querySelector(".gallery-image.selected") || document.querySelector(".gallery-card.selected");
             if (selectedImage && selectedImage.dataset.tags) {
                 try {
                     existingTags = JSON.parse(selectedImage.dataset.tags);
@@ -352,7 +352,7 @@ function toggleValidationClass(element, isValid) {
 }
 
 mapPickSubmitBtn?.addEventListener('click', function () {
-    const selectedImage = document.querySelector('.selected');
+    const selectedImage = document.querySelector('.gallery-image.selected') || document.querySelector('.gallery-card.selected');
     const locationBox = document.querySelector('#locationBox');
     
     // 선택된 이미지가 있는 경우에만 업데이트
