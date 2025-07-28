@@ -751,42 +751,55 @@ export class ModalManager {
         const cancelMapPickBtn = modalMapPickerModal.querySelector('#cancelMapPickBtn');
         
         if (mapPickSubmitBtn) {
-            mapPickSubmitBtn.replaceWith(mapPickSubmitBtn.cloneNode(true));
-            const newSubmitBtn = modalMapPickerModal.querySelector('#mapPickSubmitBtn');
-            
-            newSubmitBtn.addEventListener('click', () => {
-                if (window.foundLocationData && window.foundLocationData.locationName) {
-                    const modalLocationBox = document.getElementById('modalLocationBox');
-                    if (modalLocationBox) {
-                        modalLocationBox.value = window.foundLocationData.locationName;
-                        modalLocationBox.classList.remove('invalid');
-                        modalLocationBox.classList.add('valid');
+            // 기존 이벤트 리스너 제거를 위한 플래그 확인
+            if (!mapPickSubmitBtn._modalManagerBound) {
+                // 모달 매니저용 이벤트 핸들러 추가
+                const modalSubmitHandler = (e) => {
+                    // 이벤트 전파 중단으로 다른 핸들러와의 충돌 방지
+                    e.stopImmediatePropagation();
+                    
+                    if (window.foundLocationData && window.foundLocationData.locationName) {
+                        const modalLocationBox = document.getElementById('modalLocationBox');
+                        if (modalLocationBox) {
+                            modalLocationBox.value = window.foundLocationData.locationName;
+                            modalLocationBox.classList.remove('invalid');
+                            modalLocationBox.classList.add('valid');
+                        }
+                        
+                        this.modalFoundLocationData = {
+                            latitude: window.foundLocationData.latitude,
+                            longitude: window.foundLocationData.longitude,
+                            sdName: window.foundLocationData.sdName,
+                            sggName: window.foundLocationData.sggName,
+                            locationName: window.foundLocationData.locationName
+                        };
+                        
+                        if (window.foundLocationData.tags && Array.isArray(window.foundLocationData.tags)) {
+                            this.updateModalTagsFromLocationChange(window.foundLocationData.tags);
+                        }
                     }
                     
-                    this.modalFoundLocationData = {
-                        latitude: window.foundLocationData.latitude,
-                        longitude: window.foundLocationData.longitude,
-                        sdName: window.foundLocationData.sdName,
-                        sggName: window.foundLocationData.sggName,
-                        locationName: window.foundLocationData.locationName
-                    };
-                    
-                    if (window.foundLocationData.tags && Array.isArray(window.foundLocationData.tags)) {
-                        this.updateModalTagsFromLocationChange(window.foundLocationData.tags);
-                    }
-                }
+                    this.hideModalMapPicker();
+                };
                 
-                this.hideModalMapPicker();
-            });
+                // 가장 높은 우선순위로 이벤트 추가 (capture phase 사용)
+                mapPickSubmitBtn.addEventListener('click', modalSubmitHandler, true);
+                mapPickSubmitBtn._modalManagerBound = true;
+                mapPickSubmitBtn._modalManagerHandler = modalSubmitHandler;
+            }
         }
         
         if (cancelMapPickBtn) {
-            cancelMapPickBtn.replaceWith(cancelMapPickBtn.cloneNode(true));
-            const newCancelBtn = modalMapPickerModal.querySelector('#cancelMapPickBtn');
-            
-            newCancelBtn.addEventListener('click', () => {
-                this.hideModalMapPicker();
-            });
+            if (!cancelMapPickBtn._modalManagerBound) {
+                const modalCancelHandler = (e) => {
+                    e.stopImmediatePropagation();
+                    this.hideModalMapPicker();
+                };
+                
+                cancelMapPickBtn.addEventListener('click', modalCancelHandler, true);
+                cancelMapPickBtn._modalManagerBound = true;
+                cancelMapPickBtn._modalManagerHandler = modalCancelHandler;
+            }
         }
     }
     
