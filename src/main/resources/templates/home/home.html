@@ -59,16 +59,16 @@
                     <div class="location-area">
                         <div class="location-box">
                             <label for="modalLocationBox">위치</label>
-                            <a href="#" class="text-muted" id="modalEditLocationBtn" style="display: none;">여기가 아닌가요?</a>
-                            <input id="modalLocationBox" class="form-control" type="text" value="" readonly/>
+                                <a href="#" class="text-muted" id="modalEditLocationBtn" style="display: none;">여기가 아닌가요?</a>
+                                    <input id="modalLocationBox" class="form-control" type="text" value="" readonly/>
                         </div>
                     </div>
 
                     <div class="date-area">
                         <div class="date-box">
-                        <label for="modalDateBox">날짜</label>
-                            <a href="#" class="text-muted" id="modalEditDateBtn" style="display: none;">다른 날 다녀오셨나요?</a>
-                            <input id="modalDateBox" class="form-control" type="text" value="" readonly/>
+                            <label for="modalDateBox">날짜</label>
+                                <a href="#" class="text-muted" id="modalEditDateBtn" style="display: none;">다른 날 다녀오셨나요?</a>
+                                    <input id="modalDateBox" class="form-control" type="text" value="" readonly/>
                         </div>
                     </div>
 
@@ -77,7 +77,7 @@
                         <div class="public-status" id="modalPublicStatus">비공개</div>
                         <div class="checkbox-area" id="modalPublicCheckboxArea" style="display: none;">
                             <label for="modalPublic">
-                                공개 여부
+                                이 사진을 공개 할까요?
                                 <input type="checkbox" id="modalPublic"/>
                             </label>
                         </div>
@@ -93,7 +93,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Map Picker Modal -->
     <div th:replace="~{map/map-picker-modal :: mapPickerModal('위치 선택', 'modalMapPickerModal')}"></div>
 </section>

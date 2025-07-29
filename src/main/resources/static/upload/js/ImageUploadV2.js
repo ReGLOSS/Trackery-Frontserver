@@ -12,10 +12,10 @@ const DOM = {
     get imageNotSelectedBlock() { return document.querySelector(".image-not-selected"); },
     get imageSelectedBlock() { return document.querySelector(".image-selected"); },
     get imageUploadBtn() { return document.querySelector("#imageUploadBtn"); },
-    get locationBox() { return document.getElementById("locationBox"); },
-    get dateBox() { return document.getElementById("dateBox"); },
-    get description() { return document.getElementById("description"); },
-    get publicCheckbox() { return document.getElementById("public"); },
+    get locationBox() { return document.getElementById("modalLocationBox"); },
+    get dateBox() { return document.getElementById("modalDateBox"); },
+    get description() { return document.getElementById("modalDescription"); },
+    get publicCheckbox() { return document.getElementById("modalPublic"); },
     get whileUploadingModal() { return document.querySelector('.while-uploading-modal'); },
     get tagInput() { return document.querySelector('.tag-input'); },
     get tagAddButton() { return document.querySelector('.tag-add'); },
@@ -815,7 +815,7 @@ function initialize() {
     });
 
     // 이벤트 리스너 등록 (안전한 방식으로)
-    const showDatepicker = document.getElementById('show-datepicker');
+    const showDatepicker = document.getElementById('modalEditDateBtn');
     if (showDatepicker) {
         showDatepicker.addEventListener('click', e => {
             e.preventDefault();

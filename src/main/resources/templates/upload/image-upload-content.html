@@ -54,41 +54,42 @@
             <img src="/images/default-image4.webp" class="image-detail" alt="선택된 이미지">
 
             <div class="description-area">
-                <label for="description">설명</label>
-                <textarea id="description" class="form-control" rows="5" placeholder="여기에 설명을 입력하세요..."
+                <label for="modalDescription">설명</label>
+                <textarea id="modalDescription" class="form-control" rows="5"
+                placeholder="여기에 설명을 입력하세요. (이미지 설명은 500자를 초과할 수 없습니다.)"
                           style="resize:none;"></textarea>
             </div>
 
             <div class="tag-area">
                 <label>태그</label>
-                <div class="tag-box">
+                <div class="tag-box" id="modalTagBox">
                     <input type="text" class="tag-input" placeholder="태그 입력 후 Enter" style="display: none;">
                     <button class="tag-add">+</button>
                 </div>
             </div>
 
             <div class="location-area">
-                <label for="locationBox">위치</label>
                 <div class="location-box">
-                    <a href="#" class="text-muted" id="editLocationBtn">여기가 아닌가요?</a>
-                    <input id="locationBox" class="form-control" type="text" value="" readonly/>
+                    <label for="modalLocationBox">위치</label>
+                        <a href="#" class="text-muted" id="modalEditLocationBtn">여기가 아닌가요?</a>
+                            <input id="modalLocationBox" class="form-control" type="text" value="" readonly/>
                 </div>
             </div>
 
             <div th:replace="~{map/map-picker-modal :: mapPickerModal(title, 'mapPickerModal')}"></div>
 
             <div class="date-area">
-                <label for="dateBox">날짜</label>
                 <div class="date-box">
-                    <a href="#" class="text-muted" id='show-datepicker'>다른 날 다녀오셨나요?</a>
-                    <input id="dateBox" class="form-control" type="text" value="" readonly/>
+                    <label for="modalDateBox">날짜</label>
+                        <a href="#" class="text-muted" id="modalEditDateBtn">다른 날 다녀오셨나요?</a>
+                            <input id="modalDateBox" class="form-control" type="text" value="" readonly/>
                 </div>
             </div>
 
-            <div class="checkbox-area">
-                <label for="public">
+            <div class="public-area">
+                <label for="modalPublic">
                     이 사진을 공개 할까요?
-                    <input type="checkbox" id="public"/>
+                    <input type="checkbox" id="modalPublic"/>
                 </label>
             </div>
         </div>

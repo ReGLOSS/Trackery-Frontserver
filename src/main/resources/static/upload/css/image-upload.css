@@ -1,4 +1,4 @@
-/* 메인 컨테이너 */
+/* ===== BASE LAYOUT ===== */
 .image-upload-container {
     display: flex;
     width: 100%;
@@ -14,7 +14,19 @@
     gap: 5%;
 }
 
-/* 갤러리 섹션 */
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== GALLERY SECTION ===== */
 .gallery {
     flex: 2;
     display: grid;
@@ -37,13 +49,13 @@
     border-radius: 2%;
 }
 
-/* 이미지 관련 */
+/* ===== IMAGE STYLES ===== */
 .gallery-image {
     width: 100%;
     aspect-ratio: 1/1;
     object-fit: cover;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform 0.2s ease;
 }
 
 .gallery-image:hover {
@@ -63,7 +75,7 @@
 .image-detail {
     width: 100%;
     height: auto;
-    border-radius: 8px;
+    border-radius: 0.6vh;
     object-fit: cover;
 }
 
@@ -91,30 +103,31 @@
 }
 
 .add-image span {
-    font-size: 40px;
+    font-size: clamp(20px, 4vw, 6vh);
     color: #999;
 }
 
-/* 이미지 상태 */
+/* ===== IMAGE STATES ===== */
 .image-not-selected {
     display: flex;
     text-align: center;
     justify-content: center;
     padding: 70% 0;
     font-weight: bold;
-    font-size: 1.8rem;
+    font-size: clamp(14px, 3vw, 2.5vh);
+    animation: fadeIn 0.3s ease-in-out;
 }
 
 .image-selected {
     display: none;
     flex-direction: column;
-    gap: 3%;
+    gap: 1vh;
     width: 100%;
     height: 100%;
     margin-bottom: 25vh;
 }
 
-/* 버튼들 */
+/* ===== BUTTONS ===== */
 .close-button {
     position: absolute;
     top: 5px;
@@ -143,11 +156,18 @@
 .tag-add {
     background-color: #ddd;
     border: none;
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    font-size: 1.2rem;
+    width: 2.2vh;
+    height: 2.2vh;
+    border-radius: 0.6vh;
+    font-size: 2vh;
     cursor: pointer;
+    transition: background-color 0.2s ease;
+    align-items: center;
+    justify-content: center;
+}
+
+.tag-add:hover {
+    background-color: #bbb;
 }
 
 .tag-delete {
@@ -155,9 +175,9 @@
     color: white;
     border: none;
     border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    font-size: 12px;
+    width: 1.7vh;
+    height: 1.7vh;
+    font-size: 1.1vh;
     cursor: pointer;
     display: flex;
     justify-content: center;
@@ -165,6 +185,7 @@
     padding: 0;
     line-height: 1;
     transition: background-color 0.2s ease-in-out;
+    margin-left: auto;
 }
 
 .tag-delete:hover {
@@ -177,34 +198,37 @@
     height: 7%;
 }
 
-/* 태그 관련 */
+/* ===== TAG STYLES ===== */
 .tag-box {
-    background-color: darkgray;
+    background-color: #f8f9fa;
     padding: 1%;
-    border-radius: 8px;
+    border: 0.1vh solid #ced4da;
+    border-radius: 0.6vh;
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 0.75vh;
     align-items: center;
 }
 
 .tag {
     background-color: #dbe7ff;
-    padding: 6px 10px;
-    border-radius: 12px;
-    font-size: 0.85rem;
+    color: #495057;
+    padding: 0.75vh 1.13vh;
+    border-radius: 1.2vh;
+    font-size: 1.4vh;
     position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 0.56vh;
+    font-weight: 500;
 }
 
 .tag-input {
     background-color: white;
     border: 1px solid #ccc;
-    padding: 6px 10px;
-    border-radius: 12px;
-    font-size: 0.85rem;
+    padding: 0.56vh 0.94vh;
+    border-radius: 1.2vh;
+    font-size: 1.2vh;
     outline: none;
     min-width: 120px;
 }
@@ -213,40 +237,72 @@
     border-color: #007bff;
 }
 
-/* 입력 필드 */
+/* ===== FORM INPUTS ===== */
+.description-area label,
+.tag-area label,
+.location-area label,
+.date-area label,
+.public-area label {
+    display: block;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5vh;
+    font-size: 2vh;
+}
+
 .location-box,
 .date-box {
-    position: relative;
     display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
     align-items: center;
 }
 
 .location-box .text-muted,
 .date-box .text-muted {
-    position: absolute;
-    top: -20px;
-    right: 0;
-    font-size: 0.85rem;
+    padding-top: 1vh;
+    font-size: 1.32vh;
 }
 
-.location-box input,
-.date-box input {
+.form-control {
+    border: 0.1vh solid #ced4da;
+    border-radius: 0.6vh;
+    padding: 0.75vh 1.13vh;
+    font-size: 1.4vh;
+    background-color: #f8f9fa;
     width: 100%;
     margin: 0;
 }
 
-#locationBox.invalid,
-#dateBox.invalid {
+#modalLocationBox.invalid,
+#modalDateBox.invalid {
     border: 1px double #d63939;
 }
 
-.checkbox-area {
+/* ===== PUBLIC AREA ===== */
+.public-area {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 0.75vh;
 }
 
-/* 모달 관련 */
+.public-area label {
+    display: flex;
+    align-items: center;
+    gap: 0.75vh;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0;
+    font-size: 1.5vh;
+}
+
+.public-area input[type="checkbox"] {
+    margin: 0;
+    width: 1.4vh;
+    height: 1.4vh;
+}
+
+/* ===== MODAL STYLES ===== */
 .while-uploading-modal {
     display: none;
     position: fixed;
@@ -261,7 +317,7 @@
 }
 
 .while-uploading-modal .uploading-modal-container {
-    border-radius: 2%;
+    border-radius: 1.2vh;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -275,6 +331,7 @@
     overflow-y: auto;
     box-sizing: border-box;
     scrollbar-width: none;
+    box-shadow: 0 1vh 4vh rgba(0, 0, 0, 0.3);
 }
 
 .uploading-modal-block {
@@ -283,11 +340,11 @@
     flex-direction: column;
     gap: 3.5rem;
     align-items: center;
-    font-size: 1.5rem;
+    font-size: clamp(12px, 2vw, 2vh);
     background-color: #efefec;
     margin: 5%;
-    border-radius: 2%;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 1.2vh;
+    box-shadow: 0 0.4vh 1vh rgba(0, 0, 0, 0.1);
 }
 
 #uploadingModalInteractionBlock {
@@ -300,16 +357,16 @@
     display: none;
 }
 
-/* 스피너 */
+/* ===== SPINNER ===== */
 .spinner-border {
     width: 10rem;
     height: 10rem;
     --tblr-spinner-border-width: 0.5rem;
 }
 
-/* 기타 */
+/* ===== UTILITY CLASSES ===== */
 label {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.5vh;
 }
 
 .text-group {
@@ -323,5 +380,13 @@ label {
     text-align: left;
     margin-left: 0.5%;
     padding: 0.1%;
-    font-size: 1rem;
+    font-size: 1.4vh;
+}
+
+.description-area,
+.tag-area,
+.location-area,
+.date-area,
+.public-area {
+    margin-bottom: 1vh;
 }
