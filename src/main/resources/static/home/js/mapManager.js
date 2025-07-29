@@ -501,6 +501,13 @@ export class MapManager {
                 if (hasImages) {
                     pathElement.style.fill = '#28a745';
                     pathElement.classList.add('has-images');
+                    // 이미지가 있는 지역은 선택 상태를 해제
+                    pathElement.classList.remove('selected');
+                } else {
+                    // 이미지가 없는 지역은 has-images 클래스 제거하고 기본 회색으로 설정
+                    pathElement.classList.remove('has-images');
+                    pathElement.classList.remove('selected');
+                    pathElement.style.setProperty('fill', '#e0e0e0', 'important');
                 }
             }
         }
