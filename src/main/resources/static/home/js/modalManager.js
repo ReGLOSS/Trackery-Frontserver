@@ -545,6 +545,25 @@ export class ModalManager {
             this.originalModalData.imageDate = updateData.imageDate;
         }
         
+        // 위치 정보가 변경된 경우 원본 데이터도 업데이트
+        if (updateData.longitude !== undefined && updateData.latitude !== undefined) {
+            this.originalModalData.longitude = updateData.longitude;
+            this.originalModalData.latitude = updateData.latitude;
+            this.originalModalData.sdName = updateData.sdName || this.originalModalData.sdName;
+            this.originalModalData.sggName = updateData.sggName || this.originalModalData.sggName;
+            
+            // locationName 업데이트
+            if (updateData.sdName && updateData.sggName) {
+                this.originalModalData.locationName = `${updateData.sdName} ${updateData.sggName}`;
+            }
+            
+            console.log('Updated originalModalData location:', {
+                longitude: this.originalModalData.longitude,
+                latitude: this.originalModalData.latitude,
+                locationName: this.originalModalData.locationName
+            });
+        }
+        
         // 태그 정보가 변경된 경우 원본 데이터도 업데이트
         if (updateData.tagsToRemove !== undefined || updateData.tagsToAdd !== undefined) {
             // 현재 TagUIManager에서 최신 태그 상태 가져오기
@@ -568,7 +587,7 @@ export class ModalManager {
                 );
             }
             if (this.mapManager) {
-                this.mapManager.refreshMapColors();
+                await this.mapManager.refreshMapColors();
                 await this.mapManager.refreshUserStats();
             }
             await this.refreshCurrentModalImageData(imageId);
@@ -628,7 +647,7 @@ export class ModalManager {
             
             // 지도 색상 새로고침
             if (this.mapManager) {
-                this.mapManager.refreshMapColors();
+                await this.mapManager.refreshMapColors();
                 await this.mapManager.refreshUserStats();
             }
             

@@ -461,7 +461,8 @@ export class MapManager {
     async styleRegionsWithImages() {
         if (this.currentView === 'sido') {
             await this.styleSidosWithImages();
-        } else if (this.currentView === 'sigungu') {
+        } else if (this.currentView === 'sigungu' || this.currentView === 'detail') {
+            // 시군구 뷰나 상세 뷰에서는 시군구 지도 색상 업데이트
             await this.styleDistrictsWithImages();
         }
     }
@@ -489,7 +490,7 @@ export class MapManager {
     
     async styleDistrictsWithImages() {
         if (!this.sigunguData) return;
-        
+
         for (const sigungu of this.sigunguData) {
             const sigunguId = sigungu.sigunguId;
             const pathElement = document.getElementById(sigunguId);
@@ -563,8 +564,8 @@ export class MapManager {
     }
     
     // 새로고침 메서드들
-    refreshMapColors() {
-        this.styleRegionsWithImages();
+    async refreshMapColors() {
+        await this.styleRegionsWithImages();
     }
     
     async refreshUserStats() {
