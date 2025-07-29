@@ -780,6 +780,47 @@ const EventHandlers = {
 
 };
 
+// 이미지 전체화면 토글 기능
+function toggleImageFullscreen() {
+    const imageDetail = document.querySelector('.image-container .image-detail');
+    if (!imageDetail) return;
+    
+    // 기존 전체화면 오버레이가 있는지 확인
+    let existingOverlay = document.querySelector('.fullSize-image-overlay');
+    
+    if (existingOverlay) {
+        // 전체화면 오버레이 제거
+        existingOverlay.remove();
+    } else {
+        // 전체화면 오버레이 생성
+        const overlay = document.createElement('div');
+        overlay.className = 'fullSize-image-overlay';
+        
+        // 전체화면 이미지 생성
+        const fullSizeImage = document.createElement('img');
+        fullSizeImage.src = imageDetail.src;
+        fullSizeImage.className = 'image-detail fullSize';
+        fullSizeImage.alt = imageDetail.alt;
+        
+        // 클릭 시 오버레이 제거
+        overlay.addEventListener('click', () => {
+            overlay.remove();
+        });
+        
+        // ESC 키로도 닫기 가능
+        document.addEventListener('keydown', function escHandler(e) {
+            if (e.key === 'Escape') {
+                overlay.remove();
+                document.removeEventListener('keydown', escHandler);
+            }
+        });
+        
+        // 오버레이에 이미지 추가하고 body에 삽입
+        overlay.appendChild(fullSizeImage);
+        document.body.appendChild(overlay);
+    }
+}
+
 // 초기화 함수
 function initialize() {
     // 필수 DOM 엘리먼트 검증
@@ -842,6 +883,15 @@ function initialize() {
     if (DOM.tagAddButton) DOM.tagAddButton.addEventListener("click", EventHandlers.onTagAddClick);
     if (DOM.tagInput) DOM.tagInput.addEventListener("keydown", EventHandlers.onTagInputKeydown);
     if (DOM.tagInput) DOM.tagInput.addEventListener("blur", EventHandlers.onTagInputBlur);
+    
+    // 이미지 컨테이너 클릭 이벤트 (전체화면 보기)
+    const imageContainer = document.querySelector('.image-container');
+    if (imageContainer) {
+        imageContainer.addEventListener("click", (e) => {
+            e.stopPropagation();
+            toggleImageFullscreen();
+        });
+    }
 }
 
 // DOM이 로드된 후 초기화

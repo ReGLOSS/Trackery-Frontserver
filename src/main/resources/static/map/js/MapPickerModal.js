@@ -9,8 +9,8 @@ const mapPickSubmitBtn = mapPickerModal?.querySelector('#mapPickSubmitBtn');
 const cancelMapPickBtn = mapPickerModal?.querySelector('#cancelMapPickBtn');
 const resultForm = mapPickerModal?.querySelector('#mapPickResultForm');
 
-// 업로드 페이지용 기본 이벤트 리스너 (modalEditLocationBtn이 아닌 경우에만)
-if (modalToggleButton && modalToggleButton.id === 'editLocationBtn') {
+// 업로드 페이지용 기본 이벤트 리스너 (modalEditLocationBtn 포함)
+if (modalToggleButton && (modalToggleButton.id === 'editLocationBtn' || modalToggleButton.id === 'modalEditLocationBtn')) {
     modalToggleButton.addEventListener('click', () => {
         if (mapPickerModal && !mapPickerModal.classList.contains('show')) {
             // 모달을 열기 전에 상태 초기화 (resetVariations 대신 부분 초기화)
@@ -344,7 +344,7 @@ function toggleValidationClass(element, isValid) {
 
 mapPickSubmitBtn?.addEventListener('click', function () {
     const selectedImage = document.querySelector('.gallery-image.selected') || document.querySelector('.gallery-card.selected');
-    const locationBox = document.querySelector('#locationBox');
+    const locationBox = document.querySelector('#locationBox') || document.querySelector('#modalLocationBox');
     
     // 선택된 이미지가 있는 경우에만 업데이트
     if (selectedImage) {
