@@ -1,3 +1,7 @@
+import {tagManager} from "../../module/tags/tagManager.js";
+import {UiHelpers} from "../../module/common/uiHelpers.js";
+import {ValidationService} from "../../module/common/validationService.js";
+
 // 홈 페이지와 업로드 페이지 모두 지원하도록 동적으로 선택
 const mapPickerModal = document.querySelector('#mapPickerModal') || document.querySelector('#modalMapPickerModal');
 const modalToggleButton = document.querySelector('#editLocationBtn') || document.querySelector('#modalEditLocationBtn');
@@ -28,7 +32,7 @@ if (modalToggleButton && modalToggleButton.id === 'editLocationBtn') {
             window.dispatchEvent(new Event('resize'));
             
             // 선택된 이미지의 기존 좌표가 있으면 지도에 표시
-            const selectedImage = document.querySelector('.gallery-image.selected');
+            const selectedImage = document.querySelector('.gallery-image.selected') || document.querySelector('.gallery-card.selected');
             if (selectedImage && selectedImage.dataset.latitude && selectedImage.dataset.longitude) {
                 const latitude = parseFloat(selectedImage.dataset.latitude);
                 const longitude = parseFloat(selectedImage.dataset.longitude);
@@ -231,6 +235,7 @@ let foundLocationData = {longitude: 0, latitude: 0, locationName: "", tags: []}
 // 전역 변수로 내보내기 (map.js에서 사용)
 window.foundLocationData = foundLocationData;
 
+
 function fetchLocationName(utmkcoor) {
     const utmk = utmkcoor;
     const wgs84 = convertUTMKtoWGS84(utmk.x, utmk.y);
@@ -251,15 +256,6 @@ function fetchLocationName(utmkcoor) {
         mapPickSubmitBtn.disabled = true;
     }
 
-    // 선택된 이미지의 날짜 정보 사용 (없으면 현재 날짜 사용)
-    let dateToUse = '';
-    const selectedImage = document.querySelector(".gallery-image.selected");
-    if (selectedImage && selectedImage.dataset.dateTime) {
-        dateToUse = selectedImage.dataset.dateTime;
-    } else {
-        const now = new Date();
-        dateToUse = `${now.getFullYear()} / ${now.getMonth() + 1} / ${now.getDate()}`;
-    }
 
     // 위치 정보만 요청 (계절태그는 유지)
     fetch("/api/location/name", {
@@ -297,9 +293,9 @@ function fetchLocationName(utmkcoor) {
                 mapPickSubmitBtn.disabled = false;
             }
 
-            // 기존 태그 유지하면서 새로운 위치태그만 추가
+            // 기존 태그 가져오기
             let existingTags = [];
-            const selectedImage = document.querySelector(".gallery-image.selected");
+            const selectedImage = document.querySelector(".gallery-image.selected") || document.querySelector(".gallery-card.selected");
             if (selectedImage && selectedImage.dataset.tags) {
                 try {
                     existingTags = JSON.parse(selectedImage.dataset.tags);
@@ -308,22 +304,9 @@ function fetchLocationName(utmkcoor) {
                 }
             }
 
-            // 새로운 위치태그 구성: sdName, sggName을 최우선으로 추가
-            let newLocationTags = [];
-            if (sdName) newLocationTags.push({ tagName: sdName, tagId: 'sdName' });
-            if (sggName) newLocationTags.push({ tagName: sggName, tagId: 'sggName' });
-
-            if (regionalTags && Array.isArray(regionalTags)) {
-                newLocationTags = [...newLocationTags, ...regionalTags];
-            }
-
-            // 중복 제거: 기존 태그와 새로운 위치태그 비교
-            const uniqueLocationTags = newLocationTags.filter(newTag => 
-                !existingTags.some(existingTag => existingTag.tagName === newTag.tagName)
-            );
-
-            // 기존 태그 + 새로운 위치태그(중복 제거) 결합
-            const combinedTags = [...existingTags, ...uniqueLocationTags];
+            // TagManager를 사용하여 위치 변경 처리
+            const newLocationData = { sdName, sggName, regionalTags };
+            const combinedTags = tagManager.handleLocationChange(existingTags, newLocationData);
 
             foundLocationData = {
                 longitude: wgs84.longitude,
@@ -334,7 +317,7 @@ function fetchLocationName(utmkcoor) {
                 tags: combinedTags
             };
             window.foundLocationData = foundLocationData;
-            console.log('Final foundLocationData (계절태그 유지):', foundLocationData);
+            console.log('Final foundLocationData (TagManager 사용):', foundLocationData);
         } else {
             console.error('API Error - Status:', locationResponse.status, 'Data:', locationData);
             alert(locationData.message);
@@ -360,7 +343,7 @@ function toggleValidationClass(element, isValid) {
 }
 
 mapPickSubmitBtn?.addEventListener('click', function () {
-    const selectedImage = document.querySelector('.selected');
+    const selectedImage = document.querySelector('.gallery-image.selected') || document.querySelector('.gallery-card.selected');
     const locationBox = document.querySelector('#locationBox');
     
     // 선택된 이미지가 있는 경우에만 업데이트
@@ -380,15 +363,13 @@ mapPickSubmitBtn?.addEventListener('click', function () {
         }
     }
     
-    // 지역 태그 업데이트
-    if (window.UiHelpers && foundLocationData.tags) {
-        window.UiHelpers.addTags(foundLocationData.tags);
+    // 지역 태그 업데이트 (업로드 페이지에서만)
+    if (foundLocationData.tags && !document.getElementById('modalMapPickerModal')) {
+        UiHelpers.addTags(foundLocationData.tags);
     }
 
-    if (window.ValidationService) {
-        window.ValidationService.validateLocationAndDate();
-        window.ValidationService.updateUploadButtonState();
-    }
+    ValidationService.validateLocationAndDate();
+    ValidationService.updateUploadButtonState();
     
     mapPickerModal.classList.remove('show');
     resetVariations();

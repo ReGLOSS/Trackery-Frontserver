@@ -37,8 +37,7 @@ class MapApplication {
         // ModalManager에 의존성 주입
         this.modalManager.setDependencies({
             mapManager: this.mapManager,
-            imageManager: this.imageManager,
-            statsRenderer: this.statsRenderer
+            imageManager: this.imageManager
         });
         
         // StatsRenderer에 렌더러 주입

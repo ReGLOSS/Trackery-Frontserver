@@ -461,7 +461,8 @@ export class MapManager {
     async styleRegionsWithImages() {
         if (this.currentView === 'sido') {
             await this.styleSidosWithImages();
-        } else if (this.currentView === 'sigungu') {
+        } else if (this.currentView === 'sigungu' || this.currentView === 'detail') {
+            // 시군구 뷰나 상세 뷰에서는 시군구 지도 색상 업데이트
             await this.styleDistrictsWithImages();
         }
     }
@@ -489,7 +490,7 @@ export class MapManager {
     
     async styleDistrictsWithImages() {
         if (!this.sigunguData) return;
-        
+
         for (const sigungu of this.sigunguData) {
             const sigunguId = sigungu.sigunguId;
             const pathElement = document.getElementById(sigunguId);
@@ -500,6 +501,13 @@ export class MapManager {
                 if (hasImages) {
                     pathElement.style.fill = '#28a745';
                     pathElement.classList.add('has-images');
+                    // 이미지가 있는 지역은 선택 상태를 해제
+                    pathElement.classList.remove('selected');
+                } else {
+                    // 이미지가 없는 지역은 has-images 클래스 제거하고 기본 회색으로 설정
+                    pathElement.classList.remove('has-images');
+                    pathElement.classList.remove('selected');
+                    pathElement.style.setProperty('fill', '#e0e0e0', 'important');
                 }
             }
         }
@@ -563,8 +571,8 @@ export class MapManager {
     }
     
     // 새로고침 메서드들
-    refreshMapColors() {
-        this.styleRegionsWithImages();
+    async refreshMapColors() {
+        await this.styleRegionsWithImages();
     }
     
     async refreshUserStats() {
