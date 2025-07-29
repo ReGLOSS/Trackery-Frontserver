@@ -256,15 +256,6 @@ function fetchLocationName(utmkcoor) {
         mapPickSubmitBtn.disabled = true;
     }
 
-    // 선택된 이미지의 날짜 정보 사용 (없으면 현재 날짜 사용)
-    let dateToUse = '';
-    const selectedImage = document.querySelector(".gallery-image.selected") || document.querySelector(".gallery-card.selected");
-    if (selectedImage && selectedImage.dataset.dateTime) {
-        dateToUse = selectedImage.dataset.dateTime;
-    } else {
-        const now = new Date();
-        dateToUse = `${now.getFullYear()} / ${now.getMonth() + 1} / ${now.getDate()}`;
-    }
 
     // 위치 정보만 요청 (계절태그는 유지)
     fetch("/api/location/name", {
