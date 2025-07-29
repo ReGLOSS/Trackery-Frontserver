@@ -334,9 +334,11 @@
     width: auto;
     max-height: 34vh;
     overflow: hidden;
-    border: 0.1vh solid #e9ecef;
+    border: 0.1vh solid #ced4da;
     border-radius: 0.6vh;
     aspect-ratio: 3/2;
+    background-color: #f8f9fa;
+
 }
 
 .modal-body .image-container .image-detail.thumbnail {
