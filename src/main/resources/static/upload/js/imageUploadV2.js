@@ -459,8 +459,8 @@ const EventHandlers = {
 
     // 파일 검증
     validateFile(file) {
-        // 파일 크기 검증 (100MB 제한)
-        const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+        // 파일 크기 검증 (30MB 제한)
+        const MAX_FILE_SIZE = 30 * 1024 * 1024; // 30MB
         if (file.size > MAX_FILE_SIZE) {
             throw new Error(`파일 크기가 너무 큽니다. 최대 ${MAX_FILE_SIZE / 1024 / 1024}MB까지 업로드 가능합니다.`);
         }
