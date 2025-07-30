@@ -1,24 +1,14 @@
 .map-picker-modal {
     display: none;
     flex-direction: column;
-    gap: 10px;
+    gap: 1vh;
     justify-content: flex-start;
     align-items: center;
-    width: 31vw;
-    height: 55vh;
-    z-index: 1500;
     position: relative;
     background-color: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(8px);
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border-radius: 0.6vh;
     padding: 15px;
     box-sizing: border-box;
-}
-
-/* 업로드 페이지에서 사용될 때의 위치 조정 */
-#mapPickerModal {
-    left: -1vh;
 }
 
 /* 홈 페이지에서 사용될 때의 위치 조정 */
@@ -29,40 +19,23 @@
     transform: translate(-50%, -50%);
     z-index: 1600;
     /* 사진 수정모드 전용 크기 설정 */
-    width: 35vw;
+    width: 72vh;
     height: 50vh;
-}
-
-/* 화면 크기에 따른 반응형 위치 조정 */
-@media (max-width: 1400px) {
-    #modalMapPickerModal {
-        left: calc(50% + 200px);
-    }
-}
-
-@media (max-width: 1200px) {
-    #modalMapPickerModal {
-        left: calc(50% + 150px);
-    }
-}
-
-@media (max-width: 1000px) {
-    #modalMapPickerModal {
-        left: 50%;
-        top: 60%;
-    }
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border-radius: 1.2vh;
 }
 
 .map-area {
     width: calc(100% - 20px);
     height: 32vh;
-    margin: 0 0 10px 0;
+    margin-bottom: 1vh;
     flex-shrink: 0;
 }
 
 .map-picker-result {
     width: calc(100% - 20px);
-    margin: 0 0 10px 0;
+    margin-bottom: 1vh;
     flex-shrink: 0;
 }
 
