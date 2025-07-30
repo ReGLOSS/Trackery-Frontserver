@@ -2,6 +2,199 @@ import {debounce, togglePasswordVisibility, validatePassword} from "/module/land
 import {sendRequestVerificationEmail, authNumberVerification} from "/module/landing/email-verification.js"
 import {refreshSidebarProfile, updateSidebarField} from "/common/js/sidebar-utils.js"
 
+// 프로필 이미지 업로드 기능
+const profileImageBlock = document.querySelector('.profile-image-block');
+const profileImageInput = document.getElementById('profileImageInput');
+const updateProfileImage = document.getElementById('updateProfileImage');
+
+// 프로필 이미지 섹션 클릭 시 파일 선택 창 열기
+profileImageBlock.addEventListener('click', function() {
+    profileImageInput.click();
+});
+
+// 파일 선택 시 미리보기 처리
+profileImageInput.addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // 파일 유효성 검사
+        if (!file.type.startsWith('image/')) {
+            alert('이미지 파일만 업로드 가능합니다.');
+            return;
+        }
+        
+        // 파일 크기 제한 (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('파일 크기는 5MB 이하로 업로드해주세요.');
+            return;
+        }
+        
+        // 기존 blob URL 해제 (메모리 누수 방지)
+        if (updateProfileImage.src.startsWith('blob:')) {
+            URL.revokeObjectURL(updateProfileImage.src);
+        }
+        
+        // blob URL로 미리보기 이미지 표시
+        const blobUrl = URL.createObjectURL(file);
+        updateProfileImage.src = blobUrl;
+        
+        // presigned URL을 통한 업로드 시작
+        uploadImageWithPresignedUrl(file);
+    }
+});
+
+// UUID 생성 함수
+function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+// presigned URL 요청 함수
+async function fetchPresignedPutUrl(filename) {
+    try {
+        console.log('=== Presigned URL 요청 시작 ===');
+        console.log('요청 파일명:', filename);
+        
+        const response = await fetch("/api/images/presigned-url/put?imageFileName=" + filename, {
+            method: "GET",
+            credentials: "include"
+        });
+        
+        console.log('Presigned URL 요청 응답 상태:', response.status);
+        console.log('Presigned URL 요청 응답 헤더:', [...response.headers.entries()]);
+        
+        if (!response.ok) {
+            const data = await response.json();
+            console.error('Presigned URL 요청 실패 응답:', data);
+            throw new Error(data.message || '서버 오류');
+        }
+        
+        const data = await response.json();
+        console.log('Presigned URL 요청 성공 응답:', data);
+        return data;
+    } catch (error) {
+        console.error('presigned URL 요청 실패:', error);
+        throw error;
+    }
+}
+
+// presigned URL로 이미지 업로드 함수
+async function uploadProfileImage(file, presignedPutUrl) {
+    try {
+        console.log('=== S3 이미지 업로드 시작 ===');
+        console.log('파일 정보:', {
+            name: file.name,
+            size: file.size,
+            type: file.type
+        });
+        console.log('업로드 URL:', presignedPutUrl);
+        
+        const response = await fetch(presignedPutUrl, {
+            method: 'PUT',
+            body: file,
+            headers: {
+                'Content-Type': file.type
+            }
+        });
+        
+        console.log('S3 업로드 응답 상태:', response.status);
+        console.log('S3 업로드 응답 헤더:', [...response.headers.entries()]);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('S3 업로드 실패 응답 내용:', errorText);
+            throw new Error(`이미지 업로드 실패: ${response.status} ${response.statusText}`);
+        }
+        
+        console.log('S3 업로드 성공');
+        return response;
+    } catch (error) {
+        console.error('이미지 업로드 실패:', error);
+        throw error;
+    }
+}
+
+// 전체 업로드 프로세스 관리 함수
+async function uploadImageWithPresignedUrl(file) {
+    try {
+        console.log('=== 이미지 업로드 프로세스 시작 ===');
+        console.log('선택된 파일:', {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            lastModified: new Date(file.lastModified).toISOString()
+        });
+        
+        // 파일 확장자 추출
+        const fileExtension = file.name.split('.').pop();
+        const filename = generateUUID() + '.' + fileExtension;
+        console.log('생성된 파일명:', filename);
+        
+        // 1. presigned URL 요청
+        console.log('1단계: Presigned URL 요청');
+        const presignedData = await fetchPresignedPutUrl(filename);
+        const presignedPutUrl = presignedData.data;
+        console.log('Presigned URL 획득 완료:', presignedPutUrl);
+        
+        // 2. presigned URL로 이미지 업로드
+        console.log('2단계: S3 이미지 업로드');
+        await uploadProfileImage(file, presignedPutUrl);
+        
+        // 3. 백엔드에 프로필 이미지 업데이트 알림 (확장자 제거한 UUID만 전송)
+        console.log('3단계: 백엔드에 프로필 이미지 업데이트 알림');
+        const imageNameWithoutExtension = filename.substring(0, filename.lastIndexOf('.'));
+        console.log('전송할 이미지명 (확장자 제거):', imageNameWithoutExtension);
+        
+        const updateResponse = await fetch('/api/users/me/profile-image', {
+            method: 'PATCH',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                imageName: imageNameWithoutExtension
+            })
+        });
+        
+        console.log('프로필 이미지 업데이트 API 응답 상태:', updateResponse.status);
+        
+        if (!updateResponse.ok) {
+            const errorData = await updateResponse.json();
+            console.error('프로필 이미지 업데이트 API 실패:', errorData);
+            throw new Error(errorData.message || '프로필 이미지 업데이트 실패');
+        }
+        
+        const updateData = await updateResponse.json();
+        console.log('프로필 이미지 업데이트 API 성공:', updateData);
+        
+        console.log('=== 프로필 이미지 업로드 완료 ===');
+        alert('프로필 이미지가 성공적으로 업로드되었습니다.');
+        
+        // 사이드바 프로필 이미지 업데이트
+        console.log('4단계: 사이드바 프로필 이미지 업데이트');
+        refreshSidebarProfile().then(() => {
+            console.log('사이드바 프로필 이미지 새로고침 완료');
+        });
+        
+    } catch (error) {
+        console.error('=== 이미지 업로드 프로세스 실패 ===');
+        console.error('에러 세부사항:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+        });
+        alert('이미지 업로드 중 오류가 발생했습니다: ' + error.message);
+        
+        // 업로드 실패 시 원래 이미지로 복원
+        if (updateProfileImage.src.startsWith('blob:')) {
+            URL.revokeObjectURL(updateProfileImage.src);
+        }
+        updateProfileImage.src = '/images/profile.jpg';
+    }
+}
+
 //모달 닫기 버튼
 document.getElementsByClassName("update-user-info-modal-close")[0]
     .addEventListener("click", function () {
