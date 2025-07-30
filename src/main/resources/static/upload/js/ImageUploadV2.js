@@ -19,6 +19,8 @@ const DOM = {
     get whileUploadingModal() { return document.querySelector('.while-uploading-modal'); },
     get tagInput() { return document.querySelector('.tag-input'); },
     get tagAddButton() { return document.querySelector('.tag-add'); },
+    get detailModal() { return document.getElementById('detailModal'); },
+    get detailModalOverlay() { return document.getElementById('detailModalOverlay'); },
     
     // 필수 엘리먼트 검증 함수
     validateRequiredElements() {
@@ -562,6 +564,9 @@ const EventHandlers = {
             UiHelpers.updateSelectedImageTags();
         }
 
+        // 모달 표시
+        EventHandlers.showDetailModal();
+
         const notSelectedImageDisplay = window.getComputedStyle(DOM.imageNotSelectedBlock).display;
 
         if (notSelectedImageDisplay === "flex") {
@@ -607,6 +612,36 @@ const EventHandlers = {
 
         if (DOM.locationBox.value === "") {
             DOM.locationBox.classList.add("invalid");
+        }
+    },
+
+    // 디테일 모달 표시
+    showDetailModal() {
+        if (DOM.detailModal) {
+            DOM.detailModal.style.display = 'block';
+            // 애니메이션을 위해 약간의 지연 후 show 클래스 추가
+            setTimeout(() => {
+                DOM.detailModal.classList.add('show');
+            }, 10);
+        }
+    },
+
+    // 디테일 모달 숨기기
+    hideDetailModal() {
+        if (DOM.detailModal) {
+            DOM.detailModal.classList.remove('show');
+            // 애니메이션 완료 후 display none
+            setTimeout(() => {
+                DOM.detailModal.style.display = 'none';
+                // 선택된 이미지 정보 초기화
+                document.querySelectorAll(".gallery-image").forEach(img => {
+                    img.classList.remove("selected");
+                });
+                DOM.imageNotSelectedBlock.style.display = "flex";
+                DOM.imageSelectedBlock.style.display = "none";
+                // 맵 모달도 닫기
+                document.querySelector('#mapPickerModal').classList.remove('show');
+            }, 300);
         }
     },
 
@@ -739,7 +774,7 @@ const EventHandlers = {
             }
             
             if (img && img.classList.contains("selected")) {
-                // If the deleted image was selected, clear the detail view
+                // If the deleted image was selected, clear the detail view and close modal
                 DOM.imageSelectedBlock.style.display = "none";
                 DOM.imageNotSelectedBlock.style.display = "flex";
                 DOM.description.value = "";
@@ -748,6 +783,8 @@ const EventHandlers = {
                 DOM.publicCheckbox.checked = false;
                 // 태그 정보도 초기화
                 UiHelpers.addTags([]);
+                // 모달 닫기
+                EventHandlers.hideDetailModal();
             }
             imageWrapper.remove();
             ValidationService.updateUploadButtonState(); // Update button state after removal
@@ -892,6 +929,18 @@ function initialize() {
             toggleImageFullscreen();
         });
     }
+
+    // 디테일 모달 관련 이벤트 리스너
+    if (DOM.detailModalOverlay) {
+        DOM.detailModalOverlay.addEventListener("click", EventHandlers.hideDetailModal);
+    }
+
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && DOM.detailModal && DOM.detailModal.classList.contains('show')) {
+            EventHandlers.hideDetailModal();
+        }
+    });
 }
 
 // DOM이 로드된 후 초기화

@@ -45,54 +45,59 @@
 
         <button class="btn btn-dark" id="imageUploadBtn">이미지 업로드</button>
     </div>
-    <!--  우측 사이드탭-->
-    <div class="detail-container">
-        <div class="image-not-selected">
-            <p>사진을 선택하면 <br> 추가 정보를 기입할 수 있습니다.</p>
-        </div>
-        <div class="image-selected">
-            <div class="image-container">
-                  <img src="/images/default-image4.webp" class="image-detail" alt="선택된 이미지">
-            </div>
-
-            <div class="description-area">
-                <label for="modalDescription">설명</label>
-                <textarea id="modalDescription" class="form-control" rows="5"
-                placeholder="여기에 설명을 입력하세요. (이미지 설명은 500자를 초과할 수 없습니다.)"
-                          style="resize:none;"></textarea>
-            </div>
-
-            <div class="tag-area">
-                <label>태그</label>
-                <div class="tag-box" id="modalTagBox">
-                    <input type="text" class="tag-input" placeholder="태그 입력 후 Enter" style="display: none;">
-                    <button class="tag-add">+</button>
+    <!--  우측 사이드 모달-->
+    <div class="detail-modal" id="detailModal" style="display: none;">
+        <div class="modal-overlay" id="detailModalOverlay"></div>
+        <div class="detail-container">
+            <div class="modal-body">
+                <div class="image-not-selected">
+                    <p>사진을 선택하면 <br> 추가 정보를 기입할 수 있습니다.</p>
                 </div>
-            </div>
+                <div class="image-selected">
+                    <div class="image-container">
+                          <img src="/images/default-image4.webp" class="image-detail" alt="선택된 이미지">
+                    </div>
 
-            <div class="location-area">
-                <div class="location-box">
-                    <label for="modalLocationBox">위치</label>
-                        <a href="#" class="text-muted" id="modalEditLocationBtn">여기가 아닌가요?</a>
-                            <input id="modalLocationBox" class="form-control" type="text" value="" readonly/>
+                    <div class="description-area">
+                        <label for="modalDescription">설명</label>
+                        <textarea id="modalDescription" class="form-control" rows="5"
+                        placeholder="여기에 설명을 입력하세요. (이미지 설명은 500자를 초과할 수 없습니다.)"
+                                  style="resize:none;"></textarea>
+                    </div>
+
+                    <div class="tag-area">
+                        <label>태그</label>
+                        <div class="tag-box" id="modalTagBox">
+                            <input type="text" class="tag-input" placeholder="태그 입력 후 Enter" style="display: none;">
+                            <button class="tag-add">+</button>
+                        </div>
+                    </div>
+
+                    <div class="location-area">
+                        <div class="location-box">
+                            <label for="modalLocationBox">위치</label>
+                                <a href="#" class="text-muted" id="modalEditLocationBtn">여기가 아닌가요?</a>
+                                    <input id="modalLocationBox" class="form-control" type="text" value="" readonly/>
+                        </div>
+                    </div>
+
+                    <div th:replace="~{map/map-picker-modal :: mapPickerModal(title, 'mapPickerModal')}"></div>
+
+                    <div class="date-area">
+                        <div class="date-box">
+                            <label for="modalDateBox">날짜</label>
+                                <a href="#" class="text-muted" id="modalEditDateBtn">다른 날 다녀오셨나요?</a>
+                                    <input id="modalDateBox" class="form-control" type="text" value="" readonly/>
+                        </div>
+                    </div>
+
+                    <div class="public-area">
+                        <label for="modalPublic">
+                            이 사진을 공개 할까요?
+                            <input type="checkbox" id="modalPublic"/>
+                        </label>
+                    </div>
                 </div>
-            </div>
-
-            <div th:replace="~{map/map-picker-modal :: mapPickerModal(title, 'mapPickerModal')}"></div>
-
-            <div class="date-area">
-                <div class="date-box">
-                    <label for="modalDateBox">날짜</label>
-                        <a href="#" class="text-muted" id="modalEditDateBtn">다른 날 다녀오셨나요?</a>
-                            <input id="modalDateBox" class="form-control" type="text" value="" readonly/>
-                </div>
-            </div>
-
-            <div class="public-area">
-                <label for="modalPublic">
-                    이 사진을 공개 할까요?
-                    <input type="checkbox" id="modalPublic"/>
-                </label>
             </div>
         </div>
     </div>
