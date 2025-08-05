@@ -606,12 +606,21 @@ const EventHandlers = {
             UiHelpers.addTags([]);
         }
 
+        // 모달 필드의 유효성 클래스 초기화
+        DOM.dateBox.classList.remove("invalid", "valid");
+        DOM.locationBox.classList.remove("invalid", "valid");
+
+        // 값에 따라 유효성 클래스 설정
         if (DOM.dateBox.value === "") {
             DOM.dateBox.classList.add("invalid");
+        } else {
+            DOM.dateBox.classList.add("valid");
         }
 
         if (DOM.locationBox.value === "") {
             DOM.locationBox.classList.add("invalid");
+        } else {
+            DOM.locationBox.classList.add("valid");
         }
     },
 
