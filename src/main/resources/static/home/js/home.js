@@ -50,8 +50,101 @@ class MapApplication {
     }
 }
 
+// 전역 인스턴스 저장
+let globalMapApp = null;
+
 // DOM이 로드되면 초기화
 document.addEventListener('DOMContentLoaded', async () => {
-    const app = new MapApplication();
-    await app.init();
+    globalMapApp = new MapApplication();
+    await globalMapApp.init();
+    
+    // 업로드 완료 플래그 확인
+    checkForPendingMapUpdate();
 });
+
+// 업로드 완료 플래그 확인 및 처리
+function checkForPendingMapUpdate() {
+    const updateFlag = localStorage.getItem('trackery_map_update_needed');
+    if (updateFlag) {
+        // 플래그 제거
+        localStorage.removeItem('trackery_map_update_needed');
+        
+        // 지도 업데이트 실행 (약간의 지연 후)
+        setTimeout(async () => {
+            try {
+                if (window.trackeryImageUpdated) {
+                    await window.trackeryImageUpdated();
+                }
+            } catch (error) {
+                console.error('Error in delayed map update:', error);
+            }
+        }, 500);
+    }
+}
+
+// 페이지 포커스 시에도 플래그 확인 (다른 탭에서 업로드 후 홈탭으로 돌아온 경우)
+window.addEventListener('focus', () => {
+    checkForPendingMapUpdate();
+});
+
+// postMessage 이벤트 수신 (업로드 페이지에서 즉시 지도 업데이트)
+window.addEventListener('message', async (event) => {
+    if (event.data && event.data.type === 'TRACKERY_MAP_UPDATE') {
+        try {
+            if (window.trackeryImageUpdated) {
+                await window.trackeryImageUpdated();
+            }
+            
+            // 업데이트 완료 후 업로드 페이지에 완료 메시지 전송
+            if (event.source) {
+                event.source.postMessage({
+                    type: 'TRACKERY_MAP_UPDATE_COMPLETE',
+                    timestamp: Date.now()
+                }, event.origin);
+            }
+        } catch (error) {
+            console.error('Error in immediate map update from message:', error);
+            
+            // 에러 발생시에도 완료 메시지 전송 (새로고침을 위해)
+            if (event.source) {
+                event.source.postMessage({
+                    type: 'TRACKERY_MAP_UPDATE_COMPLETE',
+                    timestamp: Date.now()
+                }, event.origin);
+            }
+        }
+    }
+});
+
+// 전역 함수: 이미지 업로드/수정/삭제 후 호출
+window.trackeryImageUpdated = async function() {
+    if (globalMapApp && globalMapApp.mapManager) {
+        await globalMapApp.mapManager.onImageUpdated();
+    }
+};
+
+// 전역 함수: 앨범 생성/수정/삭제 후 호출
+window.trackeryAlbumUpdated = async function() {
+    if (globalMapApp && globalMapApp.mapManager) {
+        // 앨범 작업은 지역 색상에는 영향 없고 통계만 업데이트
+        if (globalMapApp.mapManager.isUserLoggedIn()) {
+            await globalMapApp.mapManager.refreshUserStats();
+        }
+    }
+};
+
+// 전역 함수: 통계만 새로고침 (다른 페이지에서 돌아왔을 때 등)
+window.trackeryRefreshStats = async function() {
+    if (globalMapApp && globalMapApp.mapManager) {
+        if (globalMapApp.mapManager.isUserLoggedIn()) {
+            await globalMapApp.mapManager.refreshUserStats();
+        }
+    }
+};
+
+// 전역 함수: 캐시 전체 삭제 (로그아웃 시 등)
+window.trackeryClearCache = function() {
+    if (globalMapApp && globalMapApp.mapManager) {
+        globalMapApp.mapManager.clearAllCache();
+    }
+};

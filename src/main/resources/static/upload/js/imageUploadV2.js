@@ -761,12 +761,16 @@ const EventHandlers = {
 
         await UiHelpers.hideUploadingBlockAndShowResultBlock();
         
-        // 모든 이미지 업로드 성공 시 2초 후 모달 닫고 페이지 새로고침
+        // 모든 이미지 업로드 성공 시 홈에서 플래그로 지도 업데이트 처리
         if (failedImageUUIDs.length === 0) {
+            // localStorage에 플래그 설정하여 홈 페이지에서 지도 업데이트 처리
+            localStorage.setItem('trackery_map_update_needed', Date.now().toString());
+            
+            // 5초 후 모달 닫고 새로고침
             setTimeout(() => {
                 DOM.whileUploadingModal.style.display = "none";
                 window.location.reload();
-            }, 2000);
+            }, 5000);
         }
     },
 

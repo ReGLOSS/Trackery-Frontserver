@@ -15,6 +15,15 @@ export class MapManager {
         this.userStats = null;
         this.cachedSigunguData = new Map();
         
+        // localStorage 캐시 관리
+        this.CACHE_KEYS = {
+            SIDO_DATA: 'trackery_sido_data',
+            USER_STATS: 'trackery_user_stats',
+            IMAGE_STATUS: 'trackery_image_status',
+            LAST_UPDATE: 'trackery_last_update'
+        };
+        this.CACHE_DURATION = 24 * 60 * 60 * 1000; // 24시간
+        
         // 네비게이션
         this.navigationHistory = [];
         
@@ -40,8 +49,11 @@ export class MapManager {
     
     async init() {
         this.bindEvents();
-        await this.loadUserStats();
-        await this.loadSidoView();
+        // 사용자가 로그인한 경우에만 통계 로드
+        if (this.isUserLoggedIn()) {
+            await this.loadUserStatsWithCache();
+        }
+        await this.loadSidoViewWithCache();
     }
     
     bindEvents() {
@@ -51,8 +63,8 @@ export class MapManager {
         }
     }
     
-    // 시도 뷰 로드
-    async loadSidoView() {
+    // 시도 뷰 로드 (캐시 활용)
+    async loadSidoViewWithCache() {
         if (this.isLoading) return;
         
         try {
@@ -62,8 +74,8 @@ export class MapManager {
             this.currentSidoId = null;
             this.currentSigunguId = null;
             
-            // API에서 시도 데이터 로드
-            await this.fetchSidoData();
+            // 캐시된 시도 데이터 로드
+            await this.fetchSidoDataWithCache();
             
             // SVG 지도 로드
             await this.renderer.loadSvgMap('/map/svg/simpleSido.svg');
@@ -72,13 +84,13 @@ export class MapManager {
             this.updateBackButton();
             this.renderer.clearMapTitle();
             this.updateDetailContainerClass();
-            this.statsRenderer.updateStatsDisplay(this.currentView, this.userStats);
+            this.statsRenderer.updateStatsDisplay(this.currentView, this.userStats, this);
             
             // 시도 클릭 이벤트 바인딩
             this.bindSidoClickEvents();
             
-            // 이미지가 있는 시도를 초록색으로 표시
-            await this.styleRegionsWithImages();
+            // 캐시된 이미지 상태로 지역 색상 표시
+            await this.styleRegionsWithCachedImages();
             
         } catch (error) {
             console.error('Error loading sido view:', error);
@@ -88,7 +100,7 @@ export class MapManager {
         }
     }
     
-    // 시군구 뷰 로드
+// 시군구 뷰 로드
     async loadSigunguView(sidoId) {
         if (this.isLoading) return;
         
@@ -129,7 +141,7 @@ export class MapManager {
             await this.renderer.loadSvgMap(svgPath);
             this.updateBackButton();
             this.updateDetailContainerClass();
-            this.statsRenderer.updateStatsDisplay(this.currentView, this.userStats);
+            this.statsRenderer.updateStatsDisplay(this.currentView, this.userStats, this);
             
             // 시군구 클릭 이벤트 바인딩
             this.bindSigunguClickEvents();
@@ -181,7 +193,7 @@ export class MapManager {
             await this.renderer.loadSvgMap(svgPath);
             this.updateBackButton();
             this.updateDetailContainerClass();
-            this.statsRenderer.updateStatsDisplay(this.currentView, this.userStats);
+            this.statsRenderer.updateStatsDisplay(this.currentView, this.userStats, this);
             
             // 시군구 클릭 이벤트 바인딩
             this.bindSigunguClickEvents();
@@ -197,7 +209,68 @@ export class MapManager {
         }
     }
     
+    // 캐시 관리 메서드들
+    isUserLoggedIn() {
+        return document.cookie.includes('accessToken=');
+    }
+    
+    getCachedData(key) {
+        try {
+            const cached = localStorage.getItem(key);
+            if (!cached) return null;
+            
+            const { data, timestamp } = JSON.parse(cached);
+            const now = Date.now();
+            
+            if (now - timestamp > this.CACHE_DURATION) {
+                localStorage.removeItem(key);
+                return null;
+            }
+            
+            return data;
+        } catch (error) {
+            console.error('Error reading cache:', error);
+            localStorage.removeItem(key);
+            return null;
+        }
+    }
+    
+    setCachedData(key, data) {
+        try {
+            const cacheData = {
+                data: data,
+                timestamp: Date.now()
+            };
+            localStorage.setItem(key, JSON.stringify(cacheData));
+        } catch (error) {
+            console.error('Error writing cache:', error);
+        }
+    }
+    
+    clearCache() {
+        Object.values(this.CACHE_KEYS).forEach(key => {
+            localStorage.removeItem(key);
+        });
+    }
+    
     // API 데이터 로딩 메서드들
+    async fetchSidoDataWithCache() {
+        // 캐시 확인
+        const cachedSidoData = this.getCachedData(this.CACHE_KEYS.SIDO_DATA);
+        if (cachedSidoData) {
+            this.sidoData = cachedSidoData;
+            return;
+        }
+        
+        // API 호출
+        await this.fetchSidoData();
+        
+        // 캐시 저장
+        if (this.sidoData) {
+            this.setCachedData(this.CACHE_KEYS.SIDO_DATA, this.sidoData);
+        }
+    }
+    
     async fetchSidoData() {
         const response = await fetch('/api/location/sido');
         if (!response.ok) {
@@ -226,6 +299,23 @@ export class MapManager {
         
         await this.fetchSigunguData(sidoId);
         this.cachedSigunguData.set(cacheKey, this.sigunguData);
+    }
+    
+    async loadUserStatsWithCache() {
+        // 캐시 확인
+        const cachedStats = this.getCachedData(this.CACHE_KEYS.USER_STATS);
+        if (cachedStats) {
+            this.userStats = cachedStats;
+            return;
+        }
+        
+        // API 호출
+        await this.loadUserStats();
+        
+        // 캐시 저장
+        if (this.userStats) {
+            this.setCachedData(this.CACHE_KEYS.USER_STATS, this.userStats);
+        }
     }
     
     async loadUserStats() {
@@ -369,11 +459,11 @@ export class MapManager {
             // 상세 뷰에서 시군구 뷰로 돌아가기
             this.loadSigunguViewWithoutHistory(this.currentSidoId);
         } else if (this.currentView === 'sigungu') {
-            // 시군구 뷰에서 시도 뷰로 돌아가기
-            this.loadSidoView();
+            // 시군구 뷰에서 시도 뷰로 돌아가기 (캐시 활용)
+            this.loadSidoViewWithCache();
         } else if (this.currentView === 'sido') {
             // 시도 뷰에서는 뒤로가기 버튼이 숨겨져야 함
-            this.loadSidoView();
+            this.loadSidoViewWithCache();
         }
     }
     
@@ -457,7 +547,16 @@ export class MapManager {
         }
     }
     
-    // 지역 색상 스타일링
+    // 지역 색상 스타일링 (캐시 활용)
+    async styleRegionsWithCachedImages() {
+        if (this.currentView === 'sido') {
+            await this.styleSidosWithCachedImages();
+        } else if (this.currentView === 'sigungu' || this.currentView === 'detail') {
+            await this.styleDistrictsWithCachedImages();
+        }
+    }
+    
+    // 기존 지역 색상 스타일링 (실시간 API 호출)
     async styleRegionsWithImages() {
         if (this.currentView === 'sido') {
             await this.styleSidosWithImages();
@@ -467,15 +566,23 @@ export class MapManager {
         }
     }
     
-    async styleSidosWithImages() {
+    // 캐시된 이미지 상태로 시도 스타일링
+    async styleSidosWithCachedImages() {
         if (!this.sidoData) return;
+        
+        const cachedImageStatus = this.getCachedData(this.CACHE_KEYS.IMAGE_STATUS);
+        if (!cachedImageStatus) {
+            // 캐시가 없으면 실시간 로드 후 캐시
+            await this.styleSidosWithImages();
+            return;
+        }
         
         for (const sido of this.sidoData) {
             const sidoId = sido.sd_id || sido.id || sido.sidoId;
             const pathElement = document.getElementById(sidoId);
             
-            if (pathElement) {
-                const imageStatus = await this.checkSidoHasImages(sidoId);
+            if (pathElement && cachedImageStatus.sido && cachedImageStatus.sido[sidoId]) {
+                const imageStatus = cachedImageStatus.sido[sidoId];
                 
                 if (imageStatus.hasAll) {
                     pathElement.style.setProperty('fill', '#28a745', 'important');
@@ -488,8 +595,105 @@ export class MapManager {
         }
     }
     
+    async styleSidosWithImages() {
+        if (!this.sidoData) {
+            console.warn('No sidoData available for styling');
+            return;
+        }
+        
+        console.log(`Styling ${this.sidoData.length} sido regions with fresh image data...`);
+        
+        // 기존 캐시 데이터를 가져오되, sigungu 정보를 보존
+        let cachedImageStatus = this.getCachedData(this.CACHE_KEYS.IMAGE_STATUS);
+        if (!cachedImageStatus) {
+            cachedImageStatus = { sido: {}, sigungu: {} };
+        }
+        // sido 객체가 없으면 초기화하되, sigungu는 기존 값 유지
+        if (!cachedImageStatus.sido) {
+            cachedImageStatus.sido = {};
+        }
+        
+        let styledCount = 0;
+        let coloredCount = 0;
+        
+        for (const sido of this.sidoData) {
+            const sidoId = sido.sd_id || sido.id || sido.sidoId;
+            const pathElement = document.getElementById(sidoId);
+            
+            if (pathElement) {
+                styledCount++;
+                console.log(`Checking images for sido ${sidoId}...`);
+                
+                const sidoImageStatus = await this.checkSidoHasImages(sidoId);
+                cachedImageStatus.sido[sidoId] = sidoImageStatus;
+                
+                if (sidoImageStatus.hasAll) {
+                    pathElement.style.setProperty('fill', '#28a745', 'important');
+                    pathElement.classList.add('has-images');
+                    coloredCount++;
+                    console.log(`Sido ${sidoId} colored GREEN (has all images)`);
+                } else if (sidoImageStatus.hasAny) {
+                    pathElement.style.setProperty('fill', '#ffc107', 'important');
+                    pathElement.classList.add('has-images');
+                    coloredCount++;
+                    console.log(`Sido ${sidoId} colored YELLOW (has some images)`);
+                } else {
+                    console.log(`Sido ${sidoId} not colored (no images)`);
+                }
+            } else {
+                console.warn(`SVG path element not found for sido ${sidoId}`);
+            }
+        }
+        
+        console.log(`Completed styling: ${styledCount} processed, ${coloredCount} colored`);
+        
+        // 이미지 상태 캐시 업데이트 (sigungu 정보 보존)
+        this.setCachedData(this.CACHE_KEYS.IMAGE_STATUS, cachedImageStatus);
+    }
+    
+    // 캐시된 이미지 상태로 시군구 스타일링
+    async styleDistrictsWithCachedImages() {
+        if (!this.sigunguData || !this.currentSidoId) return;
+        
+        const cachedImageStatus = this.getCachedData(this.CACHE_KEYS.IMAGE_STATUS);
+        if (!cachedImageStatus || !cachedImageStatus.sigungu) {
+            // 캐시가 없으면 실시간 로드
+            await this.styleDistrictsWithImages();
+            return;
+        }
+        
+        for (const sigungu of this.sigunguData) {
+            const sigunguId = sigungu.sigunguId;
+            const pathElement = document.getElementById(sigunguId);
+            
+            if (pathElement) {
+                const hasImages = cachedImageStatus.sigungu[sigunguId] || false;
+                
+                if (hasImages) {
+                    pathElement.style.fill = '#28a745';
+                    pathElement.classList.add('has-images');
+                    pathElement.classList.remove('selected');
+                } else {
+                    pathElement.classList.remove('has-images');
+                    pathElement.classList.remove('selected');
+                    pathElement.style.setProperty('fill', '#e0e0e0', 'important');
+                }
+            }
+        }
+    }
+    
     async styleDistrictsWithImages() {
-        if (!this.sigunguData) return;
+        if (!this.sigunguData || !this.currentSidoId) return;
+        
+        // 기존 캐시 데이터를 가져오되, sido 정보를 보존
+        let cachedImageStatus = this.getCachedData(this.CACHE_KEYS.IMAGE_STATUS);
+        if (!cachedImageStatus) {
+            cachedImageStatus = { sido: {}, sigungu: {} };
+        }
+        // sigungu 객체가 없으면 초기화하되, sido는 기존 값 유지
+        if (!cachedImageStatus.sigungu) {
+            cachedImageStatus.sigungu = {};
+        }
 
         for (const sigungu of this.sigunguData) {
             const sigunguId = sigungu.sigunguId;
@@ -497,20 +701,22 @@ export class MapManager {
             
             if (pathElement) {
                 const hasImages = await this.checkSigunguHasImages(sigunguId);
+                cachedImageStatus.sigungu[sigunguId] = hasImages;
                 
                 if (hasImages) {
                     pathElement.style.fill = '#28a745';
                     pathElement.classList.add('has-images');
-                    // 이미지가 있는 지역은 선택 상태를 해제
                     pathElement.classList.remove('selected');
                 } else {
-                    // 이미지가 없는 지역은 has-images 클래스 제거하고 기본 회색으로 설정
                     pathElement.classList.remove('has-images');
                     pathElement.classList.remove('selected');
                     pathElement.style.setProperty('fill', '#e0e0e0', 'important');
                 }
             }
         }
+        
+        // 이미지 상태 캐시 업데이트 (sido 정보 보존)
+        this.setCachedData(this.CACHE_KEYS.IMAGE_STATUS, cachedImageStatus);
     }
     
     async checkSidoHasImages(sidoId) {
@@ -570,13 +776,112 @@ export class MapManager {
         }
     }
     
-    // 새로고침 메서드들
+    // 시도 이미지 캐시만 업데이트 (SVG 스타일 적용 없이)
+    async updateSidoImageCache() {
+        if (!this.sidoData) {
+            console.warn('No sidoData available for cache update');
+            return;
+        }
+        
+        console.log(`Updating sido image cache for ${this.sidoData.length} regions...`);
+        
+        // 기존 캐시 데이터를 가져오되, sigungu 정보를 보존
+        let cachedImageStatus = this.getCachedData(this.CACHE_KEYS.IMAGE_STATUS);
+        if (!cachedImageStatus) {
+            cachedImageStatus = { sido: {}, sigungu: {} };
+        }
+        // sido 객체가 없으면 초기화하되, sigungu는 기존 값 유지
+        if (!cachedImageStatus.sido) {
+            cachedImageStatus.sido = {};
+        }
+        
+        let updatedCount = 0;
+        
+        for (const sido of this.sidoData) {
+            const sidoId = sido.sd_id || sido.id || sido.sidoId;
+            console.log(`📦 Caching image status for sido ${sidoId}...`);
+            
+            const sidoImageStatus = await this.checkSidoHasImages(sidoId);
+            cachedImageStatus.sido[sidoId] = sidoImageStatus;
+            updatedCount++;
+            
+            console.log(`Sido ${sidoId} cache updated: hasAny=${sidoImageStatus.hasAny}, hasAll=${sidoImageStatus.hasAll}`);
+        }
+        
+        console.log(`Completed cache update: ${updatedCount} sido regions cached`);
+        
+        // 이미지 상태 캐시 업데이트 (sigungu 정보 보존)
+        this.setCachedData(this.CACHE_KEYS.IMAGE_STATUS, cachedImageStatus);
+    }
+
+    // 새로고침 메서드들 (이미지 업로드/수정 후 호출)
     async refreshMapColors() {
-        await this.styleRegionsWithImages();
+        // 이미지 상태 캐시 완전 삭제
+        localStorage.removeItem(this.CACHE_KEYS.IMAGE_STATUS);
+        
+        console.log('Starting map colors refresh...', {
+            currentView: this.currentView,
+            hasSidoData: !!this.sidoData,
+            hasSigunguData: !!this.sigunguData
+        });
+        
+        // DOM이 준비될 때까지 잠시 대기
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // 현재 뷰에 따라 지도 색상을 강제로 새로고침
+        if (this.currentView === 'sido') {
+            // 시도 뷰에 있을 때는 시도 색상을 강제로 업데이트
+            console.log('Force updating sido colors for national map...');
+            
+            // SVG 요소들이 존재하는지 확인
+            const svgPaths = document.querySelectorAll('#map-display path');
+            console.log(`Found ${svgPaths.length} SVG paths for coloring`);
+            
+            if (svgPaths.length > 0) {
+                await this.styleRegionsWithImages(); // 캐시 없이 실시간 호출
+            } else {
+                console.warn('No SVG paths found for coloring - delaying and retrying...');
+                // SVG가 아직 로드되지 않았을 수 있으므로 잠시 후 재시도
+                await new Promise(resolve => setTimeout(resolve, 500));
+                await this.styleRegionsWithImages();
+            }
+        } else if (this.currentView === 'sigungu' || this.currentView === 'detail') {
+            // 시군구 뷰에 있을 때는 현재 보이는 시군구 색상만 업데이트하고, 
+            // 시도 색상은 캐시만 업데이트 (SVG가 없으므로 실제 색상 적용은 하지 않음)
+            console.log('Updating colors for sigungu map and caching sido data...');
+            
+            // 시도 색상 캐시만 업데이트 (SVG 요소가 없으므로 색상 적용은 건너뜀)
+            if (this.sidoData) {
+                console.log('Updating sido color cache in background...');
+                await this.updateSidoImageCache();
+            }
+            
+            // 현재 보이는 시군구 색상 업데이트
+            if (this.sigunguData) {
+                await this.styleDistrictsWithImages(); 
+            }
+        }
+        
+        console.log('✅ Map colors refreshed for all views');
     }
     
     async refreshUserStats() {
+        // 사용자 통계 캐시 삭제
+        localStorage.removeItem(this.CACHE_KEYS.USER_STATS);
         await this.loadUserStats();
         this.statsRenderer.updateStatsDisplay(this.currentView, this.userStats);
+    }
+    
+    // 전체 캐시 삭제 (로그아웃 시 또는 데이터 문제 시 사용)
+    clearAllCache() {
+        this.clearCache();
+    }
+    
+    // 이미지 업로드/수정 완료 후 호출할 메서드
+    async onImageUpdated() {
+        await this.refreshMapColors();
+        if (this.isUserLoggedIn()) {
+            await this.refreshUserStats();
+        }
     }
 }
