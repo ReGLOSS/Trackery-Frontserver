@@ -102,49 +102,68 @@ export class MapManager {
     
 // 시군구 뷰 로드
     async loadSigunguView(sidoId) {
+        return this._loadSigunguViewCommon(sidoId, {
+            addToHistory: true,
+            loadImages: false
+        });
+    }
+    
+    // 시군구 뷰 로드 (히스토리 없이)
+    async loadSigunguViewWithoutHistory(sidoId) {
+        return this._loadSigunguViewCommon(sidoId, {
+            addToHistory: false,
+            loadImages: true,
+            clearSelection: true
+        });
+    }
+    
+    // 시군구 뷰 로드 공통 로직
+    async _loadSigunguViewCommon(sidoId, options = {}) {
+        const {
+            addToHistory = false,
+            loadImages = false,
+            clearSelection = false
+        } = options;
+        
         if (this.isLoading) return;
         
         try {
             this.setLoadingState(true);
             this.renderer.showLoading();
             
-            // 탐색 기록에 추가
-            this.navigationHistory.push({
-                view: 'sido',
-                sidoId: null,
-                sigunguId: null
-            });
+            // 탐색 기록에 추가 (옵션에 따라)
+            if (addToHistory) {
+                this.navigationHistory.push({
+                    view: 'sido',
+                    sidoId: null,
+                    sigunguId: null
+                });
+            }
             
             this.currentView = 'sigungu';
             this.currentSidoId = sidoId;
             this.currentSigunguId = null;
             
-            // 시도 이름 가져오기
-            let sidoName = this.getSidoName(sidoId);
-            
-            // 시군구 데이터 로드
-            await this.fetchSigunguDataCached(sidoId);
-            
-            // 여전히 시도 이름이 없다면 시군구 데이터에서 가져오기
-            if (sidoName === '지역' && this.sigunguData && this.sigunguData.length > 0) {
-                const firstSigungu = this.sigunguData[0];
-                if (firstSigungu.sido && firstSigungu.sido.sidoName) {
-                    sidoName = firstSigungu.sido.sidoName;
-                }
+            // 이전 선택 상태 초기화 (옵션에 따라)
+            if (clearSelection) {
+                document.querySelectorAll('.region-path.selected').forEach(el => {
+                    el.classList.remove('selected');
+                });
             }
+            
+            // 시도 이름 가져오기
+            const sidoName = await this._getSidoNameWithFallback(sidoId);
             
             // 제목을 먼저 업데이트하여 즉각적인 피드백 제공
             this.renderer.updateMapTitle(sidoName);
             
-            // SVG 로드
-            const svgPath = this.getSigunguSvgPath(sidoId);
-            await this.renderer.loadSvgMap(svgPath);
-            this.updateBackButton();
-            this.updateDetailContainerClass();
-            this.statsRenderer.updateStatsDisplay(this.currentView, this.userStats, this);
+            // SVG 로드 및 UI 업데이트
+            await this._loadSigunguUI(sidoId);
             
-            // 시군구 클릭 이벤트 바인딩
-            this.bindSigunguClickEvents();
+            // 시도 이미지 로드 (옵션에 따라)
+            if (loadImages) {
+                this.imageManager.loadSidoImages(sidoId);
+            }
             
         } catch (error) {
             console.error('Error loading sigungu view:', error);
@@ -154,59 +173,34 @@ export class MapManager {
         }
     }
     
-    // 시군구 뷰 로드 (히스토리 없이)
-    async loadSigunguViewWithoutHistory(sidoId) {
-        if (this.isLoading) return;
+    // 시도 이름 가져오기 (fallback 포함)
+    async _getSidoNameWithFallback(sidoId) {
+        let sidoName = this.getSidoName(sidoId);
         
-        try {
-            this.setLoadingState(true);
-            this.renderer.showLoading();
-            
-            this.currentView = 'sigungu';
-            this.currentSidoId = sidoId;
-            this.currentSigunguId = null;
-            
-            // 이전 선택 상태 초기화
-            document.querySelectorAll('.region-path.selected').forEach(el => {
-                el.classList.remove('selected');
-            });
-            
-            // 시도 이름 가져오기
-            let sidoName = this.getSidoName(sidoId);
-            
-            // 시군구 데이터 로드
-            await this.fetchSigunguDataCached(sidoId);
-            
-            // 시도 이름이 없다면 시군구 데이터에서 가져오기
-            if (sidoName === '지역' && this.sigunguData && this.sigunguData.length > 0) {
-                const firstSigungu = this.sigunguData[0];
-                if (firstSigungu.sido && firstSigungu.sido.sidoName) {
-                    sidoName = firstSigungu.sido.sidoName;
-                }
+        // 시군구 데이터 로드
+        await this.fetchSigunguDataCached(sidoId);
+        
+        // 시도 이름이 없다면 시군구 데이터에서 가져오기
+        if (sidoName === '지역' && this.sigunguData && this.sigunguData.length > 0) {
+            const firstSigungu = this.sigunguData[0];
+            if (firstSigungu.sido && firstSigungu.sido.sidoName) {
+                sidoName = firstSigungu.sido.sidoName;
             }
-            
-            // 제목을 먼저 업데이트하여 즉각적인 피드백 제공
-            this.renderer.updateMapTitle(sidoName);
-            
-            // SVG 로드
-            const svgPath = this.getSigunguSvgPath(sidoId);
-            await this.renderer.loadSvgMap(svgPath);
-            this.updateBackButton();
-            this.updateDetailContainerClass();
-            this.statsRenderer.updateStatsDisplay(this.currentView, this.userStats, this);
-            
-            // 시군구 클릭 이벤트 바인딩
-            this.bindSigunguClickEvents();
-            
-            // 시도 이미지 로드 (뒤로가기 시)
-            this.imageManager.loadSidoImages(sidoId);
-            
-        } catch (error) {
-            console.error('Error loading sigungu view:', error);
-            this.renderer.showError('시군구 지도를 불러오는 중 오류가 발생했습니다.');
-        } finally {
-            this.setLoadingState(false);
         }
+        
+        return sidoName;
+    }
+    
+    // 시군구 UI 로드 및 업데이트
+    async _loadSigunguUI(sidoId) {
+        const svgPath = this.getSigunguSvgPath(sidoId);
+        await this.renderer.loadSvgMap(svgPath);
+        this.updateBackButton();
+        this.updateDetailContainerClass();
+        this.statsRenderer.updateStatsDisplay(this.currentView, this.userStats, this);
+        
+        // 시군구 클릭 이벤트 바인딩
+        this.bindSigunguClickEvents();
     }
     
     // 캐시 관리 메서드들
@@ -547,6 +541,19 @@ export class MapManager {
         }
     }
     
+    // 지도 요소 스타일링 공통 함수
+    _stylePathElement(pathElement, hasImages) {
+        if (hasImages) {
+            pathElement.style.fill = '#28a745';
+            pathElement.classList.add('has-images');
+            pathElement.classList.remove('selected');
+        } else {
+            pathElement.classList.remove('has-images');
+            pathElement.classList.remove('selected');
+            pathElement.style.setProperty('fill', '#e0e0e0', 'important');
+        }
+    }
+    
     // 지역 색상 스타일링 (캐시 활용)
     async styleRegionsWithCachedImages() {
         if (this.currentView === 'sido') {
@@ -668,16 +675,7 @@ export class MapManager {
             
             if (pathElement) {
                 const hasImages = cachedImageStatus.sigungu[sigunguId] || false;
-                
-                if (hasImages) {
-                    pathElement.style.fill = '#28a745';
-                    pathElement.classList.add('has-images');
-                    pathElement.classList.remove('selected');
-                } else {
-                    pathElement.classList.remove('has-images');
-                    pathElement.classList.remove('selected');
-                    pathElement.style.setProperty('fill', '#e0e0e0', 'important');
-                }
+                this._stylePathElement(pathElement, hasImages);
             }
         }
     }
@@ -702,16 +700,7 @@ export class MapManager {
             if (pathElement) {
                 const hasImages = await this.checkSigunguHasImages(sigunguId);
                 cachedImageStatus.sigungu[sigunguId] = hasImages;
-                
-                if (hasImages) {
-                    pathElement.style.fill = '#28a745';
-                    pathElement.classList.add('has-images');
-                    pathElement.classList.remove('selected');
-                } else {
-                    pathElement.classList.remove('has-images');
-                    pathElement.classList.remove('selected');
-                    pathElement.style.setProperty('fill', '#e0e0e0', 'important');
-                }
+                this._stylePathElement(pathElement, hasImages);
             }
         }
         

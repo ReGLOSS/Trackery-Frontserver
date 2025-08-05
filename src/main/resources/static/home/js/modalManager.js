@@ -244,34 +244,7 @@ export class ModalManager {
         }
     }
     
-    
-    // 태그 요소 생성 (폴백용)
-    createTagElement(tag) {
-        const tagElement = document.createElement('span');
-        tagElement.className = 'tag';
-        
-        const tagId = typeof tag === 'object' ? tag.tagId : null;
-        const tagName = typeof tag === 'object' ? (tag.tagName || tag.name || tag) : tag;
-        
-        tagElement.textContent = tagName;
-        tagElement.dataset.tagId = tagId;
-        tagElement.dataset.tagName = tagName;
-        
-        const deleteButton = document.createElement('button');
-        deleteButton.className = 'tag-delete';
-        deleteButton.innerHTML = '×';
-        deleteButton.title = '태그 삭제';
-        deleteButton.style.display = 'none';
-        deleteButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            tagElement.remove();
-        });
-        
-        tagElement.appendChild(deleteButton);
-        return tagElement;
-    }
-    
-    // 모달 표시
+// 모달 표시
     showModal() {
         const modal = document.getElementById('imageDetailModal');
         if (modal) {
@@ -961,8 +934,7 @@ export class ModalManager {
             this.tagUIManager.disableEditMode();
         }
     }
-    
-    
+
     restoreOriginalTags() {
         if (!this.originalModalData) return;
         
