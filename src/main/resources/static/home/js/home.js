@@ -3,6 +3,7 @@ import { MapRenderer } from './mapRenderer.js';
 import { ImageManager } from './imageManager.js';
 import { ModalManager } from './modalManager.js';
 import { StatsRenderer } from './statsRenderer.js';
+import { NotificationHelper } from '../../module/notification/notificationHelper.js';
 
 /**
  * 메인 애플리케이션 클래스
@@ -160,57 +161,10 @@ window.trackeryClearCache = function() {
 
 // 지도 업데이트 알림 메시지 표시
 function showMapUpdateNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = 'map-update-notification';
-    notification.style.cssText = `
-        position: fixed; bottom: 20px; right: 20px; padding: 12px 20px;
-        border-radius: 6px; color: white; font-weight: 500; z-index: 5000;
-        animation: slideInNotification 0.3s ease; max-width: 300px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    `;
-
-    // 타입별 배경색 설정
-    const colors = {
-        success: '#28a745',
-        error: '#dc3545',
-        info: '#007bff'
-    };
-    notification.style.backgroundColor = colors[type] || colors.info;
-    notification.textContent = message;
-
-    // 애니메이션 스타일 추가
-    if (!document.querySelector('#map-notification-styles')) {
-        const style = document.createElement('style');
-        style.id = 'map-notification-styles';
-        style.textContent = `
-            @keyframes slideInNotification {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-
-    document.body.appendChild(notification);
-
-    // info 타입이 아닌 경우 3초 후 자동 제거
-    if (type !== 'info') {
-        setTimeout(() => {
-            hideNotification(notification);
-        }, 3000);
-    }
-
-    return notification;
+    return NotificationHelper.showMapUpdateNotification(message, type);
 }
 
 // 알림 숨기기
 function hideNotification(notification) {
-    if (notification && notification.parentNode) {
-        notification.style.animation = 'slideInNotification 0.3s ease reverse';
-        setTimeout(() => {
-            if (notification.parentNode) {
-                document.body.removeChild(notification);
-            }
-        }, 300);
-    }
+    return NotificationHelper.hideNotification(notification);
 }
