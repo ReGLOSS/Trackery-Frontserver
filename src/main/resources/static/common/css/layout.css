@@ -9,7 +9,7 @@
 }
 
 .layout-container .layout-sidebar {
-    width: clamp(150px, 16.68vw, 30vh);
+    width: clamp(250px, 16.68vw, 30vh);
     flex-shrink: 0;
 }
 
