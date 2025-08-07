@@ -10,6 +10,7 @@ const authNumberInput = document.getElementById("registerEmailAuthNumber");
 const usernameInput = document.getElementById("username");
 const userNameInputGroup = document.querySelector(("#username")).closest(".input-group.input-group-flat");
 const nicknameInput = document.getElementById("nickname");
+const nicknameInputGroup = document.querySelector("#nickname").closest(".input-group.input-group-flat");
 const registerPasswordInput = document.getElementById("password");
 const registerPasswordConfirmInput = document.getElementById("password-confirm");
 const registerPasswordInputGroup = document.querySelector("#password").closest(".input-group.input-group-flat");
@@ -99,7 +100,7 @@ verifyAuthNumberButton.addEventListener("click", function () {
 registerPasswordInput.addEventListener("input", debounce(() => applyValidationClass(registerPasswordInputGroup, validatePassword(registerPasswordInput.value))));
 registerPasswordConfirmInput.addEventListener("input", debounce(() => checkPasswordMatch(registerPasswordInput, registerPasswordConfirmInput)));
 usernameInput.addEventListener("input", debounce(() => applyUsernameValidationClass(userNameInputGroup, validateUsername(usernameInput.value))));
-nicknameInput.addEventListener("input", debounce(() => applyValidationClass(nicknameInput, validateNickname(nicknameInput.value))));
+nicknameInput.addEventListener("input", debounce(() => applyValidationClass(nicknameInputGroup, validateNickname(nicknameInput.value))));
 
 function applyValidationClass(input, isValid) {
     toggleValidationClass(input, isValid);
@@ -127,7 +128,7 @@ function validateUsername(username) {
 }
 
 function validateNickname(nickname) {
-    return nickname.trim() !== "";
+    return nickname.trim() !== "" && nickname.length <= 20;
 }
 
 function validateEmail(email) {
@@ -139,7 +140,7 @@ function checkPasswordMatch(origPassword, confirmPassword) {
     applyValidationClass(registerPasswordConfirmInputGroup, origPassword.value === confirmPassword.value && confirmPassword.value !== "");
 }
 
-const requiredInputs = [emailInput, requestEmailVerifyButton, verifyAuthNumberButton, userNameInputGroup, registerPasswordInputGroup, registerPasswordConfirmInputGroup, usernameVerifyButton];
+const requiredInputs = [emailInput, requestEmailVerifyButton, verifyAuthNumberButton, userNameInputGroup, nicknameInputGroup, registerPasswordInputGroup, registerPasswordConfirmInputGroup, usernameVerifyButton];
 
 function checkRequiredFields() {
     const allValid = requiredInputs.every(input => input.classList.contains("is-valid"));
