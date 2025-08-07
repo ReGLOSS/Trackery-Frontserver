@@ -53,7 +53,8 @@
                          onerror="this.src='/images/profile.jpg'">
                 </a>
                 <div class="user-info">
-                    <p class="fw-bold text-white" th:text="${userProfile != null ? userProfile.nickname : '유저명'}">
+                    <p class="fw-bold text-white" 
+                       th:text="${userProfile != null ? (userProfile.nickname.length() > 8 ? userProfile.nickname.substring(0, 8) + '...' : userProfile.nickname) : '유저명'}">
                         유저명</p>
                     <p class="fw-bold text-muted"
                        th:text="${userProfile != null ? '@' + userProfile.userName : '@USER'}">@USER</p>
