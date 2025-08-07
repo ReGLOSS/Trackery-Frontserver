@@ -65,9 +65,14 @@
         </div>
 
         <div class="nickname-input-form" style="margin-bottom: 20px;">
-            <label class="form-label required">닉네임</label>
-            <input type="text" class="form-control" id="nickname" name="nickname" style="height: 50px;"
-                   placeholder="닉네임을 입력해주세요."/>
+            <div class="mb-0 d-flex align-items-baseline">
+                <label class="form-label required">닉네임</label>
+                <small class="form-text text-muted">&nbsp&nbsp 닉네임은 최대 20자까지 입력 가능합니다.</small>
+            </div>
+            <div class="input-group input-group-flat">
+                <input type="text" class="form-control" id="nickname" name="nickname" style="height: 50px;"
+                       placeholder="닉네임을 입력해주세요."/>
+            </div>
         </div>
 
         <div class="password-input-form" style="margin-bottom: 20px;">
