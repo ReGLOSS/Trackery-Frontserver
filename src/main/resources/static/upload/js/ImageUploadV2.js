@@ -689,9 +689,73 @@ const EventHandlers = {
         DOM.whileUploadingModal.style.display = "flex";
         const imageWrappers = document.querySelectorAll(".image-wrapper");
 
+        // SSE 연결 설정
+        console.log('SSE 연결 시도: /api/sse/connect');
+        const eventSource = new EventSource('/api/sse/connect', {
+            withCredentials: true
+        });
+        const processedImages = new Set();
         const successImageUUIDs = [];
         const failedImageUUIDs = [];
 
+        // SSE 연결 상태 로그
+        eventSource.onopen = function(event) {
+            console.log('SSE 연결 성공:', event);
+        };
+
+        // SSE 메시지 처리 - 이미지 처리 완료 알림을 받으면 결과 표시
+        eventSource.onmessage = function(event) {
+            console.log('SSE 원본 메시지 수신:', event.data);
+            
+            // data: 접두사가 있는 경우만 처리 (SSE 데이터 메시지)
+            if (event.data.startsWith('data:')) {
+                try {
+                    // 'data:' 접두사 제거하고 JSON 파싱
+                    const jsonData = event.data.substring(5); // 'data:' 제거
+                    console.log('JSON 데이터 추출:', jsonData);
+                    
+                    const data = JSON.parse(jsonData);
+                    console.log('SSE 파싱된 데이터:', data);
+                    console.log('메시지 타입:', data.type);
+                    
+                    if (data.type === 'SINGLE_IMAGE') {
+                        console.log('SINGLE_IMAGE 타입 메시지 처리 시작');
+                        console.log('batchId:', data.batchId);
+                        console.log('imageName:', data.imageName);
+                        
+                        processedImages.add(data.batchId);
+                        successImageUUIDs.push(data.imageName);
+                        
+                        console.log('현재 처리된 이미지 수:', processedImages.size);
+                        console.log('전체 이미지 수:', imageWrappers.length);
+                        console.log('처리된 이미지 목록:', Array.from(processedImages));
+                        console.log('성공한 이미지 목록:', successImageUUIDs);
+                        
+                        // 모든 이미지가 처리되었는지 확인
+                        if (processedImages.size === imageWrappers.length) {
+                            console.log('모든 이미지 처리 완료 - handleAllImagesProcessed 호출');
+                            EventHandlers.handleAllImagesProcessed(eventSource, successImageUUIDs, failedImageUUIDs);
+                        }
+                    } else {
+                        console.log('알 수 없는 메시지 타입:', data.type);
+                    }
+                } catch (error) {
+                    console.error('SSE 메시지 파싱 오류:', error);
+                    console.error('원본 데이터:', event.data);
+                }
+            } else {
+                console.log('SSE 이벤트 타입 메시지 (무시):', event.data);
+            }
+        };
+
+        eventSource.onerror = function(event) {
+            console.error('SSE 연결 오류:', event);
+            console.error('SSE readyState:', eventSource.readyState);
+            console.error('SSE url:', eventSource.url);
+            eventSource.close();
+        };
+
+        // 이미지 업로드만 수행하고, 결과 표시는 SSE를 통해서만 처리
         for (const imageWrapper of imageWrappers) {
             const img = imageWrapper.querySelector(".gallery-image");
             
@@ -699,30 +763,46 @@ const EventHandlers = {
                 const url = await ApiService.requestPresignedPutUrl(img);
                 await ApiService.uploadImageToS3(img, url);
                 await ApiService.fetchImgMetaData(img);
-
-                successImageUUIDs.push(img.dataset.uuid);
+                // 성공/실패 처리 제거 - SSE에서만 처리
             } catch (error) {
                 failedImageUUIDs.push(error.message);
+                // 실패한 경우에만 즉시 처리하거나, 타임아웃 설정 필요
+                console.error("업로드 실패:", error);
             }
         }
+    },
 
+    // 모든 이미지 처리 완료 시 처리 함수 (SSE를 통해서만 호출됨)
+    async handleAllImagesProcessed(eventSource, successImageUUIDs, failedImageUUIDs) {
+        console.log('handleAllImagesProcessed 함수 시작');
+        console.log('SSE 연결 종료 시도');
+        eventSource.close();
+        
+        console.log('UiHelpers.indicateResult 호출 - 성공:', successImageUUIDs.length, '실패:', failedImageUUIDs.length);
         await UiHelpers.indicateResult(successImageUUIDs, failedImageUUIDs);
 
         console.log("성공한 이미지 : {}", successImageUUIDs);
         console.log("실패한 이미지 : {}", failedImageUUIDs);
 
+        console.log('UiHelpers.addFailedImage 호출');
         await UiHelpers.addFailedImage(failedImageUUIDs);
 
+        console.log('1초 대기 시작');
         await new Promise(resolve => setTimeout(resolve, 1000));
 
+        console.log('UiHelpers.hideUploadingBlockAndShowResultBlock 호출');
         await UiHelpers.hideUploadingBlockAndShowResultBlock();
         
         // 모든 이미지 업로드 성공 시 2초 후 모달 닫고 페이지 새로고침
         if (failedImageUUIDs.length === 0) {
+            console.log('모든 이미지 성공 - 2초 후 페이지 새로고침 예정');
             setTimeout(() => {
+                console.log('모달 닫기 및 페이지 새로고침 실행');
                 DOM.whileUploadingModal.style.display = "none";
                 window.location.reload();
             }, 2000);
+        } else {
+            console.log('일부 이미지 실패 - 페이지 새로고침 안함');
         }
     },
 

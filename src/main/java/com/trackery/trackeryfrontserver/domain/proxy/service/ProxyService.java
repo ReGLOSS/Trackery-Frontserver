@@ -8,6 +8,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 import com.trackery.trackeryfrontserver.domain.proxy.ServerException;
 
@@ -88,5 +94,60 @@ public class ProxyService {
 			return ResponseEntity.status(500)
 				.body("{\"code\":\"500\",\"message\":\"현재 요청을 처리할 수 없습니다. 잠시 후에 다시 시도해주십시오.\"}");
 		}
+	}
+
+	/**
+	 * SSE 요청을 백엔드 서버로 전달하는 메서드입니다.
+	 *
+	 * @param url 요청 URL
+	 * @param headers HTTP 요청 헤더
+	 * @return SSE 연결을 위한 SseEmitter
+	 */
+	public SseEmitter forwardSseRequest(String url, HttpHeaders headers) {
+		String fullUrl = apiServerUrl + url;
+		log.info("SSE 요청 전달: {}", fullUrl);
+
+		SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+
+		// 백그라운드 스레드에서 SSE 연결 처리
+		Thread sseThread = new Thread(() -> {
+			try {
+				URL sseUrl = new URL(fullUrl);
+				HttpURLConnection connection = (HttpURLConnection) sseUrl.openConnection();
+				connection.setRequestMethod("GET");
+				connection.setRequestProperty("Accept", "text/event-stream");
+				connection.setRequestProperty("Cache-Control", "no-cache");
+				
+				// 쿠키 헤더 전달
+				String cookieHeader = headers.getFirst("Cookie");
+				if (cookieHeader != null) {
+					connection.setRequestProperty("Cookie", cookieHeader);
+				}
+
+				try (BufferedReader reader = new BufferedReader(
+					new InputStreamReader(connection.getInputStream()))) {
+					
+					String line;
+					while ((line = reader.readLine()) != null) {
+						if (!line.isEmpty()) {
+							// SSE 데이터를 클라이언트로 전달
+							emitter.send(SseEmitter.event().data(line));
+						}
+					}
+				}
+			} catch (Exception e) {
+				log.error("SSE 연결 중 오류 발생: {}", e.getMessage());
+				emitter.completeWithError(e);
+			}
+		});
+
+		sseThread.start();
+
+		// 연결 정리 설정
+		emitter.onCompletion(() -> log.info("SSE 연결 완료"));
+		emitter.onTimeout(() -> log.info("SSE 연결 타임아웃"));
+		emitter.onError(throwable -> log.error("SSE 연결 오류: {}", throwable.getMessage()));
+
+		return emitter;
 	}
 }
