@@ -5,13 +5,12 @@
     height: 100vh !important;
     background-color: #2a2a36 !important;
     display: flex !important;
-    flex-direction: column !important;
     box-shadow: inset calc(-1 * var(--tblr-navbar-border-width)) 0 0 0 #2a2a36 !important;
 }
 
 /* 사이드바 기본 레이아웃 */
 .navbar-expand-lg {
-    width: clamp(250px, 16.68vw, 30vh) !important;
+    width: clamp(21rem, 16.68vw, 30vh) !important;
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
@@ -21,7 +20,7 @@
     transition: transform .3s !important;
     overflow-y: auto !important;
     padding: 0 !important;
-    scrollbar-width: none;
+    scrollbar-width: none !important;
     flex-direction: column !important;
 }
 
