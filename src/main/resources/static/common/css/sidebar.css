@@ -22,6 +22,7 @@
     padding: 0 !important;
     scrollbar-width: none !important;
     flex-direction: column !important;
+    container-type: inline-size;
 }
 
 .navbar-expand-lg .container-fluid {
@@ -140,6 +141,7 @@
 
 .user-info {
     font-size: 3vh !important;
+    transition: font-size 0.3s ease !important;
 }
 
 .user-info p {
@@ -149,4 +151,26 @@
 .user-info .text-muted {
     color: rgba(255, 255, 255, 0.5) !important;
     font-size: 2.5vh !important;
+    transition: font-size 0.3s ease !important;
+}
+
+/* 컨테이너 크기에 따른 단계적 글자 크기 조정 */
+@container (max-width: 24rem) {
+    .user-info {
+        font-size: 2.2vh !important;
+    }
+
+    .user-info .text-muted {
+        font-size: 1.8vh !important;
+    }
+}
+
+@container (max-width: 21rem) {
+    .user-info {
+        font-size: 1.8vh !important;
+    }
+
+    .user-info .text-muted {
+        font-size: 1.5vh !important;
+    }
 }

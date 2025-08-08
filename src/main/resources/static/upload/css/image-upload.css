@@ -32,7 +32,7 @@
     position: absolute;
     top: 0;
     right: 0;
-    width: clamp(300px, 30vw, 37.5%) !important;
+    width: clamp(18.75rem, 30vw, 37.5%) !important;
     background-color: #d3d9e8;
     padding: 3vh 1.8vh;
     box-shadow: -4px 0 12px rgba(0, 0, 0, 0.2);
@@ -78,7 +78,7 @@
     flex-direction: column;
     justify-content: space-between;
     padding: 7vh 0 7vh 7vh !important;
-    width: clamp(300px, 54vw, 62.5%) !important;
+    width: clamp(18.75rem, 54vw, 62.5%) !important;
 }
 
 /* ===== GALLERY SECTION ===== */
@@ -128,7 +128,6 @@
 }
 
 .image-detail {
-    width: 100%;
     height: auto;
     border-radius: 0.6vh;
     object-fit: cover;
