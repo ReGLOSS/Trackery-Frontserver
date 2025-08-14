@@ -1,5 +1,11 @@
 package com.trackery.trackeryfrontserver.domain.proxy.service;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URL;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -9,11 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 import com.trackery.trackeryfrontserver.domain.proxy.ServerException;
 
@@ -31,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 25. 2. 19.        inari       최초 생성
+ * 25. 8. 14.		durururuk	sse 이벤트 포워딩 추가
  */
 @Slf4j
 @Service
@@ -76,7 +78,6 @@ public class ProxyService {
 
 			log.info("응답 상태 코드: {}", response.getStatusCode());
 			log.debug("응답 헤더: {}", response.getHeaders());
-			//log.info("응답 본문: {}", response.getBody());
 
 			HttpHeaders proxyHeaders = new HttpHeaders();
 			proxyHeaders.putAll(response.getHeaders());
@@ -112,12 +113,12 @@ public class ProxyService {
 		// 백그라운드 스레드에서 SSE 연결 처리
 		Thread sseThread = new Thread(() -> {
 			try {
-				URL sseUrl = new URL(fullUrl);
-				HttpURLConnection connection = (HttpURLConnection) sseUrl.openConnection();
+				URL sseUrl = URI.create(fullUrl).toURL();
+				HttpURLConnection connection = (HttpURLConnection)sseUrl.openConnection();
 				connection.setRequestMethod("GET");
 				connection.setRequestProperty("Accept", "text/event-stream");
 				connection.setRequestProperty("Cache-Control", "no-cache");
-				
+
 				// 쿠키 헤더 전달
 				String cookieHeader = headers.getFirst("Cookie");
 				if (cookieHeader != null) {
@@ -126,11 +127,10 @@ public class ProxyService {
 
 				try (BufferedReader reader = new BufferedReader(
 					new InputStreamReader(connection.getInputStream()))) {
-					
+
 					String line;
 					while ((line = reader.readLine()) != null) {
 						if (!line.isEmpty()) {
-							// SSE 데이터를 클라이언트로 전달
 							emitter.send(SseEmitter.event().data(line));
 						}
 					}
