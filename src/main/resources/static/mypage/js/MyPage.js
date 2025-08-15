@@ -25,6 +25,26 @@ async function fetchUserDetail() {
             document.getElementById("presentNicknameInputForm").value = userData.nickname;
             document.getElementById("presentEmailInputForm").value = userData.email;
 
+            // 프로필 이미지 설정 (마이페이지 메인)
+            const profileImageElement = document.querySelector(".profile-image");
+            if (profileImageElement) {
+                if (userData.profileImageUrl) {
+                    profileImageElement.src = userData.profileImageUrl;
+                } else {
+                    profileImageElement.src = "/images/profile.jpg";
+                }
+            }
+
+            // 프로필 이미지 설정 (모달)
+            const updateProfileImageElement = document.getElementById("updateProfileImage");
+            if (updateProfileImageElement) {
+                if (userData.profileImageUrl) {
+                    updateProfileImageElement.src = userData.profileImageUrl;
+                } else {
+                    updateProfileImageElement.src = "/images/profile.jpg";
+                }
+            }
+
             const activatedOAuthProviders = userData.OAuthList.map(oauth => oauth.provider.toLowerCase());
 
             activatedOAuthProviders.forEach(provider => {

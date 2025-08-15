@@ -3,16 +3,20 @@ package com.trackery.trackeryfrontserver.domain.proxy.controller;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.trackery.trackeryfrontserver.domain.proxy.service.ProxyService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * packageName    : com.trackery.trackeryfrontserver.domain.proxy.controller
@@ -39,6 +43,20 @@ public class ProxyController {
 
 	@Value("${PROJECT_URL}")
 	private String projectUrl;
+
+	/**
+	 * SSE 연결을 처리하는 메서드입니다.
+	 *
+	 * @param request HTTP 요청 정보
+	 * @param headers HTTP 요청 헤더
+	 * @return SSE 연결을 위한 SseEmitter
+	 */
+	@GetMapping(value = "/sse/connect", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+	public SseEmitter handleSseConnect(HttpServletRequest request,
+		@RequestHeader HttpHeaders headers) {
+		
+		return proxyService.forwardSseRequest("/api/sse/connect", headers);
+	}
 
 	/**
 	 * 모든 API 요청을 처리하는 메서드입니다.

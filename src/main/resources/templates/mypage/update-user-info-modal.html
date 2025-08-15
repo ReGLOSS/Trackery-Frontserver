@@ -13,8 +13,12 @@
             <p class="section-title">유저 정보 수정</p>
 
             <!--프로필 이미지 섹션-->
-            <div class="profile-image-block" style="margin-top: 20px;">
+            <div class="profile-image-block" style="margin-top: 20px; position: relative; cursor: pointer;">
                 <img id="updateProfileImage" src="/images/profile.jpg" alt="profile-image" class="profile-image">
+                <input type="file" id="profileImageInput" accept="image/*" style="display: none;">
+                <div class="profile-image-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; border-radius: inherit;">
+                    사진 변경
+                </div>
             </div>
 
             <!--유저명 변경 섹션-->
