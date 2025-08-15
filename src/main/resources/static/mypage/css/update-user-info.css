@@ -81,20 +81,19 @@
     opacity: 1;
 }
 
-.edit-icon {
-    margin-left: 30px;
-    width: 40px;
-}
-
-.edit-icon > img {
-    width: 100%;
-    height: 100%;
-}
 
 .present {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    gap: 15px;
+}
+
+.present input[type="text"] {
+    width: calc(100% - 85px);
+}
+
+.present input[type="password"] {
+    width: 100%;
 }
 
 .block-title {
@@ -106,9 +105,12 @@
     flex-direction: column;
 }
 
+.update-username-block .update-username-input-block {
+    flex-direction: row;
+}
+
 .update-username-input-block {
     display: flex;
-    justify-content: center;
 }
 
 #updateUserNameVerifyBtn {
@@ -164,7 +166,6 @@
 .update-email-input-button-group {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
     margin-top: 20px;
     width: 100%;
 }
