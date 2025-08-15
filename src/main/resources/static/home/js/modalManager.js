@@ -244,34 +244,7 @@ export class ModalManager {
         }
     }
     
-    
-    // 태그 요소 생성 (폴백용)
-    createTagElement(tag) {
-        const tagElement = document.createElement('span');
-        tagElement.className = 'tag';
-        
-        const tagId = typeof tag === 'object' ? tag.tagId : null;
-        const tagName = typeof tag === 'object' ? (tag.tagName || tag.name || tag) : tag;
-        
-        tagElement.textContent = tagName;
-        tagElement.dataset.tagId = tagId;
-        tagElement.dataset.tagName = tagName;
-        
-        const deleteButton = document.createElement('button');
-        deleteButton.className = 'tag-delete';
-        deleteButton.innerHTML = '×';
-        deleteButton.title = '태그 삭제';
-        deleteButton.style.display = 'none';
-        deleteButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            tagElement.remove();
-        });
-        
-        tagElement.appendChild(deleteButton);
-        return tagElement;
-    }
-    
-    // 모달 표시
+// 모달 표시
     showModal() {
         const modal = document.getElementById('imageDetailModal');
         if (modal) {
@@ -586,9 +559,9 @@ export class ModalManager {
                     this.mapManager?.currentSidoId
                 );
             }
-            if (this.mapManager) {
-                await this.mapManager.refreshMapColors();
-                await this.mapManager.refreshUserStats();
+            // 전역 함수를 사용하여 지도 색상과 통계 업데이트
+            if (window.trackeryImageUpdated) {
+                await window.trackeryImageUpdated();
             }
             await this.refreshCurrentModalImageData(imageId);
         }
@@ -645,10 +618,9 @@ export class ModalManager {
                 );
             }
             
-            // 지도 색상 새로고침
-            if (this.mapManager) {
-                await this.mapManager.refreshMapColors();
-                await this.mapManager.refreshUserStats();
+            // 전역 함수를 사용하여 지도 색상과 통계 업데이트
+            if (window.trackeryImageUpdated) {
+                await window.trackeryImageUpdated();
             }
             
         } catch (error) {
@@ -697,7 +669,7 @@ export class ModalManager {
                 const year = parts[0];
                 const month = parts[1].padStart(2, '0');
                 const day = parts[2].padStart(2, '0');
-                return `${year}-${month}-${day}T12:00:00`;
+                return `${year}-${month}-${day}T00:00:00`;
             }
             return dateString;
         } catch (error) {
@@ -962,8 +934,7 @@ export class ModalManager {
             this.tagUIManager.disableEditMode();
         }
     }
-    
-    
+
     restoreOriginalTags() {
         if (!this.originalModalData) return;
         

@@ -4,6 +4,7 @@
 
 import { DOM, CONSTANTS } from './constants.js';
 import { ApiService } from './apiService.js';
+import { NotificationHelper } from '../../../module/notification/notificationHelper.js';
 
 export const UiUpdater = {
     // 앨범 갤러리 렌더링
@@ -233,50 +234,7 @@ export const UiUpdater = {
 
     // 알림 메시지 표시
     showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = 'notification';
-        notification.style.cssText = `
-            position: fixed; bottom: 20px; right: 20px; padding: 12px 20px;
-            border-radius: 6px; color: white; font-weight: 500; z-index: 5000;
-            animation: slideInNotification 0.3s ease; max-width: 300px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        `;
-
-        // 타입별 배경색 설정
-        const colors = {
-            success: '#28a745',
-            error: '#dc3545',
-            info: '#007bff'
-        };
-        notification.style.backgroundColor = colors[type] || colors.info;
-        notification.textContent = message;
-
-        // 애니메이션 스타일 추가
-        if (!document.querySelector('#notification-styles')) {
-            const style = document.createElement('style');
-            style.id = 'notification-styles';
-            style.textContent = `
-                @keyframes slideInNotification {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
-        document.body.appendChild(notification);
-
-        // 3초 후 자동 제거
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.style.animation = 'slideInNotification 0.3s ease reverse';
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        document.body.removeChild(notification);
-                    }
-                }, 300);
-            }
-        }, 3000);
+        return NotificationHelper.showNotification(message, type);
     },
 
     // 확인 모달 표시
