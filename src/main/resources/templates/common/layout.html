@@ -21,11 +21,11 @@
         <section layout:fragment="content"></section>
     </div>
 </div>
-<script src="/js/tabler.min.js"></script>
+<script src="/common/js/tabler.min.js"></script>
 
 <!-- 공통 스크립트 - 환경에 따라 다른 파일 로드 -->
 <script th:if="${@environment.acceptsProfiles('prod')}" src="/dist/common.min.js"></script>
-<script th:if="${@environment.acceptsProfiles('dev')}" src="/common/js/sidebar-utils.js"></script>
+<script th:if="${@environment.acceptsProfiles('dev')}" src="/common/js/sidebar-utils.js" type="module"></script>
 
 <script src="/common/js/tabler.min.js"></script>
 <div layout:fragment="scripts"></div>
