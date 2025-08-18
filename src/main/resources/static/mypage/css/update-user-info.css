@@ -63,11 +63,53 @@
 .backplate input[type="email"],
 .backplate .form-control {
     height: 50px !important;
+    width: 100%;
 }
 
 .backplate button {
     height: 50px;
     min-height: 50px;
+}
+
+/* 수정 폼 입력 그룹 너비 통일 */
+.present-password-input-block,
+.update-password-confirm-input-block {
+    width: 100%;
+}
+
+.input-group {
+    width: 100%;
+    display: flex;
+}
+
+.input-group .form-control {
+    flex: 1;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.input-group-text {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-left: none;
+    border-top-right-radius: 0.375rem;
+    border-bottom-right-radius: 0.375rem;
+    height: 50px;
+}
+
+.toggle-password-btn {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toggle-password-btn img {
+    width: 16px;
+    height: 16px;
 }
 
 .update-user-info-modal-close {
@@ -126,6 +168,7 @@
 .update-username-block {
     display: none;
     flex-direction: column;
+    width: 100%;
 }
 
 .update-username-block .update-username-input-block {
@@ -135,6 +178,7 @@
 .update-username-input-block {
     display: flex;
     gap: 10px;
+    width: 100%;
 }
 
 .update-username-input-block input {
@@ -150,10 +194,12 @@
 .update-nickname-block {
     display: none;
     flex-direction: column;
+    width: 100%;
 }
 
 #updateNicknameInputForm {
     margin-top: 20px;
+    width: 100%;
 }
 
 .password-block {
@@ -164,6 +210,7 @@
 .update-password-block {
     display: none;
     flex-direction: column;
+    width: 100%;
 }
 
 .update-password-input-block {
@@ -171,6 +218,7 @@
     display: flex;
     flex-direction: column;
     gap: 5px;
+    width: 100%;
 }
 
 #updatePassword {
@@ -191,6 +239,7 @@
 .update-email-block {
     display: none;
     flex-direction: column;
+    width: 100%;
 }
 
 .update-email-input-button-group {
@@ -198,17 +247,20 @@
     flex-direction: row;
     margin-top: 20px;
     width: 100%;
-    gap: 10px;
+    box-sizing: border-box;
 }
 
 .update-email-input-button-group input {
     flex: 1;
+    width: 0;
+    min-width: 0;
 }
 
 .update-email-input-button-group > button {
-    width: 130px;
+    width: 120px;
     height: 50px;
     flex-shrink: 0;
+    margin-left: 10px;
 }
 
 /*간편 로그인 관련*/
