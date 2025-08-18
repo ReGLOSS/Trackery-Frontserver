@@ -16,19 +16,16 @@ export async function refreshSidebarProfile() {
         const data = await response.json();
         const userProfile = data.data;
 
-        // 프로필 이미지 업데이트
         const profileImg = document.querySelector('.sidebar .user-avatar');
-        if (profileImg && userProfile.userProfile) {
-            profileImg.src = userProfile.userProfile;
+        if (profileImg && userProfile.profileImageUrl) {
+            profileImg.src = userProfile.profileImageUrl;
         }
 
-        // 닉네임 업데이트
         const nicknameElement = document.querySelector('.sidebar .user-info .fw-bold.text-white');
         if (nicknameElement && userProfile.nickname) {
             nicknameElement.textContent = userProfile.nickname;
         }
 
-        // 사용자 이름 업데이트
         const usernameElement = document.querySelector('.sidebar .user-info .fw-bold.text-muted');
         if (usernameElement && userProfile.userName) {
             usernameElement.textContent = '@' + userProfile.userName;
