@@ -57,6 +57,19 @@
     width: 100%;
 }
 
+/* 모든 입력 필드와 버튼 높이 통일 */
+.backplate input[type="text"],
+.backplate input[type="password"],
+.backplate input[type="email"],
+.backplate .form-control {
+    height: 50px !important;
+}
+
+.backplate button {
+    height: 50px;
+    min-height: 50px;
+}
+
 .update-user-info-modal-close {
     font-weight: bold;
     font-size: 30px;
@@ -85,19 +98,29 @@
 .present {
     display: flex;
     flex-direction: row;
-    gap: 15px;
+    gap: 10px;
+    align-items: center;
 }
 
 .present input[type="text"] {
-    width: calc(100% - 85px);
+    flex: 1;
 }
 
 .present input[type="password"] {
-    width: 100%;
+    flex: 1;
+}
+
+.present button {
+    width: 70px;
+    height: 50px;
+    flex-shrink: 0;
 }
 
 .block-title {
     margin-bottom: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
 }
 
 .update-username-block {
@@ -111,10 +134,17 @@
 
 .update-username-input-block {
     display: flex;
+    gap: 10px;
+}
+
+.update-username-input-block input {
+    flex: 1;
 }
 
 #updateUserNameVerifyBtn {
-    margin-left: 10px;
+    width: 100px;
+    height: 50px;
+    flex-shrink: 0;
 }
 
 .update-nickname-block {
@@ -168,11 +198,17 @@
     flex-direction: row;
     margin-top: 20px;
     width: 100%;
+    gap: 10px;
+}
+
+.update-email-input-button-group input {
+    flex: 1;
 }
 
 .update-email-input-button-group > button {
-    margin-left: 10px;
-    width: 170px;
+    width: 130px;
+    height: 50px;
+    flex-shrink: 0;
 }
 
 /*간편 로그인 관련*/
