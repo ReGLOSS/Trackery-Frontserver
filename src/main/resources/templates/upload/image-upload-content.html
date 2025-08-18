@@ -38,7 +38,7 @@
     <div class="base-container">
         <div class="gallery">
             <div class="add-image">
-                <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                <input type="file" id="imageInput" accept="image/*" multiple style="display: none;">
                 <img src="/upload/icon/image-upload.svg" alt="image-add" class="image-add">
             </div>
         </div>
@@ -47,6 +47,35 @@
             <button class="btn btn-dark" id="imageUploadBtn">이미지 업로드</button>
         </div>
     </div>
+    <!--  이미지 첨부 모달-->
+    <div class="image-select-modal" id="imageSelectModal" style="display: none;">
+        <div class="modal-overlay" id="imageSelectModalOverlay"></div>
+        <div class="image-select-container">
+            <div class="image-select-header">
+                <h3>이미지 선택</h3>
+                <button class="modal-close-btn" id="imageSelectModalClose">&times;</button>
+            </div>
+            <div class="image-select-body">
+                <div class="dropzone-area" id="dropzoneArea">
+                    <div class="dropzone-content">
+                        <h4>이미지를 드래그하여 업로드하세요.</h4>
+                        <p>또는 <button class="browse-btn" id="browseBtn">파일 선택</button>하여 이미지를 추가할 수 있습니다.</p>
+                        <small>최대 20개의 JPG, PNG, WebP 파일만 지원됩니다. (최대 30MB)</small>
+                    </div>
+                </div>
+                <div class="selected-files" id="selectedFiles" style="display: none;">
+                    <h4>선택된 파일</h4>
+                    <div class="file-gallery" id="fileGallery"></div>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" id="cancelBtn">취소</button>
+                        <button class="btn btn-primary" id="addFilesBtn">파일 추가</button>
+                    </div>
+                </div>
+            </div>
+            <input type="file" id="modalFileInput" accept="image/*" multiple style="display: none;">
+        </div>
+    </div>
+
     <!--  우측 사이드 모달-->
     <div class="detail-modal" id="detailModal" style="display: none;">
         <div class="modal-overlay" id="detailModalOverlay"></div>

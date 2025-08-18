@@ -472,6 +472,233 @@
     --tblr-spinner-border-width: 0.5rem;
 }
 
+/* ===== IMAGE SELECT MODAL ===== */
+.image-select-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.image-select-modal .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2001;
+}
+
+.image-select-container {
+    position: relative;
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow: hidden;
+    z-index: 2002;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.image-select-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e9ecef;
+    background: #f8f9fa;
+}
+
+.image-select-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.modal-close-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.image-select-body {
+    padding: 2rem;
+}
+
+.dropzone-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 3rem 2rem;
+    text-align: center;
+    background: #fafbfc;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.dropzone-area:hover,
+.dropzone-area.drag-over {
+    border-color: #007bff;
+    background: rgba(0, 123, 255, 0.05);
+}
+
+.dropzone-content h4 {
+    margin: 1rem 0 0.5rem 0;
+    color: #495057;
+    font-size: 1.1rem;
+}
+
+.dropzone-content p {
+    margin: 0.5rem 0;
+    color: #6c757d;
+}
+
+.dropzone-content small {
+    color: #868e96;
+    font-size: 0.875rem;
+}
+
+.browse-btn {
+    background: none;
+    border: none;
+    color: #007bff;
+    text-decoration: underline;
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+}
+
+.browse-btn:hover {
+    color: #0056b3;
+}
+
+.selected-files h4 {
+    margin-bottom: 1rem;
+    color: #495057;
+    font-size: 1.1rem;
+}
+
+.file-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 12px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 16px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 1.5rem;
+    background: #fafbfc;
+}
+
+.file-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 8px;
+    transition: all 0.2s ease;
+}
+
+.file-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.file-thumbnail {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+.file-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    text-align: center;
+}
+
+.file-details h5 {
+    margin: 0 0 4px 0;
+    font-size: 0.75rem;
+    color: #495057;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+.file-details small {
+    color: #6c757d;
+    font-size: 0.65rem;
+}
+
+.file-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+}
+
+.file-item:hover .file-remove {
+    opacity: 1;
+}
+
+.file-remove:hover {
+    background: rgba(200, 35, 51, 0.95);
+    transform: scale(1.1);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.modal-actions .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
 /* ===== UTILITY CLASSES ===== */
 label {
     margin-bottom: 0.5vh;

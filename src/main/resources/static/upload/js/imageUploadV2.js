@@ -21,6 +21,18 @@ const DOM = {
     get tagAddButton() { return document.querySelector('.tag-add'); },
     get detailModal() { return document.getElementById('detailModal'); },
     get detailModalOverlay() { return document.getElementById('detailModalOverlay'); },
+    
+    // 이미지 선택 모달 관련 DOM 요소들
+    get imageSelectModal() { return document.getElementById('imageSelectModal'); },
+    get imageSelectModalOverlay() { return document.getElementById('imageSelectModalOverlay'); },
+    get imageSelectModalClose() { return document.getElementById('imageSelectModalClose'); },
+    get dropzoneArea() { return document.getElementById('dropzoneArea'); },
+    get browseBtn() { return document.getElementById('browseBtn'); },
+    get modalFileInput() { return document.getElementById('modalFileInput'); },
+    get selectedFiles() { return document.getElementById('selectedFiles'); },
+    get fileGallery() { return document.getElementById('fileGallery'); },
+    get cancelBtn() { return document.getElementById('cancelBtn'); },
+    get addFilesBtn() { return document.getElementById('addFilesBtn'); },
 
     // 필수 엘리먼트 검증 함수
     validateRequiredElements() {
@@ -429,32 +441,45 @@ const ApiService = {
 
 // 이벤트 핸들러 모음
 const EventHandlers = {
-    // 이미지 추가 버튼 클릭 핸들러
+    // 이미지 추가 버튼 클릭 핸들러 - 모달 표시
     onAddImageClick() {
-        DOM.fileInput.click();
+        EventHandlers.showImageSelectModal();
     },
 
-    // 파일 입력 변경 핸들러
+    // 파일 입력 변경 핸들러 (다중 파일 지원)
     async onFileInputChange(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+        const files = Array.from(event.target.files);
+        if (files.length === 0) return;
 
-        try {
-            // 파일 검증
-            const fileExtension = EventHandlers.validateFile(file);
-            
-            // EXIF 데이터 파싱 및 위치 정보 요청
-            const parsedData = await ApiService.fetchLocation(file);
-            
-            // UI 요소 생성 및 추가
-            const imageData = EventHandlers.createImageData(file, fileExtension, parsedData);
-            const imageElement = EventHandlers.createImageElement(imageData);
-            const wrapper = EventHandlers.createImageWrapper(imageElement, imageData.uuid);
-            
-            DOM.gallery.appendChild(wrapper);
-        } catch (error) {
-            NotificationManager.showError(error.message);
+        // 파일 개수 제한 (현재 최대 20개)
+        const MAX_FILES = 20;
+        if (files.length > MAX_FILES) {
+            NotificationManager.showError(`한 번에 최대 ${MAX_FILES}개의 파일만 업로드할 수 있습니다.`);
+            return;
         }
+
+        // 각 파일을 순차적으로 처리
+        for (const file of files) {
+            try {
+                // 파일 검증
+                const fileExtension = EventHandlers.validateFile(file);
+                
+                // EXIF 데이터 파싱 및 위치 정보 요청
+                const parsedData = await ApiService.fetchLocation(file);
+                
+                // UI 요소 생성 및 추가
+                const imageData = EventHandlers.createImageData(file, fileExtension, parsedData);
+                const imageElement = EventHandlers.createImageElement(imageData);
+                const wrapper = EventHandlers.createImageWrapper(imageElement, imageData.uuid);
+                
+                DOM.gallery.appendChild(wrapper);
+            } catch (error) {
+                NotificationManager.showError(`${file.name}: ${error.message}`);
+            }
+        }
+
+        // 파일 입력 초기화 (같은 파일 재선택 가능하도록)
+        event.target.value = '';
     },
 
     // 파일 검증
@@ -904,6 +929,231 @@ const EventHandlers = {
         }
     },
 
+
+    // === 이미지 선택 모달 관련 핸들러들 ===
+    
+    // 모달 표시
+    showImageSelectModal() {
+        if (DOM.imageSelectModal) {
+            DOM.imageSelectModal.style.display = 'flex';
+            // 애니메이션을 위해 약간의 지연 후 클래스 추가
+            setTimeout(() => {
+                DOM.imageSelectModal.classList.add('show');
+            }, 10);
+        }
+        // 기존 파일 목록 초기화
+        ImageSelectModal.clearFileList();
+    },
+
+    // 모달 숨기기
+    hideImageSelectModal() {
+        if (DOM.imageSelectModal) {
+            DOM.imageSelectModal.classList.remove('show');
+            setTimeout(() => {
+                DOM.imageSelectModal.style.display = 'none';
+                // 모달 상태 초기화
+                ImageSelectModal.resetModal();
+            }, 300);
+        }
+    },
+
+    // 모달 내 파일 선택 버튼 클릭
+    onBrowseBtnClick() {
+        DOM.modalFileInput.click();
+    },
+
+    // 모달 내 파일 입력 변경
+    onModalFileInputChange(event) {
+        const files = Array.from(event.target.files);
+        if (files.length > 0) {
+            ImageSelectModal.addFilesToList(files);
+        }
+        // 파일 입력 초기화
+        event.target.value = '';
+    },
+
+    // 모달 내 드래그 앤 드롭 핸들러들
+    onModalDragEnter(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        DOM.dropzoneArea.classList.add('drag-over');
+    },
+
+    onModalDragOver(event) {
+        event.preventDefault();
+        event.stopPropagation();
+    },
+
+    onModalDragLeave(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!DOM.dropzoneArea.contains(event.relatedTarget)) {
+            DOM.dropzoneArea.classList.remove('drag-over');
+        }
+    },
+
+    onModalDrop(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        DOM.dropzoneArea.classList.remove('drag-over');
+
+        const files = Array.from(event.dataTransfer.files);
+        const imageFiles = files.filter(file => file.type.startsWith('image/'));
+        
+        if (imageFiles.length > 0) {
+            ImageSelectModal.addFilesToList(imageFiles);
+        }
+        
+        if (imageFiles.length !== files.length) {
+            NotificationManager.showError(`${files.length - imageFiles.length}개의 파일은 이미지가 아니어서 제외되었습니다.`);
+        }
+    },
+
+    // 파일 추가 버튼 클릭
+    async onAddFilesBtnClick() {
+        const files = ImageSelectModal.getSelectedFiles();
+        if (files.length === 0) {
+            NotificationManager.showError('선택된 파일이 없습니다.');
+            return;
+        }
+
+        // 모달 닫기
+        EventHandlers.hideImageSelectModal();
+
+        // 기존 파일 처리 로직 사용
+        for (const file of files) {
+            try {
+                const fileExtension = EventHandlers.validateFile(file);
+                const parsedData = await ApiService.fetchLocation(file);
+                const imageData = EventHandlers.createImageData(file, fileExtension, parsedData);
+                const imageElement = EventHandlers.createImageElement(imageData);
+                const wrapper = EventHandlers.createImageWrapper(imageElement, imageData.uuid);
+                DOM.gallery.appendChild(wrapper);
+            } catch (error) {
+                NotificationManager.showError(`${file.name}: ${error.message}`);
+            }
+        }
+    },
+
+    // 취소 버튼 클릭
+    onCancelBtnClick() {
+        EventHandlers.hideImageSelectModal();
+    },
+
+};
+
+// 이미지 선택 모달 관리 객체
+const ImageSelectModal = {
+    selectedFiles: [],
+
+    // 파일 목록에 파일 추가
+    addFilesToList(files) {
+        // 파일 개수 제한 확인
+        const MAX_FILES = 20;
+        const currentCount = this.selectedFiles.length;
+        const newFilesCount = files.length;
+        
+        if (currentCount + newFilesCount > MAX_FILES) {
+            NotificationManager.showError(`최대 ${MAX_FILES}개의 파일만 선택할 수 있습니다.`);
+            return;
+        }
+
+        // 중복 파일 확인 및 필터링
+        const validFiles = [];
+        for (const file of files) {
+            try {
+                EventHandlers.validateFile(file);
+                // 같은 이름의 파일이 이미 있는지 확인
+                const isDuplicate = this.selectedFiles.some(existing => 
+                    existing.name === file.name && existing.size === file.size
+                );
+                if (!isDuplicate) {
+                    validFiles.push(file);
+                } else {
+                    NotificationManager.showError(`${file.name}은 이미 선택된 파일입니다.`);
+                }
+            } catch (error) {
+                NotificationManager.showError(`${file.name}: ${error.message}`);
+            }
+        }
+
+        // 유효한 파일들을 목록에 추가
+        this.selectedFiles.push(...validFiles);
+        this.updateUI();
+    },
+
+    // 파일 목록에서 파일 제거
+    removeFile(index) {
+        this.selectedFiles.splice(index, 1);
+        this.updateUI();
+    },
+
+    // UI 업데이트
+    updateUI() {
+        if (this.selectedFiles.length === 0) {
+            DOM.selectedFiles.style.display = 'none';
+            DOM.dropzoneArea.style.display = 'block';
+        } else {
+            DOM.selectedFiles.style.display = 'block';
+            DOM.dropzoneArea.style.display = 'none';
+            this.renderFileList();
+        }
+    },
+
+    // 파일 목록을 앨범형식으로 렌더링
+    renderFileList() {
+        const fileGallery = DOM.fileGallery;
+        fileGallery.innerHTML = '';
+
+        this.selectedFiles.forEach((file, index) => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            
+            const fileSize = this.formatFileSize(file.size);
+            const thumbnail = ObjectURLManager.create(file);
+            
+            fileItem.innerHTML = `
+                <img src="${thumbnail}" alt="${file.name}" class="file-thumbnail" />
+                <div class="file-info">
+                    <div class="file-details">
+                        <h5>${file.name}</h5>
+                        <small>${fileSize}</small>
+                    </div>
+                </div>
+                <button class="file-remove" onclick="ImageSelectModal.removeFile(${index})">&times;</button>
+            `;
+            
+            fileGallery.appendChild(fileItem);
+        });
+    },
+
+    // 파일 크기 포맷팅
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    },
+
+    // 선택된 파일들 반환
+    getSelectedFiles() {
+        return [...this.selectedFiles];
+    },
+
+    // 파일 목록 초기화
+    clearFileList() {
+        this.selectedFiles = [];
+        this.updateUI();
+    },
+
+    // 모달 상태 초기화
+    resetModal() {
+        this.clearFileList();
+        DOM.dropzoneArea.style.display = 'block';
+        DOM.selectedFiles.style.display = 'none';
+        DOM.dropzoneArea.classList.remove('drag-over');
+    }
 };
 
 // 이미지 전체화면 토글 기능
@@ -1010,6 +1260,34 @@ function initialize() {
     if (DOM.tagInput) DOM.tagInput.addEventListener("keydown", EventHandlers.onTagInputKeydown);
     if (DOM.tagInput) DOM.tagInput.addEventListener("blur", EventHandlers.onTagInputBlur);
 
+
+    // 이미지 선택 모달 이벤트 리스너들
+    if (DOM.imageSelectModalOverlay) {
+        DOM.imageSelectModalOverlay.addEventListener("click", EventHandlers.hideImageSelectModal);
+    }
+    if (DOM.imageSelectModalClose) {
+        DOM.imageSelectModalClose.addEventListener("click", EventHandlers.hideImageSelectModal);
+    }
+    if (DOM.browseBtn) {
+        DOM.browseBtn.addEventListener("click", EventHandlers.onBrowseBtnClick);
+    }
+    if (DOM.modalFileInput) {
+        DOM.modalFileInput.addEventListener("change", EventHandlers.onModalFileInputChange);
+    }
+    if (DOM.dropzoneArea) {
+        DOM.dropzoneArea.addEventListener("dragenter", EventHandlers.onModalDragEnter);
+        DOM.dropzoneArea.addEventListener("dragover", EventHandlers.onModalDragOver);
+        DOM.dropzoneArea.addEventListener("dragleave", EventHandlers.onModalDragLeave);
+        DOM.dropzoneArea.addEventListener("drop", EventHandlers.onModalDrop);
+        DOM.dropzoneArea.addEventListener("click", EventHandlers.onBrowseBtnClick);
+    }
+    if (DOM.addFilesBtn) {
+        DOM.addFilesBtn.addEventListener("click", EventHandlers.onAddFilesBtnClick);
+    }
+    if (DOM.cancelBtn) {
+        DOM.cancelBtn.addEventListener("click", EventHandlers.onCancelBtnClick);
+    }
+
     // 이미지 컨테이너 클릭 이벤트 (전체화면 보기)
     const imageContainer = document.querySelector('.image-container');
     if (imageContainer) {
@@ -1026,8 +1304,12 @@ function initialize() {
 
     // ESC 키로 모달 닫기
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && DOM.detailModal && DOM.detailModal.classList.contains('show')) {
-            EventHandlers.hideDetailModal();
+        if (e.key === 'Escape') {
+            if (DOM.imageSelectModal && DOM.imageSelectModal.style.display === 'flex') {
+                EventHandlers.hideImageSelectModal();
+            } else if (DOM.detailModal && DOM.detailModal.classList.contains('show')) {
+                EventHandlers.hideDetailModal();
+            }
         }
     });
 }

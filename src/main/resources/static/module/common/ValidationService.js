@@ -5,8 +5,8 @@ export const ValidationService = {
         const selectedImage = document.querySelector(".gallery-image.selected");
         if (!selectedImage) return;
 
-        const locationBox = document.getElementById("locationBox");
-        const dateBox = document.getElementById("dateBox");
+        const locationBox = document.getElementById("modalLocationBox");
+        const dateBox = document.getElementById("modalDateBox");
         
         if (!locationBox || !dateBox) return;
         
