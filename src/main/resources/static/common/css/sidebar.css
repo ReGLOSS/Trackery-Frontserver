@@ -5,13 +5,12 @@
     height: 100vh !important;
     background-color: #2a2a36 !important;
     display: flex !important;
-    flex-direction: column !important;
     box-shadow: inset calc(-1 * var(--tblr-navbar-border-width)) 0 0 0 #2a2a36 !important;
 }
 
 /* 사이드바 기본 레이아웃 */
 .navbar-expand-lg {
-    width: clamp(150px, 16.68vw, 30vh) !important;
+    width: clamp(21rem, 16.68vw, 30vh) !important;
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
@@ -21,8 +20,9 @@
     transition: transform .3s !important;
     overflow-y: auto !important;
     padding: 0 !important;
-    scrollbar-width: none;
+    scrollbar-width: none !important;
     flex-direction: column !important;
+    container-type: inline-size;
 }
 
 .navbar-expand-lg .container-fluid {
@@ -141,6 +141,7 @@
 
 .user-info {
     font-size: 3vh !important;
+    transition: font-size 0.3s ease !important;
 }
 
 .user-info p {
@@ -150,4 +151,26 @@
 .user-info .text-muted {
     color: rgba(255, 255, 255, 0.5) !important;
     font-size: 2.5vh !important;
+    transition: font-size 0.3s ease !important;
+}
+
+/* 컨테이너 크기에 따른 단계적 글자 크기 조정 */
+@container (max-width: 24rem) {
+    .user-info {
+        font-size: 2.2vh !important;
+    }
+
+    .user-info .text-muted {
+        font-size: 1.8vh !important;
+    }
+}
+
+@container (max-width: 21rem) {
+    .user-info {
+        font-size: 1.8vh !important;
+    }
+
+    .user-info .text-muted {
+        font-size: 1.5vh !important;
+    }
 }

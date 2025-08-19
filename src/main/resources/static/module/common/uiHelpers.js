@@ -7,19 +7,25 @@ export const UiHelpers = {
     async hideUploadingBlockAndShowResultBlock() {
         const uploadingBlock = document.querySelector('#uploadingBlock');
         const resultInfoBlock = document.querySelector('#resultInfoBlock');
-        
+
         if (uploadingBlock) uploadingBlock.style.display = "none";
-        if (resultInfoBlock) resultInfoBlock.style.display = "flex";
+        if (resultInfoBlock) resultInfoBlock.style.display = "block";
     },
 
     async addFailedImage(failedImageUUIDs = []) {
         const failedUploadInfoGroup = document.querySelector("#failedUploadInfoGroup");
-        const modalGallery = document.querySelector(".uploading-modal-gallery");
-        
+        const failedImagesSection = document.querySelector(".failed-images-section");
+        const modalGallery = document.querySelector("#uploadingModalGallery");
+
         if (failedImageUUIDs.length === 0) {
             if (failedUploadInfoGroup) failedUploadInfoGroup.style.display = "none";
+            if (failedImagesSection) failedImagesSection.style.display = "none";
             return;
         }
+
+        // 실패한 이미지가 있으면 경고 섹션들 표시
+        if (failedUploadInfoGroup) failedUploadInfoGroup.style.display = "block";
+        if (failedImagesSection) failedImagesSection.style.display = "block";
 
         failedImageUUIDs.forEach(uuid => {
             const failedImage = document.querySelector(`.gallery-image[data-uuid="${uuid}"]`);
@@ -37,7 +43,7 @@ export const UiHelpers = {
     async indicateResult(successImageUUIDs = [], failedImageUUIDs = []) {
         const uploadedImageCount = document.querySelector('#uploadedImageCount');
         const uploadFailedImageCount = document.querySelector('#uploadFailedImageCount');
-        
+
         if (uploadedImageCount) {
             uploadedImageCount.textContent = successImageUUIDs.length + "장의 이미지를 성공적으로 업로드했습니다.";
         }
