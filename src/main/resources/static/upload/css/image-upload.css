@@ -102,7 +102,7 @@
     grid-template-columns: repeat(4, 18vh);
     grid-auto-rows: 18vh;
     gap: 2vw;
-    padding: 4vh;
+    padding: 4vh 0;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: #b8c5d1 transparent;
@@ -166,7 +166,6 @@
 .gallery-image.invalid {
     border: 0.3vh solid #d63939;
 }
-
 
 .image-detail {
     height: auto;
@@ -388,6 +387,7 @@
 
 .upload-button-container {
     align-self: flex-end;
+    margin-top: 1vh;
 }
 
 .upload-button-container .btn {
