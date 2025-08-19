@@ -1,7 +1,8 @@
-import {parseExif} from "./exifParser.js";
-import {tagManager} from "../../module/tags/tagManager.js";
-import {UiHelpers} from "../../module/common/uiHelpers.js";
-import {ValidationService} from "../../module/common/validationService.js";
+import { parseExif } from "./exifParser.js";
+import { tagManager } from "../../module/tags/tagManager.js";
+import { UiHelpers } from "../../module/common/uiHelpers.js";
+import { ValidationService } from "../../module/common/validationService.js";
+import { NotificationHelper } from "../../module/notification/notificationHelper.js";
 
 // DOM 엘리먼트 관리자
 const DOM = {
@@ -22,18 +23,30 @@ const DOM = {
     get detailModal() { return document.getElementById('detailModal'); },
     get detailModalOverlay() { return document.getElementById('detailModalOverlay'); },
 
+    // 이미지 선택 모달 관련 DOM 요소들
+    get imageSelectModal() { return document.getElementById('imageSelectModal'); },
+    get imageSelectModalOverlay() { return document.getElementById('imageSelectModalOverlay'); },
+    get imageSelectModalClose() { return document.getElementById('imageSelectModalClose'); },
+    get dropzoneArea() { return document.getElementById('dropzoneArea'); },
+    get browseBtn() { return document.getElementById('browseBtn'); },
+    get modalFileInput() { return document.getElementById('modalFileInput'); },
+    get selectedFiles() { return document.getElementById('selectedFiles'); },
+    get fileGallery() { return document.getElementById('fileGallery'); },
+    get cancelBtn() { return document.getElementById('cancelBtn'); },
+    get addFilesBtn() { return document.getElementById('addFilesBtn'); },
+
     // 필수 엘리먼트 검증 함수
     validateRequiredElements() {
-        const required = ['fileInput', 'addImageButton', 'gallery', 'imageNotSelectedBlock', 
-                         'imageSelectedBlock', 'description', 'locationBox', 'dateBox'];
+        const required = ['fileInput', 'addImageButton', 'gallery', 'imageNotSelectedBlock',
+            'imageSelectedBlock', 'description', 'locationBox', 'dateBox'];
         const missing = [];
-        
+
         for (const elementName of required) {
             if (!this[elementName]) {
                 missing.push(elementName);
             }
         }
-        
+
         if (missing.length > 0) {
             console.error('필수 DOM 엘리먼트가 없습니다:', missing);
             return false;
@@ -45,201 +58,23 @@ const DOM = {
 // 메모리 관리를 위한 Object URL 추적
 const ObjectURLManager = {
     objectUrls: new Set(),
-    
+
     create(file) {
         const url = URL.createObjectURL(file);
         this.objectUrls.add(url);
         return url;
     },
-    
+
     revoke(url) {
         if (this.objectUrls.has(url)) {
             URL.revokeObjectURL(url);
             this.objectUrls.delete(url);
         }
     },
-    
+
     revokeAll() {
         this.objectUrls.forEach(url => URL.revokeObjectURL(url));
         this.objectUrls.clear();
-    }
-};
-
-// 사용자 친화적 알림 시스템
-const NotificationManager = {
-    // 알림 엘리먼트 생성
-    createNotification(message, type = 'error') {
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        notification.innerHTML = `
-            <div class="notification-content">
-                <span class="notification-icon">${this.getIcon(type)}</span>
-                <span class="notification-message">${message}</span>
-                <button class="notification-close" aria-label="닫기">&times;</button>
-            </div>
-        `;
-        
-        // 스타일 적용
-        this.applyStyles(notification, type);
-        
-        // 닫기 버튼 이벤트
-        const closeBtn = notification.querySelector('.notification-close');
-        closeBtn.addEventListener('click', () => {
-            this.removeNotification(notification);
-        });
-        
-        return notification;
-    },
-    
-    // 타입별 아이콘 반환
-    getIcon(type) {
-        const icons = {
-            error: '⚠️',
-            success: '✅',
-            warning: '⚠️',
-            info: 'ℹ️'
-        };
-        return icons[type] || icons.error;
-    },
-    
-    // 알림 스타일 적용
-    applyStyles(notification, type) {
-        const baseStyles = {
-            position: 'fixed',
-            top: '20px',
-            right: '20px',
-            minWidth: '300px',
-            maxWidth: '400px',
-            padding: '16px',
-            borderRadius: '8px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-            zIndex: '10000',
-            fontSize: '14px',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            transform: 'translateX(100%)',
-            transition: 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out',
-            opacity: '0'
-        };
-        
-        const typeStyles = {
-            error: { backgroundColor: '#fee', border: '1px solid #fcc', color: '#c33' },
-            success: { backgroundColor: '#efe', border: '1px solid #cfc', color: '#363' },
-            warning: { backgroundColor: '#fff3cd', border: '1px solid #ffeaa7', color: '#856404' },
-            info: { backgroundColor: '#e7f3ff', border: '1px solid #b3d9ff', color: '#0c5460' }
-        };
-        
-        Object.assign(notification.style, baseStyles, typeStyles[type]);
-        
-        // 컨텐츠 스타일
-        const content = notification.querySelector('.notification-content');
-        Object.assign(content.style, {
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-        });
-        
-        // 아이콘 스타일
-        const icon = notification.querySelector('.notification-icon');
-        Object.assign(icon.style, {
-            fontSize: '16px',
-            flexShrink: '0'
-        });
-        
-        // 메시지 스타일
-        const message = notification.querySelector('.notification-message');
-        Object.assign(message.style, {
-            flex: '1',
-            lineHeight: '1.4'
-        });
-        
-        // 닫기 버튼 스타일
-        const closeBtn = notification.querySelector('.notification-close');
-        Object.assign(closeBtn.style, {
-            background: 'none',
-            border: 'none',
-            fontSize: '18px',
-            cursor: 'pointer',
-            padding: '0',
-            marginLeft: '8px',
-            opacity: '0.7',
-            flexShrink: '0'
-        });
-        
-        closeBtn.addEventListener('mouseenter', () => {
-            closeBtn.style.opacity = '1';
-        });
-        
-        closeBtn.addEventListener('mouseleave', () => {
-            closeBtn.style.opacity = '0.7';
-        });
-    },
-    
-    // 알림 표시
-    showNotification(message, type = 'error', duration = 5000) {
-        const notification = this.createNotification(message, type);
-        document.body.appendChild(notification);
-        
-        // 기존 알림들과 겹치지 않도록 위치 조정
-        this.adjustPosition(notification);
-        
-        // 애니메이션으로 표시
-        requestAnimationFrame(() => {
-            notification.style.transform = 'translateX(0)';
-            notification.style.opacity = '1';
-        });
-        
-        // 자동 제거
-        if (duration > 0) {
-            setTimeout(() => {
-                this.removeNotification(notification);
-            }, duration);
-        }
-        
-        return notification;
-    },
-    
-    // 알림 위치 조정
-    adjustPosition(newNotification) {
-        const existingNotifications = document.querySelectorAll('.notification');
-        let totalHeight = 20; // 초기 top 여백
-        
-        existingNotifications.forEach(notification => {
-            if (notification !== newNotification) {
-                totalHeight += notification.offsetHeight + 10; // 알림 간격
-            }
-        });
-        
-        newNotification.style.top = totalHeight + 'px';
-    },
-    
-    // 알림 제거
-    removeNotification(notification) {
-        notification.style.transform = 'translateX(100%)';
-        notification.style.opacity = '0';
-        
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-                // 남은 알림들 위치 재조정
-                this.repositionNotifications();
-            }
-        }, 300);
-    },
-    
-    // 남은 알림들 위치 재조정
-    repositionNotifications() {
-        const notifications = document.querySelectorAll('.notification');
-        let totalHeight = 20;
-        
-        notifications.forEach(notification => {
-            notification.style.top = totalHeight + 'px';
-            totalHeight += notification.offsetHeight + 10;
-        });
-    },
-    
-    // 편의 메서드들
-    showError(message, duration = 5000) {
-        return this.showNotification(message, 'error', duration);
     }
 };
 
@@ -293,7 +128,7 @@ const ApiService = {
             };
         }
 
-        const {latitude, longitude, dateTime} = exif;
+        const { latitude, longitude, dateTime } = exif;
         const formattedDateTime = ImageProcessor.formatDateFromExif(dateTime);
 
         if (latitude == null || longitude == null) {
@@ -311,7 +146,7 @@ const ApiService = {
         try {
             // TagManager를 사용하여 태그 생성
             const tags = await tagManager.fetchAndCreateTags(latitude, longitude, formattedDateTime);
-            
+
             // 위치명 생성 (TagManager 사용)
             const displayLocationName = tagManager.extractLocationName(tags);
 
@@ -369,7 +204,7 @@ const ApiService = {
         try {
             const response = await fetch(url, {
                 method: "PUT",
-                headers: {"Content-Type": contentType},
+                headers: { "Content-Type": contentType },
                 body: blob
             });
 
@@ -400,7 +235,7 @@ const ApiService = {
             const response = await fetch("/api/images", {
                 method: "POST",
                 credentials: "include",
-                headers: {"Content-Type": "application/json"},
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     imageName: fileName,
                     imageType: imageElement.dataset.fileExtension,
@@ -429,32 +264,45 @@ const ApiService = {
 
 // 이벤트 핸들러 모음
 const EventHandlers = {
-    // 이미지 추가 버튼 클릭 핸들러
+    // 이미지 추가 버튼 클릭 핸들러 - 모달 표시
     onAddImageClick() {
-        DOM.fileInput.click();
+        EventHandlers.showImageSelectModal();
     },
 
-    // 파일 입력 변경 핸들러
+    // 파일 입력 변경 핸들러 (다중 파일 지원)
     async onFileInputChange(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+        const files = Array.from(event.target.files);
+        if (files.length === 0) return;
 
-        try {
-            // 파일 검증
-            const fileExtension = EventHandlers.validateFile(file);
-            
-            // EXIF 데이터 파싱 및 위치 정보 요청
-            const parsedData = await ApiService.fetchLocation(file);
-            
-            // UI 요소 생성 및 추가
-            const imageData = EventHandlers.createImageData(file, fileExtension, parsedData);
-            const imageElement = EventHandlers.createImageElement(imageData);
-            const wrapper = EventHandlers.createImageWrapper(imageElement, imageData.uuid);
-            
-            DOM.gallery.appendChild(wrapper);
-        } catch (error) {
-            NotificationManager.showError(error.message);
+        // 파일 개수 제한 (현재 최대 50개)
+        const MAX_FILES = 50;
+        if (files.length > MAX_FILES) {
+            NotificationHelper.showError(`한 번에 최대 ${MAX_FILES}개의 파일만 업로드할 수 있습니다.`);
+            return;
         }
+
+        // 각 파일을 순차적으로 처리
+        for (const file of files) {
+            try {
+                // 파일 검증
+                const fileExtension = EventHandlers.validateFile(file);
+
+                // EXIF 데이터 파싱 및 위치 정보 요청
+                const parsedData = await ApiService.fetchLocation(file);
+
+                // UI 요소 생성 및 추가
+                const imageData = EventHandlers.createImageData(file, fileExtension, parsedData);
+                const imageElement = EventHandlers.createImageElement(imageData);
+                const wrapper = EventHandlers.createImageWrapper(imageElement, imageData.uuid);
+
+                DOM.gallery.appendChild(wrapper);
+            } catch (error) {
+                NotificationHelper.showError(`${file.name}: ${error.message}`);
+            }
+        }
+
+        // 파일 입력 초기화 (같은 파일 재선택 가능하도록)
+        event.target.value = '';
     },
 
     // 파일 검증
@@ -491,7 +339,7 @@ const EventHandlers = {
 
     // 이미지 데이터 객체 생성
     createImageData(file, fileExtension, parsedData) {
-        const {location = '', dateTime = '', tags = []} = parsedData;
+        const { location = '', dateTime = '', tags = [] } = parsedData;
         const objectUrl = ObjectURLManager.create(file);
         const uuid = crypto.randomUUID();
 
@@ -582,7 +430,7 @@ const EventHandlers = {
 
         document.querySelector('#mapPickerModal').classList.remove('show');
 
-        const {preview, location, dateTime, description, tags, public: isPublic} = target.dataset;
+        const { preview, location, dateTime, description, tags, public: isPublic } = target.dataset;
 
         document.querySelector(".image-detail").src = preview;
         DOM.description.value = description;
@@ -680,22 +528,22 @@ const EventHandlers = {
     // 날짜 변경 핸들러
     async onDateChange() {
         ValidationService.validateLocationAndDate();
-        
+
         // 날짜 변경 시 계절 태그 업데이트 (TagManager 사용)
         const selectedImage = document.querySelector(".gallery-image.selected");
         if (selectedImage) {
             await EventHandlers.updateSeasonalTags(selectedImage);
         }
     },
-    
+
     // 계절 태그 업데이트 헬퍼 함수 (TagManager 사용)
     async updateSeasonalTags(selectedImage) {
         const dateTime = selectedImage.dataset.dateTime;
-        
+
         if (!dateTime) {
             return;
         }
-        
+
         try {
             // 기존 태그 정보 가져오기
             let existingTags = [];
@@ -704,19 +552,19 @@ const EventHandlers = {
             } catch (error) {
                 console.error('기존 태그 파싱 오류:', error);
             }
-            
+
             // 새로운 계절 태그 가져오기
             const seasonTags = await tagManager.apiService.fetchSeasonTags(dateTime);
-            
+
             // TagManager를 사용하여 계절 태그 업데이트
             const updatedTags = tagManager.handleSeasonChange(existingTags, seasonTags);
-            
+
             // UI 업데이트
             UiHelpers.addTags(updatedTags);
-            
+
             // 선택된 이미지의 태그 정보 업데이트
             selectedImage.dataset.tags = JSON.stringify(updatedTags);
-            
+
         } catch (error) {
             console.error('계절 태그 업데이트 중 오류:', error);
         }
@@ -729,8 +577,8 @@ const EventHandlers = {
         if (currentlySelected) {
             UiHelpers.updateSelectedImageTags();
         }
-        
-        DOM.whileUploadingModal.style.display = "flex";
+
+        DOM.whileUploadingModal.classList.add("show");
         const imageWrappers = document.querySelectorAll(".image-wrapper");
 
         // SSE 연결 설정
@@ -742,12 +590,12 @@ const EventHandlers = {
         const failedImageUUIDs = [];
 
         // SSE 연결 상태 로그
-        eventSource.onopen = function(event) {
+        eventSource.onopen = function (event) {
             console.log('SSE 연결 성공:', event);
         };
 
         // SSE 메시지 처리 - 이미지 처리 완료 알림을 받으면 결과 표시
-        eventSource.onmessage = function(event) {
+        eventSource.onmessage = function (event) {
             console.log('SSE 원본 메시지 수신:', event.data);
 
             // data: 접두사가 있는 경우만 처리 (SSE 데이터 메시지)
@@ -791,7 +639,7 @@ const EventHandlers = {
             }
         };
 
-        eventSource.onerror = function(event) {
+        eventSource.onerror = function (event) {
             console.error('SSE 연결 오류:', event);
             console.error('SSE readyState:', eventSource.readyState);
             console.error('SSE url:', eventSource.url);
@@ -801,7 +649,7 @@ const EventHandlers = {
         // 이미지 업로드만 수행하고, 결과 표시는 SSE를 통해서만 처리
         for (const imageWrapper of imageWrappers) {
             const img = imageWrapper.querySelector(".gallery-image");
-            
+
             try {
                 const url = await ApiService.requestPresignedPutUrl(img);
                 await ApiService.uploadImageToS3(img, url);
@@ -835,7 +683,7 @@ const EventHandlers = {
 
         console.log('UiHelpers.hideUploadingBlockAndShowResultBlock 호출');
         await UiHelpers.hideUploadingBlockAndShowResultBlock();
-        
+
         // 모든 이미지 업로드 성공 시 홈에서 플래그로 지도 업데이트 처리
         if (failedImageUUIDs.length === 0) {
             // localStorage에 플래그 설정하여 홈 페이지에서 지도 업데이트 처리
@@ -844,7 +692,7 @@ const EventHandlers = {
             // 5초 후 모달 닫고 새로고침
             setTimeout(() => {
                 console.log('모달 닫기 및 페이지 새로고침 실행');
-                DOM.whileUploadingModal.style.display = "none";
+                DOM.whileUploadingModal.classList.remove("show");
                 window.location.reload();
             }, 5000);
         }
@@ -856,12 +704,12 @@ const EventHandlers = {
         const imageWrapper = button.closest(".image-wrapper");
         if (imageWrapper) {
             const img = imageWrapper.querySelector(".gallery-image");
-            
+
             // Object URL 메모리 정리
             if (img && img.dataset.preview) {
                 ObjectURLManager.revoke(img.dataset.preview);
             }
-            
+
             if (img && img.classList.contains("selected")) {
                 // If the deleted image was selected, clear the detail view and close modal
                 DOM.imageSelectedBlock.style.display = "none";
@@ -904,6 +752,344 @@ const EventHandlers = {
         }
     },
 
+
+    // === 이미지 선택 모달 관련 핸들러들 ===
+
+    // 모달 표시
+    showImageSelectModal() {
+        if (DOM.imageSelectModal) {
+            DOM.imageSelectModal.style.display = 'flex';
+            // 애니메이션을 위해 약간의 지연 후 클래스 추가
+            setTimeout(() => {
+                DOM.imageSelectModal.classList.add('show');
+            }, 10);
+        }
+        // 기존 파일 목록 초기화
+        ImageSelectModal.clearFileList();
+    },
+
+    // 모달 숨기기
+    hideImageSelectModal() {
+        if (DOM.imageSelectModal) {
+            DOM.imageSelectModal.classList.remove('show');
+            setTimeout(() => {
+                DOM.imageSelectModal.style.display = 'none';
+                // 모달 상태 초기화
+                ImageSelectModal.resetModal();
+            }, 300);
+        }
+    },
+
+    // 모달 내 파일 선택 버튼 클릭
+    onBrowseBtnClick() {
+        DOM.modalFileInput.click();
+    },
+
+    // 모달 내 파일 입력 변경
+    onModalFileInputChange(event) {
+        const files = Array.from(event.target.files);
+        if (files.length > 0) {
+            ImageSelectModal.addFilesToList(files);
+        }
+        // 파일 입력 초기화
+        event.target.value = '';
+    },
+
+    // 모달 내 드래그 앤 드롭 핸들러들
+    onModalDragEnter(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        DOM.dropzoneArea.classList.add('drag-over');
+    },
+
+    onModalDragOver(event) {
+        event.preventDefault();
+        event.stopPropagation();
+    },
+
+    onModalDragLeave(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!DOM.dropzoneArea.contains(event.relatedTarget)) {
+            DOM.dropzoneArea.classList.remove('drag-over');
+        }
+    },
+
+    onModalDrop(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        DOM.dropzoneArea.classList.remove('drag-over');
+
+        const files = Array.from(event.dataTransfer.files);
+        const imageFiles = files.filter(file => file.type.startsWith('image/'));
+
+        if (imageFiles.length > 0) {
+            ImageSelectModal.addFilesToList(imageFiles);
+        }
+
+        if (imageFiles.length !== files.length) {
+            NotificationHelper.showError(`${files.length - imageFiles.length}개의 파일은 이미지가 아니어서 제외되었습니다.`);
+        }
+    },
+
+    // 파일 추가 버튼 클릭
+    async onAddFilesBtnClick() {
+        const files = ImageSelectModal.getSelectedFiles();
+        if (files.length === 0) {
+            NotificationHelper.showError('선택된 파일이 없습니다.');
+            return;
+        }
+
+        // 모달 닫기
+        EventHandlers.hideImageSelectModal();
+
+        // 처리 중 표시 UI
+        const processingIndicator = EventHandlers.showProcessingIndicator();
+
+        // 총 개수 초기화
+        EventHandlers.initializeProcessingProgress(processingIndicator, files.length);
+
+        try {
+            // 모든 이미지를 처리하고 메모리에 저장
+            const processedImages = [];
+            const totalFiles = files.length;
+            let processedCount = 0;
+
+            for (const file of files) {
+                try {
+                    // ValidationService를 통한 파일 검증
+                    const fileExtension = EventHandlers.validateFile(file);
+
+                    // EXIF 데이터 파싱 및 위치 정보 요청
+                    const parsedData = await ApiService.fetchLocation(file);
+
+                    // 이미지 데이터 생성
+                    const imageData = EventHandlers.createImageData(file, fileExtension, parsedData);
+                    processedImages.push(imageData);
+
+                    processedCount++;
+                    EventHandlers.updateProcessingProgress(processingIndicator, processedCount, totalFiles);
+
+                } catch (error) {
+                    NotificationHelper.showError(`${file.name}: ${error.message}`);
+                    processedCount++;
+                    EventHandlers.updateProcessingProgress(processingIndicator, processedCount, totalFiles);
+                }
+            }
+
+            // 처리 완료 후 모든 이미지를 한번에 base-container에 추가
+            for (const imageData of processedImages) {
+                const imageElement = EventHandlers.createImageElement(imageData);
+                const wrapper = EventHandlers.createImageWrapper(imageElement, imageData.uuid);
+                DOM.gallery.appendChild(wrapper);
+            }
+
+        } finally {
+            // 처리 중 표시 제거
+            EventHandlers.hideProcessingIndicator(processingIndicator);
+        }
+    },
+
+    // 취소 버튼 클릭
+    onCancelBtnClick() {
+        EventHandlers.hideImageSelectModal();
+    },
+
+    // 처리 중 표시 UI 생성 및 표시
+    showProcessingIndicator() {
+        const indicator = document.createElement('div');
+        indicator.className = 'processing-indicator';
+        indicator.innerHTML = `
+            <div class="processing-content">
+                <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+                <h4 class="processing-message">이미지를 처리하는 중입니다...</h4>
+                <div class="progress-info">
+                    <div class="progress-text">
+                        <span class="current-count">0</span> / <span class="total-count">0</span> 완료
+                    </div>
+                    <div class="progress progress-sm mb-2">
+                        <div class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div class="progress-percentage text-secondary">0%</div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(indicator);
+
+        // 애니메이션 효과
+        requestAnimationFrame(() => {
+            indicator.style.opacity = '1';
+        });
+
+        return indicator;
+    },
+
+    // 진행률 업데이트
+    updateProcessingProgress(indicator, currentCount, totalCount) {
+        if (!indicator) return;
+
+        const percentage = Math.round((currentCount / totalCount) * 100);
+
+        const currentCountElement = indicator.querySelector('.current-count');
+        const totalCountElement = indicator.querySelector('.total-count');
+        const progressBar = indicator.querySelector('.progress-bar');
+        const progressPercentage = indicator.querySelector('.progress-percentage');
+
+        if (currentCountElement) currentCountElement.textContent = currentCount;
+        if (totalCountElement) totalCountElement.textContent = totalCount;
+        if (progressBar) {
+            progressBar.style.width = percentage + '%';
+            progressBar.setAttribute('aria-valuenow', percentage);
+        }
+        if (progressPercentage) progressPercentage.textContent = percentage + '%';
+    },
+
+    // 처리 시작 시 총 개수 설정
+    initializeProcessingProgress(indicator, totalCount) {
+        if (!indicator) return;
+
+        const totalCountElement = indicator.querySelector('.total-count');
+        if (totalCountElement) totalCountElement.textContent = totalCount;
+
+        this.updateProcessingProgress(indicator, 0, totalCount);
+    },
+
+    // 처리 중 표시 UI 제거
+    hideProcessingIndicator(indicator) {
+        if (indicator) {
+            indicator.style.opacity = '0';
+            setTimeout(() => {
+                if (indicator.parentNode) {
+                    indicator.parentNode.removeChild(indicator);
+                }
+            }, 300);
+        }
+    },
+
+};
+
+// 이미지 선택 모달 관리 객체
+const ImageSelectModal = {
+    selectedFiles: [],
+
+    // 파일 목록에 파일 추가
+    addFilesToList(files) {
+        // 파일 개수 제한 확인
+        const MAX_FILES = 20;
+        const currentCount = this.selectedFiles.length;
+        const newFilesCount = files.length;
+
+        if (currentCount + newFilesCount > MAX_FILES) {
+            NotificationHelper.showError(`최대 ${MAX_FILES}개의 파일만 선택할 수 있습니다.`);
+            return;
+        }
+
+        // 중복 파일 확인 및 필터링
+        const validFiles = [];
+        for (const file of files) {
+            try {
+                EventHandlers.validateFile(file);
+                // 같은 이름의 파일이 이미 있는지 확인
+                const isDuplicate = this.selectedFiles.some(existing =>
+                    existing.name === file.name && existing.size === file.size
+                );
+                if (!isDuplicate) {
+                    validFiles.push(file);
+                } else {
+                    NotificationHelper.showError(`${file.name}은 이미 선택된 파일입니다.`);
+                }
+            } catch (error) {
+                NotificationHelper.showError(`${file.name}: ${error.message}`);
+            }
+        }
+
+        // 유효한 파일들을 목록에 추가
+        this.selectedFiles.push(...validFiles);
+        this.updateUI();
+    },
+
+    // 파일 목록에서 파일 제거
+    removeFile(index) {
+        this.selectedFiles.splice(index, 1);
+        this.updateUI();
+    },
+
+    // UI 업데이트
+    updateUI() {
+        if (this.selectedFiles.length === 0) {
+            DOM.selectedFiles.style.display = 'none';
+            DOM.dropzoneArea.style.display = 'block';
+        } else {
+            DOM.selectedFiles.style.display = 'block';
+            DOM.dropzoneArea.style.display = 'none';
+            this.renderFileList();
+        }
+    },
+
+    // 파일 목록을 앨범형식으로 렌더링
+    renderFileList() {
+        const fileGallery = DOM.fileGallery;
+        fileGallery.innerHTML = '';
+
+        this.selectedFiles.forEach((file, index) => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+
+            const fileSize = this.formatFileSize(file.size);
+            const thumbnail = ObjectURLManager.create(file);
+
+            fileItem.innerHTML = `
+                <img src="${thumbnail}" alt="${file.name}" class="file-thumbnail" />
+                <div class="file-info">
+                    <div class="file-details">
+                        <h5>${file.name}</h5>
+                        <small>${fileSize}</small>
+                    </div>
+                </div>
+                <button class="file-remove" data-index="${index}">&times;</button>
+            `;
+
+            // 삭제 버튼에 이벤트 리스너 추가
+            const removeButton = fileItem.querySelector('.file-remove');
+            removeButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const fileIndex = parseInt(e.target.dataset.index);
+                this.removeFile(fileIndex);
+            });
+
+            fileGallery.appendChild(fileItem);
+        });
+    },
+
+    // 파일 크기 포맷팅
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    },
+
+    // 선택된 파일들 반환
+    getSelectedFiles() {
+        return [...this.selectedFiles];
+    },
+
+    // 파일 목록 초기화
+    clearFileList() {
+        this.selectedFiles = [];
+        this.updateUI();
+    },
+
+    // 모달 상태 초기화
+    resetModal() {
+        this.clearFileList();
+        DOM.dropzoneArea.style.display = 'block';
+        DOM.selectedFiles.style.display = 'none';
+        DOM.dropzoneArea.classList.remove('drag-over');
+    }
 };
 
 // 이미지 전체화면 토글 기능
@@ -954,7 +1140,7 @@ function initialize() {
         console.error('초기화 실패: 필수 DOM 엘리먼트가 누락되었습니다.');
         return;
     }
-    
+
     // 유효성 검증 리스너 설정
     ValidationService.setupValidationListeners();
 
@@ -974,7 +1160,7 @@ function initialize() {
                 }
 
                 ValidationService.validateLocationAndDate();
-                
+
                 // 날짜 변경 시 계절 태그 업데이트 (TagManager 사용)
                 await EventHandlers.updateSeasonalTags(selectedImage);
             }
@@ -1004,11 +1190,39 @@ function initialize() {
     if (DOM.locationBox) DOM.locationBox.addEventListener("change", EventHandlers.onLocationChange);
     if (DOM.dateBox) DOM.dateBox.addEventListener("change", EventHandlers.onDateChange);
     if (DOM.imageUploadBtn) DOM.imageUploadBtn.addEventListener("click", EventHandlers.onImageUploadClick);
-    
+
     // 태그 관련 이벤트 리스너 (null 체크 포함)
     if (DOM.tagAddButton) DOM.tagAddButton.addEventListener("click", EventHandlers.onTagAddClick);
     if (DOM.tagInput) DOM.tagInput.addEventListener("keydown", EventHandlers.onTagInputKeydown);
     if (DOM.tagInput) DOM.tagInput.addEventListener("blur", EventHandlers.onTagInputBlur);
+
+
+    // 이미지 선택 모달 이벤트 리스너들
+    if (DOM.imageSelectModalOverlay) {
+        DOM.imageSelectModalOverlay.addEventListener("click", EventHandlers.hideImageSelectModal);
+    }
+    if (DOM.imageSelectModalClose) {
+        DOM.imageSelectModalClose.addEventListener("click", EventHandlers.hideImageSelectModal);
+    }
+    if (DOM.browseBtn) {
+        DOM.browseBtn.addEventListener("click", EventHandlers.onBrowseBtnClick);
+    }
+    if (DOM.modalFileInput) {
+        DOM.modalFileInput.addEventListener("change", EventHandlers.onModalFileInputChange);
+    }
+    if (DOM.dropzoneArea) {
+        DOM.dropzoneArea.addEventListener("dragenter", EventHandlers.onModalDragEnter);
+        DOM.dropzoneArea.addEventListener("dragover", EventHandlers.onModalDragOver);
+        DOM.dropzoneArea.addEventListener("dragleave", EventHandlers.onModalDragLeave);
+        DOM.dropzoneArea.addEventListener("drop", EventHandlers.onModalDrop);
+        DOM.dropzoneArea.addEventListener("click", EventHandlers.onBrowseBtnClick);
+    }
+    if (DOM.addFilesBtn) {
+        DOM.addFilesBtn.addEventListener("click", EventHandlers.onAddFilesBtnClick);
+    }
+    if (DOM.cancelBtn) {
+        DOM.cancelBtn.addEventListener("click", EventHandlers.onCancelBtnClick);
+    }
 
     // 이미지 컨테이너 클릭 이벤트 (전체화면 보기)
     const imageContainer = document.querySelector('.image-container');
@@ -1026,8 +1240,12 @@ function initialize() {
 
     // ESC 키로 모달 닫기
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && DOM.detailModal && DOM.detailModal.classList.contains('show')) {
-            EventHandlers.hideDetailModal();
+        if (e.key === 'Escape') {
+            if (DOM.imageSelectModal && DOM.imageSelectModal.style.display === 'flex') {
+                EventHandlers.hideImageSelectModal();
+            } else if (DOM.detailModal && DOM.detailModal.classList.contains('show')) {
+                EventHandlers.hideDetailModal();
+            }
         }
     });
 }
