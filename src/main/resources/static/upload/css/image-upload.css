@@ -499,27 +499,26 @@
 .image-select-container {
     position: relative;
     background: #d3d9e8;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 600px;
+    border-radius: clamp(0.5rem, 1.2vw, 1.2rem);
+    width: clamp(20rem, 90vw, 60rem);
     max-height: 80vh;
     overflow: hidden;
     z-index: 2002;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1vh 4vh rgba(0, 0, 0, 0.2);
 }
 
 .image-select-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem 2rem;
-    border-bottom: 1px solid #c5cdd6;
+    padding: clamp(1rem, 2vh, 2rem) clamp(1.5rem, 3vw, 3rem);
+    border-bottom: 0.1vh solid #c5cdd6;
     background: #d6e0e6;
 }
 
 .image-select-header h3 {
     margin: 0;
-    font-size: 1.25rem;
+    font-size: clamp(1rem, 2.5vh, 1.5rem);
     font-weight: 600;
     color: #495057;
 }
@@ -527,16 +526,16 @@
 .modal-close-btn {
     background: none;
     border: none;
-    font-size: 1.5rem;
+    font-size: clamp(1.2rem, 3vh, 2rem);
     cursor: pointer;
     color: #6c757d;
     padding: 0;
-    width: 32px;
-    height: 32px;
+    width: clamp(2rem, 4vh, 3rem);
+    height: clamp(2rem, 4vh, 3rem);
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
+    border-radius: 0.4vh;
     transition: background-color 0.2s;
 }
 
@@ -545,13 +544,13 @@
 }
 
 .image-select-body {
-    padding: 2rem;
+    padding: clamp(1rem, 3vh, 3rem);
 }
 
 .dropzone-area {
-    border: 2px dashed #b8c5d1;
-    border-radius: 8px;
-    padding: 3rem 2rem;
+    border: 0.2vh dashed #b8c5d1;
+    border-radius: 0.8vh;
+    padding: clamp(2rem, 4vh, 4rem) clamp(1rem, 3vw, 3rem);
     text-align: center;
     background: #e8eef4;
     transition: all 0.3s ease;
@@ -565,19 +564,20 @@
 }
 
 .dropzone-content h4 {
-    margin: 1rem 0 0.5rem 0;
+    margin: 1vh 0 0.5vh 0;
     color: #495057;
-    font-size: 1.1rem;
+    font-size: clamp(1rem, 2.2vh, 1.4rem);
 }
 
 .dropzone-content p {
-    margin: 0.5rem 0;
+    margin: 0.5vh 0;
     color: #6c757d;
+    font-size: clamp(0.875rem, 1.8vh, 1.1rem);
 }
 
 .dropzone-content small {
     color: #868e96;
-    font-size: 0.875rem;
+    font-size: clamp(0.75rem, 1.5vh, 1rem);
 }
 
 
@@ -597,21 +597,21 @@
 }
 
 .selected-files h4 {
-    margin-bottom: 1rem;
+    margin-bottom: 1vh;
     color: #495057;
-    font-size: 1.1rem;
+    font-size: clamp(1rem, 2.2vh, 1.4rem);
 }
 
 .file-gallery {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 12px;
-    border: 1px solid #c5cdd6;
-    border-radius: 8px;
-    padding: 16px;
-    max-height: 300px;
+    grid-template-columns: repeat(auto-fill, minmax(clamp(6rem, 12vw, 10rem), 1fr));
+    gap: clamp(0.5rem, 1.5vw, 1.5rem);
+    border: 0.1vh solid #c5cdd6;
+    border-radius: 0.8vh;
+    padding: clamp(1rem, 2vh, 2rem);
+    max-height: 30vh;
     overflow-y: auto;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.5vh;
     background: #e8eef4;
 }
 
@@ -621,23 +621,23 @@
     flex-direction: column;
     align-items: center;
     background: #f5f8fb;
-    border: 1px solid #d0d7de;
-    border-radius: 8px;
-    padding: 8px;
+    border: 0.1vh solid #d0d7de;
+    border-radius: 0.8vh;
+    padding: clamp(0.5rem, 1vh, 1rem);
     transition: all 0.2s ease;
 }
 
 .file-item:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
+    box-shadow: 0 0.2vh 0.8vh rgba(0, 0, 0, 0.1);
+    transform: translateY(-0.2vh);
 }
 
 .file-thumbnail {
     width: 100%;
     aspect-ratio: 1;
     object-fit: cover;
-    border-radius: 4px;
-    margin-bottom: 8px;
+    border-radius: 0.4vh;
+    margin-bottom: 0.8vh;
 }
 
 .file-info {
@@ -649,8 +649,8 @@
 }
 
 .file-details h5 {
-    margin: 0 0 4px 0;
-    font-size: 0.75rem;
+    margin: 0 0 0.4vh 0;
+    font-size: clamp(0.65rem, 1.2vh, 0.9rem);
     color: #495057;
     white-space: nowrap;
     overflow: hidden;
@@ -660,20 +660,20 @@
 
 .file-details small {
     color: #6c757d;
-    font-size: 0.65rem;
+    font-size: clamp(0.6rem, 1vh, 0.8rem);
 }
 
 .file-remove {
     position: absolute;
-    top: 4px;
-    right: 4px;
+    top: 0.4vh;
+    right: 0.4vh;
     background: rgba(220, 53, 69, 0.9);
     color: white;
     border: none;
     border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    font-size: 12px;
+    width: clamp(1.2rem, 2.5vh, 2rem);
+    height: clamp(1.2rem, 2.5vh, 2rem);
+    font-size: clamp(0.7rem, 1.5vh, 1rem);
     cursor: pointer;
     transition: all 0.2s;
     display: flex;
@@ -694,12 +694,12 @@
 .modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 0.75rem;
+    gap: clamp(0.5rem, 1.5vw, 1rem);
 }
 
 .modal-actions .btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
+    padding: clamp(0.4rem, 1vh, 0.8rem) clamp(0.8rem, 2vw, 1.5rem);
+    font-size: clamp(0.8rem, 1.8vh, 1rem);
 }
 
 /* ===== UTILITY CLASSES ===== */
@@ -728,3 +728,4 @@ label {
 .public-area {
     margin-bottom: 1vh;
 }
+

@@ -15,46 +15,46 @@
 }
 
 .processing-content {
-    background-color: var(--tblr-body-bg, #fff);
-    padding: 2rem;
-    border-radius: var(--tblr-border-radius-lg, 0.5rem);
+    background-color: #d3d9e8;
+    padding: clamp(1.5rem, 3vh, 3rem);
+    border-radius: clamp(0.4rem, 0.8vh, 0.8rem);
     text-align: center;
-    box-shadow: var(--tblr-box-shadow-lg, 0 0.5rem 1rem rgba(0, 0, 0, 0.15));
-    min-width: 300px;
-    max-width: 400px;
+    box-shadow: 0 1vh 2vh rgba(0, 0, 0, 0.15);
+    min-width: clamp(18rem, 30vw, 25rem);
+    max-width: clamp(25rem, 40vw, 35rem);
 }
 
 .processing-content .spinner-border {
-    width: 3rem;
-    height: 3rem;
-    margin-bottom: 1rem;
-    color: #d3d0e8;
+    width: clamp(2.5rem, 4vh, 4rem);
+    height: clamp(2.5rem, 4vh, 4rem);
+    margin-bottom: clamp(0.8rem, 1.5vh, 1.5rem);
+    color: #2a2a36;
 }
 
 .processing-message {
-    font-size: 1rem;
-    margin-bottom: 1.5rem;
+    font-size: clamp(0.9rem, 2vh, 1.2rem);
+    margin-bottom: clamp(1rem, 2vh, 2rem);
     color: #2a2a36;
     font-weight: 500;
 }
 
 .progress-info {
-    margin-top: 1rem;
+    margin-top: clamp(0.8rem, 1.5vh, 1.5rem);
 }
 
 .progress-text {
-    font-size: 0.875rem;
-    margin-bottom: 0.75rem;
+    font-size: clamp(0.8rem, 1.7vh, 1rem);
+    margin-bottom: clamp(0.6rem, 1.2vh, 1rem);
     color: #71717c;
     font-weight: 500;
 }
 
 .progress-bar-container {
     width: 100%;
-    height: 0.5rem;
+    height: clamp(0.4rem, 0.8vh, 0.6rem);
     background-color: #d8e0e6;
-    border-radius: var(--tblr-border-radius, 0.375rem);
-    margin-bottom: 0.5rem;
+    border-radius: clamp(0.2rem, 0.4vh, 0.4rem);
+    margin-bottom: clamp(0.4rem, 0.8vh, 0.8rem);
     overflow: hidden;
 }
 
@@ -65,7 +65,7 @@
             #d3d0e8 0%,
             #b8b3d1 100%);
     transition: width 0.3s ease;
-    border-radius: var(--tblr-border-radius, 0.375rem);
+    border-radius: clamp(0.2rem, 0.4vh, 0.4rem);
     position: relative;
     overflow: hidden;
 }
@@ -95,17 +95,7 @@
 }
 
 .progress-percentage {
-    font-size: 0.75rem;
+    font-size: clamp(0.7rem, 1.4vh, 0.9rem);
     color: #71717c;
     font-weight: 600;
-}
-
-/* 반응형 */
-@media (max-width: 576px) {
-    .processing-content {
-        margin: 1rem;
-        padding: 1.5rem;
-        min-width: auto;
-        max-width: none;
-    }
 }
