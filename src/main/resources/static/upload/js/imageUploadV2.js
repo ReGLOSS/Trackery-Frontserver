@@ -1,8 +1,8 @@
-import {parseExif} from "./exifParser.js";
-import {tagManager} from "../../module/tags/tagManager.js";
-import {UiHelpers} from "../../module/common/uiHelpers.js";
-import {ValidationService} from "../../module/common/validationService.js";
-import {NotificationHelper} from "../../module/notification/notificationHelper.js";
+import { parseExif } from "./exifParser.js";
+import { tagManager } from "../../module/tags/tagManager.js";
+import { UiHelpers } from "../../module/common/uiHelpers.js";
+import { ValidationService } from "../../module/common/validationService.js";
+import { NotificationHelper } from "../../module/notification/notificationHelper.js";
 
 // DOM 엘리먼트 관리자
 const DOM = {
@@ -22,7 +22,7 @@ const DOM = {
     get tagAddButton() { return document.querySelector('.tag-add'); },
     get detailModal() { return document.getElementById('detailModal'); },
     get detailModalOverlay() { return document.getElementById('detailModalOverlay'); },
-    
+
     // 이미지 선택 모달 관련 DOM 요소들
     get imageSelectModal() { return document.getElementById('imageSelectModal'); },
     get imageSelectModalOverlay() { return document.getElementById('imageSelectModalOverlay'); },
@@ -37,16 +37,16 @@ const DOM = {
 
     // 필수 엘리먼트 검증 함수
     validateRequiredElements() {
-        const required = ['fileInput', 'addImageButton', 'gallery', 'imageNotSelectedBlock', 
-                         'imageSelectedBlock', 'description', 'locationBox', 'dateBox'];
+        const required = ['fileInput', 'addImageButton', 'gallery', 'imageNotSelectedBlock',
+            'imageSelectedBlock', 'description', 'locationBox', 'dateBox'];
         const missing = [];
-        
+
         for (const elementName of required) {
             if (!this[elementName]) {
                 missing.push(elementName);
             }
         }
-        
+
         if (missing.length > 0) {
             console.error('필수 DOM 엘리먼트가 없습니다:', missing);
             return false;
@@ -58,20 +58,20 @@ const DOM = {
 // 메모리 관리를 위한 Object URL 추적
 const ObjectURLManager = {
     objectUrls: new Set(),
-    
+
     create(file) {
         const url = URL.createObjectURL(file);
         this.objectUrls.add(url);
         return url;
     },
-    
+
     revoke(url) {
         if (this.objectUrls.has(url)) {
             URL.revokeObjectURL(url);
             this.objectUrls.delete(url);
         }
     },
-    
+
     revokeAll() {
         this.objectUrls.forEach(url => URL.revokeObjectURL(url));
         this.objectUrls.clear();
@@ -128,7 +128,7 @@ const ApiService = {
             };
         }
 
-        const {latitude, longitude, dateTime} = exif;
+        const { latitude, longitude, dateTime } = exif;
         const formattedDateTime = ImageProcessor.formatDateFromExif(dateTime);
 
         if (latitude == null || longitude == null) {
@@ -146,7 +146,7 @@ const ApiService = {
         try {
             // TagManager를 사용하여 태그 생성
             const tags = await tagManager.fetchAndCreateTags(latitude, longitude, formattedDateTime);
-            
+
             // 위치명 생성 (TagManager 사용)
             const displayLocationName = tagManager.extractLocationName(tags);
 
@@ -204,7 +204,7 @@ const ApiService = {
         try {
             const response = await fetch(url, {
                 method: "PUT",
-                headers: {"Content-Type": contentType},
+                headers: { "Content-Type": contentType },
                 body: blob
             });
 
@@ -235,7 +235,7 @@ const ApiService = {
             const response = await fetch("/api/images", {
                 method: "POST",
                 credentials: "include",
-                headers: {"Content-Type": "application/json"},
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     imageName: fileName,
                     imageType: imageElement.dataset.fileExtension,
@@ -274,8 +274,8 @@ const EventHandlers = {
         const files = Array.from(event.target.files);
         if (files.length === 0) return;
 
-        // 파일 개수 제한 (현재 최대 20개)
-        const MAX_FILES = 20;
+        // 파일 개수 제한 (현재 최대 50개)
+        const MAX_FILES = 50;
         if (files.length > MAX_FILES) {
             NotificationHelper.showError(`한 번에 최대 ${MAX_FILES}개의 파일만 업로드할 수 있습니다.`);
             return;
@@ -286,15 +286,15 @@ const EventHandlers = {
             try {
                 // 파일 검증
                 const fileExtension = EventHandlers.validateFile(file);
-                
+
                 // EXIF 데이터 파싱 및 위치 정보 요청
                 const parsedData = await ApiService.fetchLocation(file);
-                
+
                 // UI 요소 생성 및 추가
                 const imageData = EventHandlers.createImageData(file, fileExtension, parsedData);
                 const imageElement = EventHandlers.createImageElement(imageData);
                 const wrapper = EventHandlers.createImageWrapper(imageElement, imageData.uuid);
-                
+
                 DOM.gallery.appendChild(wrapper);
             } catch (error) {
                 NotificationHelper.showError(`${file.name}: ${error.message}`);
@@ -339,7 +339,7 @@ const EventHandlers = {
 
     // 이미지 데이터 객체 생성
     createImageData(file, fileExtension, parsedData) {
-        const {location = '', dateTime = '', tags = []} = parsedData;
+        const { location = '', dateTime = '', tags = [] } = parsedData;
         const objectUrl = ObjectURLManager.create(file);
         const uuid = crypto.randomUUID();
 
@@ -430,7 +430,7 @@ const EventHandlers = {
 
         document.querySelector('#mapPickerModal').classList.remove('show');
 
-        const {preview, location, dateTime, description, tags, public: isPublic} = target.dataset;
+        const { preview, location, dateTime, description, tags, public: isPublic } = target.dataset;
 
         document.querySelector(".image-detail").src = preview;
         DOM.description.value = description;
@@ -528,22 +528,22 @@ const EventHandlers = {
     // 날짜 변경 핸들러
     async onDateChange() {
         ValidationService.validateLocationAndDate();
-        
+
         // 날짜 변경 시 계절 태그 업데이트 (TagManager 사용)
         const selectedImage = document.querySelector(".gallery-image.selected");
         if (selectedImage) {
             await EventHandlers.updateSeasonalTags(selectedImage);
         }
     },
-    
+
     // 계절 태그 업데이트 헬퍼 함수 (TagManager 사용)
     async updateSeasonalTags(selectedImage) {
         const dateTime = selectedImage.dataset.dateTime;
-        
+
         if (!dateTime) {
             return;
         }
-        
+
         try {
             // 기존 태그 정보 가져오기
             let existingTags = [];
@@ -552,19 +552,19 @@ const EventHandlers = {
             } catch (error) {
                 console.error('기존 태그 파싱 오류:', error);
             }
-            
+
             // 새로운 계절 태그 가져오기
             const seasonTags = await tagManager.apiService.fetchSeasonTags(dateTime);
-            
+
             // TagManager를 사용하여 계절 태그 업데이트
             const updatedTags = tagManager.handleSeasonChange(existingTags, seasonTags);
-            
+
             // UI 업데이트
             UiHelpers.addTags(updatedTags);
-            
+
             // 선택된 이미지의 태그 정보 업데이트
             selectedImage.dataset.tags = JSON.stringify(updatedTags);
-            
+
         } catch (error) {
             console.error('계절 태그 업데이트 중 오류:', error);
         }
@@ -577,7 +577,7 @@ const EventHandlers = {
         if (currentlySelected) {
             UiHelpers.updateSelectedImageTags();
         }
-        
+
         DOM.whileUploadingModal.style.display = "flex";
         const imageWrappers = document.querySelectorAll(".image-wrapper");
 
@@ -590,12 +590,12 @@ const EventHandlers = {
         const failedImageUUIDs = [];
 
         // SSE 연결 상태 로그
-        eventSource.onopen = function(event) {
+        eventSource.onopen = function (event) {
             console.log('SSE 연결 성공:', event);
         };
 
         // SSE 메시지 처리 - 이미지 처리 완료 알림을 받으면 결과 표시
-        eventSource.onmessage = function(event) {
+        eventSource.onmessage = function (event) {
             console.log('SSE 원본 메시지 수신:', event.data);
 
             // data: 접두사가 있는 경우만 처리 (SSE 데이터 메시지)
@@ -639,7 +639,7 @@ const EventHandlers = {
             }
         };
 
-        eventSource.onerror = function(event) {
+        eventSource.onerror = function (event) {
             console.error('SSE 연결 오류:', event);
             console.error('SSE readyState:', eventSource.readyState);
             console.error('SSE url:', eventSource.url);
@@ -649,7 +649,7 @@ const EventHandlers = {
         // 이미지 업로드만 수행하고, 결과 표시는 SSE를 통해서만 처리
         for (const imageWrapper of imageWrappers) {
             const img = imageWrapper.querySelector(".gallery-image");
-            
+
             try {
                 const url = await ApiService.requestPresignedPutUrl(img);
                 await ApiService.uploadImageToS3(img, url);
@@ -683,7 +683,7 @@ const EventHandlers = {
 
         console.log('UiHelpers.hideUploadingBlockAndShowResultBlock 호출');
         await UiHelpers.hideUploadingBlockAndShowResultBlock();
-        
+
         // 모든 이미지 업로드 성공 시 홈에서 플래그로 지도 업데이트 처리
         if (failedImageUUIDs.length === 0) {
             // localStorage에 플래그 설정하여 홈 페이지에서 지도 업데이트 처리
@@ -704,12 +704,12 @@ const EventHandlers = {
         const imageWrapper = button.closest(".image-wrapper");
         if (imageWrapper) {
             const img = imageWrapper.querySelector(".gallery-image");
-            
+
             // Object URL 메모리 정리
             if (img && img.dataset.preview) {
                 ObjectURLManager.revoke(img.dataset.preview);
             }
-            
+
             if (img && img.classList.contains("selected")) {
                 // If the deleted image was selected, clear the detail view and close modal
                 DOM.imageSelectedBlock.style.display = "none";
@@ -754,7 +754,7 @@ const EventHandlers = {
 
 
     // === 이미지 선택 모달 관련 핸들러들 ===
-    
+
     // 모달 표시
     showImageSelectModal() {
         if (DOM.imageSelectModal) {
@@ -822,11 +822,11 @@ const EventHandlers = {
 
         const files = Array.from(event.dataTransfer.files);
         const imageFiles = files.filter(file => file.type.startsWith('image/'));
-        
+
         if (imageFiles.length > 0) {
             ImageSelectModal.addFilesToList(imageFiles);
         }
-        
+
         if (imageFiles.length !== files.length) {
             NotificationHelper.showError(`${files.length - imageFiles.length}개의 파일은 이미지가 아니어서 제외되었습니다.`);
         }
@@ -845,7 +845,7 @@ const EventHandlers = {
 
         // 처리 중 표시 UI
         const processingIndicator = EventHandlers.showProcessingIndicator();
-        
+
         // 총 개수 초기화
         EventHandlers.initializeProcessingProgress(processingIndicator, files.length);
 
@@ -854,22 +854,22 @@ const EventHandlers = {
             const processedImages = [];
             const totalFiles = files.length;
             let processedCount = 0;
-            
+
             for (const file of files) {
                 try {
                     // ValidationService를 통한 파일 검증
                     const fileExtension = EventHandlers.validateFile(file);
-                    
+
                     // EXIF 데이터 파싱 및 위치 정보 요청
                     const parsedData = await ApiService.fetchLocation(file);
-                    
+
                     // 이미지 데이터 생성
                     const imageData = EventHandlers.createImageData(file, fileExtension, parsedData);
                     processedImages.push(imageData);
-                    
+
                     processedCount++;
                     EventHandlers.updateProcessingProgress(processingIndicator, processedCount, totalFiles);
-                    
+
                 } catch (error) {
                     NotificationHelper.showError(`${file.name}: ${error.message}`);
                     processedCount++;
@@ -916,7 +916,7 @@ const EventHandlers = {
         `;
 
         document.body.appendChild(indicator);
-        
+
         // 애니메이션 효과
         requestAnimationFrame(() => {
             indicator.style.opacity = '1';
@@ -930,7 +930,7 @@ const EventHandlers = {
         if (!indicator) return;
 
         const percentage = Math.round((currentCount / totalCount) * 100);
-        
+
         const currentCountElement = indicator.querySelector('.current-count');
         const totalCountElement = indicator.querySelector('.total-count');
         const progressBar = indicator.querySelector('.progress-bar');
@@ -948,10 +948,10 @@ const EventHandlers = {
     // 처리 시작 시 총 개수 설정
     initializeProcessingProgress(indicator, totalCount) {
         if (!indicator) return;
-        
+
         const totalCountElement = indicator.querySelector('.total-count');
         if (totalCountElement) totalCountElement.textContent = totalCount;
-        
+
         this.updateProcessingProgress(indicator, 0, totalCount);
     },
 
@@ -979,7 +979,7 @@ const ImageSelectModal = {
         const MAX_FILES = 20;
         const currentCount = this.selectedFiles.length;
         const newFilesCount = files.length;
-        
+
         if (currentCount + newFilesCount > MAX_FILES) {
             NotificationHelper.showError(`최대 ${MAX_FILES}개의 파일만 선택할 수 있습니다.`);
             return;
@@ -991,7 +991,7 @@ const ImageSelectModal = {
             try {
                 EventHandlers.validateFile(file);
                 // 같은 이름의 파일이 이미 있는지 확인
-                const isDuplicate = this.selectedFiles.some(existing => 
+                const isDuplicate = this.selectedFiles.some(existing =>
                     existing.name === file.name && existing.size === file.size
                 );
                 if (!isDuplicate) {
@@ -1035,10 +1035,10 @@ const ImageSelectModal = {
         this.selectedFiles.forEach((file, index) => {
             const fileItem = document.createElement('div');
             fileItem.className = 'file-item';
-            
+
             const fileSize = this.formatFileSize(file.size);
             const thumbnail = ObjectURLManager.create(file);
-            
+
             fileItem.innerHTML = `
                 <img src="${thumbnail}" alt="${file.name}" class="file-thumbnail" />
                 <div class="file-info">
@@ -1049,7 +1049,7 @@ const ImageSelectModal = {
                 </div>
                 <button class="file-remove" onclick="ImageSelectModal.removeFile(${index})">&times;</button>
             `;
-            
+
             fileGallery.appendChild(fileItem);
         });
     },
@@ -1131,7 +1131,7 @@ function initialize() {
         console.error('초기화 실패: 필수 DOM 엘리먼트가 누락되었습니다.');
         return;
     }
-    
+
     // 유효성 검증 리스너 설정
     ValidationService.setupValidationListeners();
 
@@ -1151,7 +1151,7 @@ function initialize() {
                 }
 
                 ValidationService.validateLocationAndDate();
-                
+
                 // 날짜 변경 시 계절 태그 업데이트 (TagManager 사용)
                 await EventHandlers.updateSeasonalTags(selectedImage);
             }
@@ -1181,7 +1181,7 @@ function initialize() {
     if (DOM.locationBox) DOM.locationBox.addEventListener("change", EventHandlers.onLocationChange);
     if (DOM.dateBox) DOM.dateBox.addEventListener("change", EventHandlers.onDateChange);
     if (DOM.imageUploadBtn) DOM.imageUploadBtn.addEventListener("click", EventHandlers.onImageUploadClick);
-    
+
     // 태그 관련 이벤트 리스너 (null 체크 포함)
     if (DOM.tagAddButton) DOM.tagAddButton.addEventListener("click", EventHandlers.onTagAddClick);
     if (DOM.tagInput) DOM.tagInput.addEventListener("keydown", EventHandlers.onTagInputKeydown);
