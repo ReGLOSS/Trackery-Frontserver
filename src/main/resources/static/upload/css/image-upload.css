@@ -95,20 +95,18 @@
     display: none;
 }
 
-
 /* ===== GALLERY SECTION ===== */
 .gallery {
     flex: 2;
     display: grid;
     grid-template-columns: repeat(4, 18vh);
     grid-auto-rows: 18vh;
-    gap: 4vh;
+    gap: 2vw;
     padding: 4vh;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: #b8c5d1 transparent;
     height: 80vh;
-    border: 0.1vh solid #e0e0e0;
     border-radius: var(--border-radius-md);
     justify-content: center;
 }
