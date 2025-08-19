@@ -145,7 +145,7 @@
 }
 
 .gallery-image.invalid {
-    border: 0.1vh solid #d63939;
+    border: 0.3vh solid #d63939;
 }
 
 .uploading-modal-gallery-image {
