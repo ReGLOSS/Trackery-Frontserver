@@ -78,7 +78,7 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 7vh 0 7vh 7vh !important;
+    padding: 5vh 0 5vh 5vh !important;
     width: clamp(18.75rem, 54vw, 62.5%) !important;
 }
 
@@ -86,11 +86,36 @@
 .gallery {
     flex: 2;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 5%;
-    padding: 3%;
+    grid-template-columns: repeat(4, 18vh);
+    grid-auto-rows: 18vh;
+    gap: 4vh;
+    padding: 4vh;
     overflow-y: auto;
-    scrollbar-width: none;
+    scrollbar-width: thin;
+    scrollbar-color: #b8c5d1 transparent;
+    height: 80vh;
+    border: 0.1vh solid #e0e0e0;
+    border-radius: 0.8vh;
+    justify-content: center;
+}
+
+.gallery::-webkit-scrollbar {
+    width: 0.8vh;
+}
+
+.gallery::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 0.4vh;
+}
+
+.gallery::-webkit-scrollbar-thumb {
+    background: #b8c5d1;
+    border-radius: 0.4vh;
+    transition: background 0.3s ease;
+}
+
+.gallery::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
 }
 
 #uploadingModalGallery {
@@ -108,14 +133,15 @@
 /* ===== IMAGE STYLES ===== */
 .gallery-image {
     width: 100%;
-    aspect-ratio: 1/1;
+    height: 100%;
     object-fit: cover;
     cursor: pointer;
     transition: transform 0.2s ease;
+    display: block;
 }
 
 .gallery-image:hover {
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
 .gallery-image.invalid {
@@ -136,30 +162,52 @@
 
 .image-wrapper {
     position: relative;
-    width: 16vh;
-    aspect-ratio: 1/1;
+    width: 18vh;
+    height: 18vh;
     overflow: hidden;
+    border-radius: 0.8vh;
+    border: 0.1vh solid #ced4da;
 }
 
 .image-wrapper .gallery-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
 }
 
 .add-image {
-    width: 16vh;
-    aspect-ratio: 1/1;
-    background-color: #e0e0e0;
+    width: 18vh;
+    height: 18vh;
+    background-color: transparent;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
+    border: 0.2vh dashed #b8c5d1;
+    border-radius: 0.8vh;
+    transition: all 0.3s ease;
+}
+
+.add-image:hover {
+    background-color: rgba(211, 217, 232, 0.3);
+    border-color: #2a2a36;
 }
 
 .add-image span {
     font-size: clamp(20px, 4vw, 6vh);
     color: #999;
+}
+
+.add-image .image-add {
+    width: 40%;
+    height: 40%;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+}
+
+.add-image:hover .image-add {
+    opacity: 0.8;
 }
 
 /* ===== IMAGE STATES ===== */
@@ -728,4 +776,3 @@ label {
 .public-area {
     margin-bottom: 1vh;
 }
-
