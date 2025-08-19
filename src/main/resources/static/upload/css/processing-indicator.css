@@ -28,13 +28,13 @@
     width: 3rem;
     height: 3rem;
     margin-bottom: 1rem;
-    color: var(--tblr-primary, #206bc4);
+    color: #d3d0e8;
 }
 
 .processing-message {
     font-size: 1rem;
     margin-bottom: 1.5rem;
-    color: var(--tblr-body-color, #1e293b);
+    color: #2a2a36;
     font-weight: 500;
 }
 
@@ -45,14 +45,14 @@
 .progress-text {
     font-size: 0.875rem;
     margin-bottom: 0.75rem;
-    color: var(--tblr-secondary, #667085);
+    color: #71717c;
     font-weight: 500;
 }
 
 .progress-bar-container {
     width: 100%;
     height: 0.5rem;
-    background-color: var(--tblr-border-color-light, #e5e7eb);
+    background-color: #d8e0e6;
     border-radius: var(--tblr-border-radius, 0.375rem);
     margin-bottom: 0.5rem;
     overflow: hidden;
@@ -61,11 +61,9 @@
 .progress-bar {
     width: 0%;
     height: 100%;
-    background: linear-gradient(
-        90deg, 
-        var(--tblr-primary, #206bc4) 0%, 
-        var(--tblr-blue, #0054a6) 100%
-    );
+    background: linear-gradient(90deg,
+            #d3d0e8 0%,
+            #b8b3d1 100%);
     transition: width 0.3s ease;
     border-radius: var(--tblr-border-radius, 0.375rem);
     position: relative;
@@ -79,12 +77,10 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(
-        90deg,
-        transparent 0%,
-        rgba(255, 255, 255, 0.2) 50%,
-        transparent 100%
-    );
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.2) 50%,
+            transparent 100%);
     animation: shimmer 2s infinite;
 }
 
@@ -92,6 +88,7 @@
     0% {
         transform: translateX(-100%);
     }
+
     100% {
         transform: translateX(100%);
     }
@@ -99,7 +96,7 @@
 
 .progress-percentage {
     font-size: 0.75rem;
-    color: var(--tblr-secondary, #667085);
+    color: #71717c;
     font-weight: 600;
 }
 

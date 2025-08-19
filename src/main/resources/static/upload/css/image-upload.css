@@ -66,6 +66,7 @@
         opacity: 0;
         transform: translateY(-10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -497,7 +498,7 @@
 
 .image-select-container {
     position: relative;
-    background: white;
+    background: #d3d9e8;
     border-radius: 12px;
     width: 90%;
     max-width: 600px;
@@ -512,8 +513,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 1.5rem 2rem;
-    border-bottom: 1px solid #e9ecef;
-    background: #f8f9fa;
+    border-bottom: 1px solid #c5cdd6;
+    background: #d6e0e6;
 }
 
 .image-select-header h3 {
@@ -548,19 +549,19 @@
 }
 
 .dropzone-area {
-    border: 2px dashed #dee2e6;
+    border: 2px dashed #b8c5d1;
     border-radius: 8px;
     padding: 3rem 2rem;
     text-align: center;
-    background: #fafbfc;
+    background: #e8eef4;
     transition: all 0.3s ease;
     cursor: pointer;
 }
 
 .dropzone-area:hover,
 .dropzone-area.drag-over {
-    border-color: #007bff;
-    background: rgba(0, 123, 255, 0.05);
+    border-color: #2a2a36;
+    background: rgba(42, 42, 54, 0.1);
 }
 
 .dropzone-content h4 {
@@ -579,10 +580,12 @@
     font-size: 0.875rem;
 }
 
+
+
 .browse-btn {
     background: none;
     border: none;
-    color: #007bff;
+    color: #2a2a36;
     text-decoration: underline;
     cursor: pointer;
     font: inherit;
@@ -590,7 +593,7 @@
 }
 
 .browse-btn:hover {
-    color: #0056b3;
+    color: #71717c;
 }
 
 .selected-files h4 {
@@ -603,13 +606,13 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 12px;
-    border: 1px solid #dee2e6;
+    border: 1px solid #c5cdd6;
     border-radius: 8px;
     padding: 16px;
     max-height: 300px;
     overflow-y: auto;
     margin-bottom: 1.5rem;
-    background: #fafbfc;
+    background: #e8eef4;
 }
 
 .file-item {
@@ -617,8 +620,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: white;
-    border: 1px solid #e9ecef;
+    background: #f5f8fb;
+    border: 1px solid #d0d7de;
     border-radius: 8px;
     padding: 8px;
     transition: all 0.2s ease;
