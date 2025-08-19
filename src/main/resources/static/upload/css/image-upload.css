@@ -209,7 +209,7 @@
 }
 
 .add-image span {
-    font-size: clamp(20px, 4vw, 6vh);
+    font-size: clamp(1.25rem, 4vw, 6vh);
     color: var(--text-muted);
 }
 
@@ -257,7 +257,7 @@
     justify-content: center;
     padding: 70% 0;
     font-weight: bold;
-    font-size: clamp(14px, 3vw, 2.5vh);
+    font-size: clamp(0.875rem, 3vw, 2.5vh);
     animation: fadeIn 0.3s ease-in-out;
 }
 
@@ -324,15 +324,15 @@
 /* ===== BUTTONS ===== */
 .close-button {
     position: absolute;
-    top: 5px;
-    right: 5px;
+    top: 0.3rem;
+    right: 0.3rem;
     background-color: rgba(0, 0, 0, 0.5);
     color: white;
     border: none;
     border-radius: 50%;
-    width: 25px;
-    height: 25px;
-    font-size: 16px;
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 1rem;
     cursor: pointer;
     display: flex;
     justify-content: center;
@@ -427,7 +427,7 @@
     border-radius: 1.2vh;
     font-size: 1.2vh;
     outline: none;
-    min-width: 120px;
+    min-width: 7.5rem;
 }
 
 .tag-input:focus {
@@ -683,17 +683,17 @@
 }
 
 .uploading-modal-gallery::-webkit-scrollbar {
-    width: clamp(3px, 0.6vh, 5px);
+    width: clamp(0.2rem, 0.6vh, 0.3rem);
 }
 
 .uploading-modal-gallery::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.1);
-    border-radius: clamp(2px, 0.4vh, 3px);
+    border-radius: clamp(0.125rem, 0.4vh, 0.2rem);
 }
 
 .uploading-modal-gallery::-webkit-scrollbar-thumb {
     background: rgba(42, 42, 54, 0.3);
-    border-radius: clamp(2px, 0.4vh, 3px);
+    border-radius: clamp(0.125rem, 0.4vh, 0.2rem);
 }
 
 .uploading-modal-gallery::-webkit-scrollbar-thumb:hover {
@@ -852,6 +852,8 @@
     border-radius: 0.8vh;
     padding: clamp(0.5rem, 1vh, 1rem);
     transition: all 0.2s ease;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .file-item:hover {
@@ -873,6 +875,8 @@
     align-items: center;
     width: 100%;
     text-align: center;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .file-details h5 {
@@ -883,6 +887,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    word-break: break-all;
+    line-height: 1.2;
 }
 
 .file-details small {

@@ -1047,8 +1047,17 @@ const ImageSelectModal = {
                         <small>${fileSize}</small>
                     </div>
                 </div>
-                <button class="file-remove" onclick="ImageSelectModal.removeFile(${index})">&times;</button>
+                <button class="file-remove" data-index="${index}">&times;</button>
             `;
+
+            // 삭제 버튼에 이벤트 리스너 추가
+            const removeButton = fileItem.querySelector('.file-remove');
+            removeButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const fileIndex = parseInt(e.target.dataset.index);
+                this.removeFile(fileIndex);
+            });
 
             fileGallery.appendChild(fileItem);
         });
