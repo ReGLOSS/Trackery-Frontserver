@@ -578,7 +578,7 @@ const EventHandlers = {
             UiHelpers.updateSelectedImageTags();
         }
 
-        DOM.whileUploadingModal.style.display = "flex";
+        DOM.whileUploadingModal.classList.add("show");
         const imageWrappers = document.querySelectorAll(".image-wrapper");
 
         // SSE 연결 설정
@@ -692,7 +692,7 @@ const EventHandlers = {
             // 5초 후 모달 닫고 새로고침
             setTimeout(() => {
                 console.log('모달 닫기 및 페이지 새로고침 실행');
-                DOM.whileUploadingModal.style.display = "none";
+                DOM.whileUploadingModal.classList.remove("show");
                 window.location.reload();
             }, 5000);
         }

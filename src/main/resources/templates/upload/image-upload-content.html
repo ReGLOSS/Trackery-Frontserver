@@ -1,8 +1,6 @@
 <!DOCTYPE html>
-<html
-        lang="ko"
-        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-        layout:decorate="~{common/layout}">
+<html lang="ko" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{common/layout}">
+
 <head>
     <title>Trackery - 이미지 업로드</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
@@ -13,131 +11,182 @@
     <link th:replace="~{map/map-picker-modal :: mapPickerModalCss}">
     <script th:replace="~{map/map-picker-modal :: kostatMapScript}"></script>
 </head>
+
 <body>
-<section layout:fragment="content" class="image-upload-container">
-    <!--업로드 중 모달-->
-    <div class="while-uploading-modal">
-        <div class="uploading-modal-container">
-            <div id="uploadingBlock" class="uploading-modal-block">
-                <div class="spinner-border"></div>
-                이미지를 업로드하는 중입니다. 잠시만 기다려주세요...
-            </div>
+    <section layout:fragment="content" class="image-upload-container">
+        <!--업로드 중 모달-->
+        <div class="while-uploading-modal" id="whileUploadingModal" style="display: none;">
+            <div class="uploading-modal-content">
+                <div id="uploadingBlock" class="uploading-block">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">업로드 중...</span>
+                    </div>
+                    <div class="uploading-message">이미지를 업로드하는 중입니다</div>
+                    <div class="uploading-submessage">잠시만 기다려주세요...</div>
+                </div>
 
-            <div id="resultInfoBlock" class="uploading-modal-block">
-                <p id="uploadedImageCount">N장의 이미지를 성공적으로 업로드했습니다.</p>
+                <div id="resultInfoBlock" class="result-block" style="display: none;">
+                    <!-- 성공 결과 -->
+                    <div class="result-success-container">
+                        <div class="result-icon-large success">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+                                stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                <path d="M5 12l5 5l10 -10"></path>
+                            </svg>
+                        </div>
+                        <div class="result-main-title">업로드 완료!</div>
+                        <div class="result-main-message" id="uploadedImageCount">N장의 이미지를 성공적으로 업로드했습니다.</div>
+                    </div>
 
-                <div id="failedUploadInfoGroup">
-                    <p id="uploadFailedImageCount">N장의 이미지는 업로드에 실패했습니다.</p>
-                    <p class="text-muted upload-failed-gallery-label">업로드에 실패한 이미지</p>
-                    <div id="uploadingModalGallery" class="uploading-modal-gallery"></div>
+                    <!-- 실패 결과 -->
+                    <div id="failedUploadInfoGroup" class="result-failed-container" style="display: none;">
+                        <div class="result-icon-large warning">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+                                stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                <path d="M12 9v2m0 4v.01"></path>
+                                <path
+                                    d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75">
+                                </path>
+                            </svg>
+                        </div>
+                        <div class="result-warning-title">일부 업로드 실패</div>
+                        <div class="result-warning-message" id="uploadFailedImageCount">N장의 이미지는 업로드에 실패했습니다.</div>
+                    </div>
+
+                    <!-- 실패한 이미지 갤러리 -->
+                    <div class="failed-images-section" style="display: none;">
+                        <div class="failed-images-header">
+                            <div class="failed-images-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                    stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                    <path d="M15 8h.01"></path>
+                                    <path
+                                        d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12z">
+                                    </path>
+                                    <path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5"></path>
+                                    <path d="M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3"></path>
+                                </svg>
+                            </div>
+                            <div class="failed-images-title">업로드에 실패한 이미지</div>
+                        </div>
+                        <div id="uploadingModalGallery" class="uploading-modal-gallery"></div>
+                    </div>
+
+
                 </div>
             </div>
         </div>
-    </div>
 
-    <!--  메인탭-->
-    <div class="base-container">
-        <div class="gallery">
-            <div class="add-image">
-                <input type="file" id="imageInput" accept="image/*" multiple style="display: none;">
-                <img src="/upload/icon/image-upload.svg" alt="image-add" class="image-add">
-            </div>
-        </div>
-
-        <div class="upload-button-container">
-            <button class="btn btn-dark" id="imageUploadBtn">이미지 업로드</button>
-        </div>
-    </div>
-    <!--  이미지 첨부 모달-->
-    <div class="image-select-modal" id="imageSelectModal" style="display: none;">
-        <div class="modal-overlay" id="imageSelectModalOverlay"></div>
-        <div class="image-select-container">
-            <div class="image-select-header">
-                <h3>이미지 선택</h3>
-                <button class="modal-close-btn" id="imageSelectModalClose">&times;</button>
-            </div>
-            <div class="image-select-body">
-                <div class="dropzone-area" id="dropzoneArea">
-                    <div class="dropzone-content">
-                        <h4>이미지를 드래그하여 업로드하세요.</h4>
-                        <p>또는 <button class="browse-btn" id="browseBtn">파일 선택</button>하여 이미지를 추가할 수 있습니다.</p>
-                        <small>최대 50개의 JPG, PNG, WebP 파일만 지원됩니다. (최대 장당 30MB)</small>
-                    </div>
-                </div>
-                <div class="selected-files" id="selectedFiles" style="display: none;">
-                    <h4>선택된 파일</h4>
-                    <div class="file-gallery" id="fileGallery"></div>
-                    <div class="modal-actions">
-                        <button class="btn btn-secondary" id="cancelBtn">취소</button>
-                        <button class="btn btn-primary" id="addFilesBtn">파일 추가</button>
-                    </div>
+        <!--  메인탭-->
+        <div class="base-container">
+            <div class="gallery">
+                <div class="add-image">
+                    <input type="file" id="imageInput" accept="image/*" multiple style="display: none;">
+                    <img src="/upload/icon/image-upload.svg" alt="image-add" class="image-add">
                 </div>
             </div>
-            <input type="file" id="modalFileInput" accept="image/*" multiple style="display: none;">
+
+            <div class="upload-button-container">
+                <button class="btn btn-dark" id="imageUploadBtn">이미지 업로드</button>
+            </div>
         </div>
-    </div>
-
-    <!--  우측 사이드 모달-->
-    <div class="detail-modal" id="detailModal" style="display: none;">
-        <div class="modal-overlay" id="detailModalOverlay"></div>
-        <div class="detail-container">
-            <div class="modal-body">
-                <div class="image-not-selected">
-                    <p>사진을 선택하면 <br> 추가 정보를 기입할 수 있습니다.</p>
+        <!--  이미지 첨부 모달-->
+        <div class="image-select-modal" id="imageSelectModal" style="display: none;">
+            <div class="modal-overlay" id="imageSelectModalOverlay"></div>
+            <div class="image-select-container">
+                <div class="image-select-header">
+                    <h3>이미지 선택</h3>
+                    <button class="modal-close-btn" id="imageSelectModalClose">&times;</button>
                 </div>
-                <div class="image-selected">
-                    <div class="image-container">
-                          <img src="/images/default-image4.webp" class="image-detail" alt="선택된 이미지">
-                    </div>
-
-                    <div class="description-area">
-                        <label for="modalDescription">설명</label>
-                        <textarea id="modalDescription" class="form-control" rows="5"
-                        placeholder="여기에 설명을 입력하세요. (이미지 설명은 500자를 초과할 수 없습니다.)"
-                                  style="resize:none;"></textarea>
-                    </div>
-
-                    <div class="tag-area">
-                        <label>태그</label>
-                        <div class="tag-box" id="modalTagBox">
-                            <input type="text" class="tag-input" placeholder="태그 입력 후 Enter" style="display: none;">
-                            <button class="tag-add">+</button>
+                <div class="image-select-body">
+                    <div class="dropzone-area" id="dropzoneArea">
+                        <div class="dropzone-content">
+                            <h4>이미지를 드래그하여 업로드하세요.</h4>
+                            <p>또는 <button class="browse-btn" id="browseBtn">파일 선택</button>하여 이미지를 추가할 수 있습니다.</p>
+                            <small>최대 50개의 JPG, PNG, WebP 파일만 지원됩니다. (최대 장당 30MB)</small>
                         </div>
                     </div>
+                    <div class="selected-files" id="selectedFiles" style="display: none;">
+                        <h4>선택된 파일</h4>
+                        <div class="file-gallery" id="fileGallery"></div>
+                        <div class="modal-actions">
+                            <button class="btn btn-secondary" id="cancelBtn">취소</button>
+                            <button class="btn btn-primary" id="addFilesBtn">파일 추가</button>
+                        </div>
+                    </div>
+                </div>
+                <input type="file" id="modalFileInput" accept="image/*" multiple style="display: none;">
+            </div>
+        </div>
 
-                    <div class="location-area">
-                        <div class="location-box">
-                            <label for="modalLocationBox">위치</label>
+        <!--  우측 사이드 모달-->
+        <div class="detail-modal" id="detailModal" style="display: none;">
+            <div class="modal-overlay" id="detailModalOverlay"></div>
+            <div class="detail-container">
+                <div class="modal-body">
+                    <div class="image-not-selected">
+                        <p>사진을 선택하면 <br> 추가 정보를 기입할 수 있습니다.</p>
+                    </div>
+                    <div class="image-selected">
+                        <div class="image-container">
+                            <img src="/images/default-image4.webp" class="image-detail" alt="선택된 이미지">
+                        </div>
+
+                        <div class="description-area">
+                            <label for="modalDescription">설명</label>
+                            <textarea id="modalDescription" class="form-control" rows="5"
+                                placeholder="여기에 설명을 입력하세요. (이미지 설명은 500자를 초과할 수 없습니다.)"
+                                style="resize:none;"></textarea>
+                        </div>
+
+                        <div class="tag-area">
+                            <label>태그</label>
+                            <div class="tag-box" id="modalTagBox">
+                                <input type="text" class="tag-input" placeholder="태그 입력 후 Enter" style="display: none;">
+                                <button class="tag-add">+</button>
+                            </div>
+                        </div>
+
+                        <div class="location-area">
+                            <div class="location-box">
+                                <label for="modalLocationBox">위치</label>
                                 <a href="#" class="text-muted" id="modalEditLocationBtn">여기가 아닌가요?</a>
-                                    <input id="modalLocationBox" class="form-control" type="text" value="" readonly/>
+                                <input id="modalLocationBox" class="form-control" type="text" value="" readonly />
+                            </div>
                         </div>
-                    </div>
 
-                    <div th:replace="~{map/map-picker-modal :: mapPickerModal(title, 'mapPickerModal')}"></div>
+                        <div th:replace="~{map/map-picker-modal :: mapPickerModal(title, 'mapPickerModal')}"></div>
 
-                    <div class="date-area">
-                        <div class="date-box">
-                            <label for="modalDateBox">날짜</label>
+                        <div class="date-area">
+                            <div class="date-box">
+                                <label for="modalDateBox">날짜</label>
                                 <a href="#" class="text-muted" id="modalEditDateBtn">다른 날 다녀오셨나요?</a>
-                                    <input id="modalDateBox" class="form-control" type="text" value="" readonly/>
+                                <input id="modalDateBox" class="form-control" type="text" value="" readonly />
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="public-area">
-                        <label for="modalPublic">
-                            이 사진을 공개 할까요?
-                            <input type="checkbox" id="modalPublic"/>
-                        </label>
+                        <div class="public-area">
+                            <label for="modalPublic">
+                                이 사진을 공개 할까요?
+                                <input type="checkbox" id="modalPublic" />
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+    </section>
+    <div layout:fragment="scripts">
+        <script src="/common/js/exif-js/exif.js"></script>
+        <script type="module" src="/upload/js/imageUploadV2.js"></script>
+        <script th:replace="~{map/map-picker-modal :: mapPickerModalJs}"></script>
     </div>
-</section>
-<div layout:fragment="scripts">
-    <script src="/common/js/exif-js/exif.js"></script>
-    <script type="module" src="/upload/js/imageUploadV2.js"></script>
-    <script th:replace="~{map/map-picker-modal :: mapPickerModalJs}"></script>
-</div>
 </body>
+
 </html>
