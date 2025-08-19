@@ -141,6 +141,8 @@
 .profile-image-block {
     display: flex;
     justify-content: center;
+    width: fit-content;
+    margin: 0 auto;
 }
 
 .profile-image-block:hover .profile-image-overlay {
