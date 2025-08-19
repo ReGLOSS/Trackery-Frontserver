@@ -976,7 +976,7 @@ const ImageSelectModal = {
     // 파일 목록에 파일 추가
     addFilesToList(files) {
         // 파일 개수 제한 확인
-        const MAX_FILES = 20;
+        const MAX_FILES = 50;
         const currentCount = this.selectedFiles.length;
         const newFilesCount = files.length;
 
