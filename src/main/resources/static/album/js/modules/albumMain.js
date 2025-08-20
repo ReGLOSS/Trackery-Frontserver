@@ -31,8 +31,6 @@ window.EventHandlers = EventHandlers;
 // 초기화 함수
 // ============================================================
 function initialize() {
-    console.log("Album.js 모듈 로드 완료");
-
     // 이벤트 리스너 등록
     setupEventListeners();
 
