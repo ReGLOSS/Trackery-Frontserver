@@ -49,7 +49,7 @@ function initialize() {
 function setupEventListeners() {
     // 모달 닫기 버튼
     if (DOM.closeBtn) {
-        DOM.closeBtn.addEventListener("click", EventHandlers.closeModal);
+        DOM.closeBtn.addEventListener("click", () => EventHandlers.closeModal());
     }
 
     // 앨범 편집 버튼
