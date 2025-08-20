@@ -868,9 +868,28 @@ export class MapManager {
     
     // 이미지 업로드/수정 완료 후 호출할 메서드
     async onImageUpdated() {
-        await this.refreshMapColors();
-        if (this.isUserLoggedIn()) {
-            await this.refreshUserStats();
+        // 알림 모듈 동적 import
+        const { NotificationHelper } = await import('../../module/notification/notificationHelper.js');
+        
+        // 지도 업데이트 시작 알림
+        const updateNotification = NotificationHelper.showMapUpdateNotification('지도를 업데이트하는 중...', 'info');
+        
+        try {
+            await this.refreshMapColors();
+            if (this.isUserLoggedIn()) {
+                await this.refreshUserStats();
+            }
+            
+            // 업데이트 완료 알림
+            NotificationHelper.hideNotification(updateNotification);
+            NotificationHelper.showMapUpdateNotification('지도 업데이트가 완료되었습니다.', 'success');
+            
+        } catch (error) {
+            console.error('Error updating map after image change:', error);
+            
+            // 에러 알림
+            NotificationHelper.hideNotification(updateNotification);
+            NotificationHelper.showMapUpdateNotification('지도 업데이트 중 오류가 발생했습니다.', 'error');
         }
     }
 }

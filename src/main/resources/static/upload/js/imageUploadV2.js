@@ -689,6 +689,9 @@ const EventHandlers = {
             // localStorage에 플래그 설정하여 홈 페이지에서 지도 업데이트 처리
             localStorage.setItem('trackery_map_update_needed', Date.now().toString());
 
+            // 지도 업데이트 알림 표시
+            NotificationHelper.showSuccess('이미지 업로드가 완료되었습니다. 지도가 업데이트됩니다.');
+
             // 5초 후 모달 닫고 새로고침
             setTimeout(() => {
                 console.log('모달 닫기 및 페이지 새로고침 실행');
