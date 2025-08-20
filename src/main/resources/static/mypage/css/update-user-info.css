@@ -176,7 +176,7 @@
 .block-title {
     margin-bottom: 10px;
     font-weight: 600;
-    font-size: 14px;
+    font-size: clamp(14px, 1.5vmin, 50px);
     color: #333;
 }
 

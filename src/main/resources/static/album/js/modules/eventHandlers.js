@@ -13,7 +13,6 @@ import { Navigation } from './navigation.js';
 export const EventHandlers = {
     // 앨범 생성 모달 열기
     openAlbumCreateModal() {
-        console.log("앨범 생성 모달 열기");
         
         // 상태 초기화
         State.isCreatingMode = true;
@@ -62,7 +61,6 @@ export const EventHandlers = {
             if (actualData.albumCount === 0) {
                 DOM.noAlbumContainer.style.display = 'flex';
                 DOM.albumExistsContainer.style.display = 'none';
-                console.log("앨범 없음");
             } else {
                 DOM.noAlbumContainer.style.display = 'none';
                 DOM.albumExistsContainer.style.display = 'flex';
@@ -103,7 +101,31 @@ export const EventHandlers = {
             // 데이터 로드 완료 후 모달 표시
             DOM.albumDetailContainer.style.display = "flex";
             
-            console.log(`앨범 ${albumId} 로드 완료`);
+            // 드롭다운 이벤트 리스너 설정
+            setTimeout(() => {
+                // 드롭다운 토글 버튼 이벤트
+                const dropdownBtn = document.querySelector('.dropdown-btn');
+                if (dropdownBtn) {
+                    dropdownBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        const dropdownMenu = document.querySelector('.dropdown-menu');
+                        if (dropdownMenu) {
+                            // 드롭다운 토글 로직
+                            if (dropdownMenu.classList.contains('show')) {
+                                // 닫기
+                                dropdownMenu.classList.remove('show');
+                                dropdownBtn.setAttribute('aria-expanded', 'false');
+                            } else {
+                                // 열기
+                                dropdownMenu.classList.add('show');
+                                dropdownBtn.setAttribute('aria-expanded', 'true');
+                            }
+                        }
+                    });
+                }
+            }, 100);
+            
         } catch (error) {
             console.error("앨범 상세 모달 열기 실패:", error);
             UiUpdater.showNotification("앨범을 불러오는 중 오류가 발생했습니다.", 'error');
@@ -136,7 +158,6 @@ export const EventHandlers = {
                 imageCount: actualData.imageCount
             };
 
-            console.log(parsedData);
 
             UiUpdater.updateAlbumDetailInfo(
                 parsedData.albumTitle,
@@ -147,7 +168,6 @@ export const EventHandlers = {
 
             if (parsedData.imageCount > 0) {
                 const imageApiResponse = await ApiService.fetchAlbumImages(albumId);
-                console.log(imageApiResponse);
                 const imageList = imageApiResponse.data.list;
                 const paginationData = imageApiResponse.data;
                 
@@ -186,7 +206,6 @@ export const EventHandlers = {
 
     // 모달 상태 초기화
     resetModalState() {
-        console.log("모달 상태 초기화 시작");
         
         // 페이지네이션 이벤트 리스너 제거
         this.removePaginationClickEvents();
@@ -200,21 +219,18 @@ export const EventHandlers = {
         const albumImageContainer = document.querySelector('.album-image-container');
         if (albumImageContainer) {
             albumImageContainer.innerHTML = '';
-            console.log("메인 이미지 컨테이너 초기화");
         }
 
         // 앨범 상세 갤러리 초기화
         const albumDetailGallery = document.querySelector('.album-detail-gallery');
         if (albumDetailGallery) {
             albumDetailGallery.innerHTML = '';
-            console.log("상세 갤러리 초기화");
         }
 
         // 내 이미지 갤러리 초기화
         const albumDetailEditMyImagesGallery = document.querySelector('.album-detail-edit-image-my-images-gallery');
         if (albumDetailEditMyImagesGallery) {
             albumDetailEditMyImagesGallery.innerHTML = '';
-            console.log("내 이미지 갤러리 초기화");
         }
 
         // 페이지네이션 컨테이너 초기화
@@ -222,11 +238,9 @@ export const EventHandlers = {
         const myImagesPagination = document.querySelector('.my-images-page-num');
         if (albumImagesPagination) {
             albumImagesPagination.innerHTML = '';
-            console.log("앨범 이미지 페이지네이션 초기화");
         }
         if (myImagesPagination) {
             myImagesPagination.innerHTML = '';
-            console.log("내 이미지 페이지네이션 초기화");
         }
 
         // 앨범 정보 초기화
@@ -264,12 +278,10 @@ export const EventHandlers = {
         State.selectedImages.clear();
         State.isCreatingMode = false;
 
-        console.log("모달 상태 초기화 완료");
     },
 
     // 모달 닫기
     closeModal() {
-        console.log("닫기 버튼 클릭");
         
         // 모달 숨기기
         DOM.albumDetailContainer.style.display = "none";
@@ -333,8 +345,8 @@ export const EventHandlers = {
             const confirmed = await UiUpdater.showConfirmModal(
                 title,
                 message,
-                () => console.log('삭제 확인'),
-                () => console.log('삭제 취소')
+                () => {},
+                () => {}
             );
 
             if (!confirmed) {
@@ -370,14 +382,12 @@ export const EventHandlers = {
         const albumPagination = document.querySelector('.album-images-page-num .pagination');
         if (albumPagination) {
             albumPagination.addEventListener('click', this.handleAlbumPaginationClick);
-            console.log('앨범 이미지 페이지네이션 이벤트 등록');
         }
 
         // 내 이미지 페이지네이션
         const myImagesPagination = document.querySelector('.my-images-page-num .pagination');
         if (myImagesPagination) {
             myImagesPagination.addEventListener('click', this.handleMyImagesPaginationClick);
-            console.log('내 이미지 페이지네이션 이벤트 등록');
         }
     },
 
@@ -401,7 +411,6 @@ export const EventHandlers = {
         if (link && !link.closest('.disabled')) {
             const page = parseInt(link.dataset.page);
             if (page > 0) {
-                console.log(`앨범 이미지 페이지 ${page} 로드 요청`);
                 EventHandlers.loadAlbumImagesPage(page);
             }
         }
@@ -414,7 +423,6 @@ export const EventHandlers = {
         if (link && !link.closest('.disabled')) {
             const page = parseInt(link.dataset.page);
             if (page > 0) {
-                console.log(`내 이미지 페이지 ${page} 로드 요청`);
                 EventHandlers.loadMyImagesPage(page);
             }
         }
@@ -425,14 +433,12 @@ export const EventHandlers = {
         try {
             if (!State.currentAlbumId) return;
 
-            console.log(`앨범 이미지 페이지 ${pageNum} 로드 시작`);
             UiUpdater.showNotification(`${pageNum}페이지 로딩 중...`, 'info');
 
             const imageApiResponse = await ApiService.fetchAlbumImages(State.currentAlbumId, pageNum);
             const imageList = imageApiResponse.data.list;
             const paginationData = imageApiResponse.data;
 
-            console.log(`앨범 이미지 API 응답: ${imageList.length}개 이미지 받음`);
 
             await UiUpdater.renderAlbumDetailGallery(imageList);
             UiUpdater.renderAlbumImagesPagination(paginationData);
@@ -442,7 +448,6 @@ export const EventHandlers = {
                 // 렌더링 완료 후 체크박스 추가
                 setTimeout(() => {
                     ImageEditMode.addCheckboxesToGallery('.gallery-card');
-                    console.log('앨범 이미지 편집 모드용 체크박스 추가 완료');
                 }, 100);
             }
 
@@ -450,7 +455,6 @@ export const EventHandlers = {
             this.addGalleryCardClickEvents();
             this.addPaginationClickEvents();
 
-            console.log(`앨범 이미지 페이지 ${pageNum} 로드 완료`);
 
         } catch (error) {
             console.error('앨범 이미지 페이지 로드 실패:', error);
@@ -466,7 +470,6 @@ export const EventHandlers = {
                 return;
             }
 
-            console.log(`내 이미지 페이지 ${pageNum} 로드 시작`);
             UiUpdater.showNotification(`${pageNum}페이지 로딩 중...`, 'info');
 
             // 현재 앨범에 있는 이미지를 제외하고 조회
@@ -474,7 +477,6 @@ export const EventHandlers = {
             const imageList = response.data.list;
             const paginationData = response.data;
 
-            console.log(`API 응답: ${imageList.length}개 이미지 받음`);
 
             // 갤러리 렌더링 전에 잠시 대기 (비동기 충돌 방지)
             await new Promise(resolve => setTimeout(resolve, 50));
@@ -487,7 +489,6 @@ export const EventHandlers = {
                 // 렌더링 완료 후 체크박스 추가
                 setTimeout(() => {
                     ImageEditMode.addCheckboxesToGallery('.my-image-card');
-                    console.log('이미지 편집 모드용 체크박스 추가 완료');
                 }, 100);
             }
 
@@ -497,7 +498,6 @@ export const EventHandlers = {
             // 페이지네이션 이벤트는 한 번만 등록되도록 수정됨
             this.addPaginationClickEvents();
 
-            console.log(`내 이미지 페이지 ${pageNum} 로드 완료`);
 
         } catch (error) {
             console.error('내 이미지 페이지 로드 실패:', error);
