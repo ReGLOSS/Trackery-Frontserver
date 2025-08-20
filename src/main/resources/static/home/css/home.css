@@ -226,8 +226,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1vh 0;
-    margin-bottom: 1vh;
+    padding: 1vh 1vh;
 }
 
 .gallery-info {
@@ -683,22 +682,6 @@
     animation: selectionPulse 0.3s ease-out reverse;
 }
 
-
-/* ===== 접근성 및 키보드 지원 스타일 ===== */
-
-/* 스크린 리더 전용 텍스트 */
-.sr-only {
-    position: absolute !important;
-    width: 1px !important;
-    height: 1px !important;
-    padding: 0 !important;
-    margin: -1px !important;
-    overflow: hidden !important;
-    clip: rect(0, 0, 0, 0) !important;
-    white-space: nowrap !important;
-    border: 0 !important;
-}
-
 /* 기본 포커스 스타일 */
 .region-image-card.selectable:focus {
     outline: 0.2vh solid #007bff;
@@ -710,53 +693,8 @@
     outline-offset: 0.1vh;
 }
 
-
-
 .region-image-gallery.selection-mode::before {
     display: none;
-}
-
-/* 동작 감소 설정 지원 */
-@media (prefers-reduced-motion: reduce) {
-    .region-image-card,
-    .selection-checkbox label,
-    .selection-controls .btn,
-    .checkmarkPop,
-    .selectionPulse {
-        animation: none !important;
-        transition: none !important;
-    }
-    
-    .region-image-card:hover {
-        transform: none;
-    }
-}
-
-/* 터치 디바이스 지원 */
-@media (hover: none) and (pointer: coarse) {
-    .region-image-card.selectable {
-        min-height: 6vh; /* 터치 타겟 최소 크기 */
-    }
-    
-    .selection-checkbox {
-        top: 1.2vh;
-        left: 1.2vh;
-    }
-    
-    .selection-checkbox input[type="checkbox"] {
-        width: 3vh;
-        height: 3vh;
-    }
-    
-    .selection-checkbox label {
-        width: 3vh;
-        height: 3vh;
-    }
-    
-    .selection-controls .btn {
-        min-height: 5vh; /* 터치 타겟 최소 크기 */
-        padding: 1vh 1.5vh;
-    }
 }
 
 /* 선택된 개수 표시 개선 */
@@ -771,19 +709,6 @@
     text-align: center;
     display: inline-block;
 }
-
-/* 라이브 리전 스타일 */
-[aria-live] {
-    position: absolute;
-    left: -10000px;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-}
-
-
-
-
 
 /* ===== MODAL STYLES ===== */
 .image-detail-modal {

@@ -13,7 +13,6 @@ export class ImageManager {
         this.bulkDeleteManager = bulkDeleteManager;
     }
     
-    
     // 시도별 이미지 로드
     async loadSidoImages(sidoId, options = {}) {
         try {
@@ -104,20 +103,13 @@ export class ImageManager {
         const selectionModeButtonHtml = finalOptions.showSelectionModeButton ? `
             <div class="image-gallery-header">
                 <button class="btn btn-outline-primary btn-sm" id="selectionModeBtn" 
-                        role="switch" 
-                        aria-pressed="false"
-                        aria-label="선택 모드 활성화. 여러 이미지를 선택하여 삭제할 수 있습니다."
-                        aria-describedby="selectionModeDesc">
+                        role="switch">
                     <i class="ti ti-checkbox" aria-hidden="true"></i>
                     선택 모드
                 </button>
                 <span class="gallery-info">
                     총 ${images.length}장의 이미지
                 </span>
-                <!-- 스크린 리더용 설명 -->
-                <div id="selectionModeDesc" class="sr-only">
-                    선택 모드를 활성화하면 여러 이미지를 선택하여 한 번에 삭제할 수 있습니다.
-                </div>
             </div>
         ` : '';
         
