@@ -30,6 +30,11 @@ export const NotificationHelper = {
         return this.showNotification(message, 'info');
     },
 
+    // 경고 알림
+    showWarning(message) {
+        return this.showNotification(message, 'warning');
+    },
+
     // 지도 업데이트 전용 알림 (자동 제거 안됨)
     showMapUpdateNotification(message, type = 'info') {
         const notification = this._createNotification('map-update-notification', message, type);
@@ -64,9 +69,15 @@ export const NotificationHelper = {
         const colors = {
             success: '#28a745',
             error: '#dc3545',
-            info: '#007bff'
+            info: '#007bff',
+            warning: '#ffc107'
         };
         notification.style.backgroundColor = colors[type] || colors.info;
+        
+        // 경고 타입의 경우 텍스트 색상을 검은색으로 변경
+        if (type === 'warning') {
+            notification.style.color = '#000';
+        }
         notification.textContent = message;
 
         // 애니메이션 스타일 추가
