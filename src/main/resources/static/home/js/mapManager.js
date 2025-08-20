@@ -8,13 +8,13 @@ export class MapManager {
         this.currentView = 'sido'; // 'sido', 'sigungu', 'detail'
         this.currentSidoId = null;
         this.currentSigunguId = null;
-        
+
         // 데이터 캐싱
         this.sidoData = null;
         this.sigunguData = null;
         this.userStats = null;
         this.cachedSigunguData = new Map();
-        
+
         // localStorage 캐시 관리
         this.CACHE_KEYS = {
             SIDO_DATA: 'trackery_sido_data',
@@ -23,15 +23,15 @@ export class MapManager {
             LAST_UPDATE: 'trackery_last_update'
         };
         this.CACHE_DURATION = 24 * 60 * 60 * 1000; // 24시간
-        
+
         // 네비게이션
         this.navigationHistory = [];
-        
+
         // 상태 관리
         this.isLoading = false;
         this.pendingRequests = new Set();
         this.debounceTimers = new Map();
-        
+
         // 외부 매니저들 참조
         this.renderer = null;
         this.imageManager = null;
@@ -43,11 +43,12 @@ export class MapManager {
     }
     
     // 의존성 주입
-    setDependencies({ renderer, imageManager, modalManager, statsRenderer }) {
+    setDependencies({ renderer, imageManager, modalManager, statsRenderer, bulkDeleteManager }) {
         this.renderer = renderer;
         this.imageManager = imageManager;
         this.modalManager = modalManager;
         this.statsRenderer = statsRenderer;
+        this.bulkDeleteManager = bulkDeleteManager;
     }
     
     // 알림 헬퍼 로드
@@ -142,7 +143,7 @@ export class MapManager {
         }
     }
     
-// 시군구 뷰 로드
+    // 시군구 뷰 로드
     async loadSigunguView(sidoId) {
         return this._loadSigunguViewCommon(sidoId, {
             addToHistory: true,
@@ -437,7 +438,12 @@ export class MapManager {
         paths.forEach(path => {
             path.addEventListener('click', (e) => {
                 if (this.isLoading) return;
-                
+
+                // 선택 모드가 활성화되어 있으면 해제
+                if (this.bulkDeleteManager && this.bulkDeleteManager.getIsSelectionMode()) {
+                    this.bulkDeleteManager.exitSelectionMode();
+                }
+
                 const sidoId = e.target.id;
                 if (sidoId) {
                     this.loadSigunguView(sidoId);
@@ -468,7 +474,12 @@ export class MapManager {
     
     async handleSigunguClick(sigunguId) {
         if (this.isLoading) return;
-        
+
+        // 선택 모드가 활성화되어 있으면 해제
+        if (this.bulkDeleteManager && this.bulkDeleteManager.getIsSelectionMode()) {
+            this.bulkDeleteManager.exitSelectionMode();
+        }
+
         // 상세 뷰로 전환하기 전에 탐색 기록에 추가
         this.navigationHistory.push({
             view: 'sigungu',
@@ -528,7 +539,12 @@ export class MapManager {
     // 네비게이션 메서드들
     goBack() {
         if (this.isLoading) return;
-        
+
+        // 선택 모드가 활성화되어 있으면 해제
+        if (this.bulkDeleteManager && this.bulkDeleteManager.getIsSelectionMode()) {
+            this.bulkDeleteManager.exitSelectionMode();
+        }
+
         if (this.currentView === 'detail') {
             // 상세 뷰에서 시군구 뷰로 돌아가기
             this.loadSigunguViewWithoutHistory(this.currentSidoId);
