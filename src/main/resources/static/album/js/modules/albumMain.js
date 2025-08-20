@@ -31,8 +31,6 @@ window.EventHandlers = EventHandlers;
 // 초기화 함수
 // ============================================================
 function initialize() {
-    console.log("Album.js 모듈 로드 완료");
-
     // 이벤트 리스너 등록
     setupEventListeners();
 
@@ -49,7 +47,7 @@ function initialize() {
 function setupEventListeners() {
     // 모달 닫기 버튼
     if (DOM.closeBtn) {
-        DOM.closeBtn.addEventListener("click", EventHandlers.closeModal);
+        DOM.closeBtn.addEventListener("click", () => EventHandlers.closeModal());
     }
 
     // 앨범 편집 버튼
