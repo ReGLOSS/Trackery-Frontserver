@@ -37,9 +37,6 @@ export class BulkDeleteModal {
                 <div class="modal-overlay" id="bulkDeleteConfirmOverlay"></div>
                 <div class="image-select-container">
                     <div class="image-select-header">
-                        <h3 id="deleteModalTitle">선택된 이미지 삭제</h3>
-                        <button class="modal-close-btn" id="bulkDeleteConfirmClose" 
-                                type="button">&times;</button>
                     </div>
                     <div class="image-select-body">
                         <div class="delete-warning" id="deleteModalDesc">
@@ -349,7 +346,6 @@ export class BulkDeleteModal {
         return '';
     }
 
-
     /**
      * 진행 상황 모달 완료 버튼 바인딩
      */
@@ -480,7 +476,6 @@ export class BulkDeleteModal {
         });
     }
 
-    
     /**
      * 리소스 정리
      */
