@@ -227,6 +227,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 1vh 1vh;
+    position: relative;
 }
 
 .gallery-info {
@@ -236,6 +237,9 @@
     display: flex;
     align-items: center;
     gap: 0.5vh;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .gallery-info .ti {
@@ -428,6 +432,7 @@
     margin-bottom: 1.5vh;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: space-between;
     box-shadow: 0 0.2vh 0.8vh rgba(0, 0, 0, 0.05);
     backdrop-filter: blur(0.4vh);
 }
