@@ -348,8 +348,7 @@ export class BulkDeleteManager {
                         if (response.status === 401 || response.status === 403 || response.status === 404) {
                             break;
                         }
-                        
-                        
+
                         // 마지막 시도가 아니면 잠시 대기 후 재시도
                         if (attempt < maxRetries) {
                             await this.delay(1000 * attempt); // 점진적 백오프
@@ -363,7 +362,6 @@ export class BulkDeleteManager {
                         statusCode: null
                     };
                     
-                    
                     // 마지막 시도가 아니면 잠시 대기 후 재시도
                     if (attempt < maxRetries) {
                         await this.delay(1000 * attempt); // 점진적 백오프
@@ -374,8 +372,7 @@ export class BulkDeleteManager {
             // 모든 재시도 실패
             completed++;
             this.bulkDeleteModal.updateProgress(completed, total);
-            
-            
+
             return {
                 success: false,
                 imageId: imageId,

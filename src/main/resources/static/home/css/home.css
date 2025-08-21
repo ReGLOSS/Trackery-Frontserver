@@ -404,11 +404,6 @@
     }
 }
 
-/* 선택 체크박스 */
-.selection-checkbox {
-    display: none;
-}
-
 /* 선택 오버레이 */
 .selection-overlay {
     position: absolute;
@@ -536,7 +531,6 @@
     transform: translateY(0.1vh);
 }
 
-
 /* 선택 모드 유틸리티 클래스 */
 .selection-mode-active {
     position: relative;
@@ -620,37 +614,6 @@
     display: none;
 }
 
-/* 선택 모드 전환 애니메이션 */
-.selection-mode-enter {
-    animation: selectionModeEnter 0.4s ease-out;
-}
-
-.selection-mode-exit {
-    animation: selectionModeExit 0.3s ease-in;
-}
-
-@keyframes selectionModeEnter {
-    0% {
-        opacity: 0;
-        transform: translateY(-1vh);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes selectionModeExit {
-    0% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    100% {
-        opacity: 0;
-        transform: translateY(-1vh);
-    }
-}
-
 /* ===== 선택 모드 애니메이션 ===== */
 @keyframes selectionPulse {
     0% {
@@ -662,29 +625,6 @@
     100% {
         box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
     }
-}
-
-@keyframes checkboxBounce {
-    0%, 20%, 53%, 80%, 100% {
-        transform: translate3d(0, 0, 0);
-    }
-    40%, 43% {
-        transform: translate3d(0, -0.3vh, 0);
-    }
-    70% {
-        transform: translate3d(0, -0.15vh, 0);
-    }
-    90% {
-        transform: translate3d(0, -0.04vh, 0);
-    }
-}
-
-.selection-animate-in {
-    animation: selectionPulse 0.6s ease-out;
-}
-
-.selection-animate-out {
-    animation: selectionPulse 0.3s ease-out reverse;
 }
 
 /* 기본 포커스 스타일 */
@@ -1407,35 +1347,3 @@
 .failed-image-container:hover .failed-image {
     filter: brightness(1.1);
 }
-
-/* 오류 타입 범례 (선택적으로 추가 가능) */
-.error-type-legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: clamp(0.5rem, 1vh, 0.75rem);
-    margin-top: clamp(0.75rem, 1.5vh, 1rem);
-    padding: clamp(0.5rem, 1vh, 0.75rem);
-    background: rgba(248, 249, 250, 0.8);
-    border-radius: clamp(0.25rem, 0.5vh, 0.375rem);
-    font-size: clamp(0.625rem, 1.25vh, 0.75rem);
-}
-
-.error-type-legend-item {
-    display: flex;
-    align-items: center;
-    gap: clamp(0.25rem, 0.5vh, 0.375rem);
-}
-
-.error-type-legend-color {
-    width: clamp(0.75rem, 1.5vh, 1rem);
-    height: clamp(0.75rem, 1.5vh, 1rem);
-    border-radius: 50%;
-    border: 2px solid;
-}
-
-.error-type-legend-color.auth { border-color: #6f42c1; }
-.error-type-legend-color.permission { border-color: #fd7e14; }
-.error-type-legend-color.not-found { border-color: #6c757d; }
-.error-type-legend-color.network { border-color: #20c997; }
-.error-type-legend-color.server { border-color: #dc3545; }
-.error-type-legend-color.unknown { border-color: #495057; }
