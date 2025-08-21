@@ -1,0 +1,241 @@
+/* 작업 처리 중 표시 UI */
+:root {
+    --processing-bg-color: #d3d9e8;
+    --processing-text-color: #2a2a36;
+    --processing-secondary-color: #71717c;
+    --success-bg-color: #d4edda;
+    --success-color: #155724;
+    --warning-bg-color: #fff3cd;
+    --warning-color: #856404;
+    --border-warning-color: #ffc107;
+}
+
+.processing-indicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.processing-content {
+    background-color: var(--processing-bg-color);
+    padding: clamp(1.5rem, 3vh, 3rem);
+    border-radius: clamp(0.4rem, 0.8vh, 0.8rem);
+    text-align: center;
+    box-shadow: 0 1vh 2vh rgba(0, 0, 0, 0.15);
+    min-width: clamp(18rem, 30vw, 25rem);
+    max-width: clamp(25rem, 40vw, 35rem);
+}
+
+.processing-content .spinner-border {
+    width: clamp(2.5rem, 4vh, 4rem);
+    height: clamp(2.5rem, 4vh, 4rem);
+    margin-bottom: clamp(0.8rem, 1.5vh, 1.5rem);
+    color: var(--processing-text-color);
+}
+
+.processing-message {
+    font-size: clamp(0.9rem, 2vh, 1.2rem);
+    margin-bottom: clamp(1rem, 2vh, 2rem);
+    color: var(--processing-text-color);
+    font-weight: 500;
+}
+
+/* 범용 작업 인디케이터 스타일 */
+.processing-indicator .processing-submessage {
+    font-size: 0.9rem;
+    color: var(--processing-secondary-color);
+    margin-bottom: 1rem;
+}
+
+.progress-info {
+    margin-top: clamp(0.8rem, 1.5vh, 1.5rem);
+}
+
+.progress-text {
+    font-size: clamp(0.8rem, 1.7vh, 1rem);
+    margin-bottom: clamp(0.6rem, 1.2vh, 1rem);
+    color: var(--processing-secondary-color);
+    font-weight: 500;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: clamp(0.4rem, 0.8vh, 0.6rem);
+    background-color: #d8e0e6;
+    border-radius: clamp(0.2rem, 0.4vh, 0.4rem);
+    margin-bottom: clamp(0.4rem, 0.8vh, 0.8rem);
+    overflow: hidden;
+}
+
+.progress-bar {
+    width: 0;
+    height: 100%;
+    background: linear-gradient(90deg,
+            #d3d0e8 0%,
+            #b8b3d1 100%);
+    transition: width 0.3s ease;
+    border-radius: clamp(0.2rem, 0.4vh, 0.4rem);
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.2) 50%,
+            transparent 100%);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.progress-percentage {
+    font-size: clamp(0.7rem, 1.4vh, 0.9rem);
+    color: var(--processing-secondary-color);
+    font-weight: 600;
+}
+
+/* 작업 결과 표시 스타일 */
+.result-block {
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+.result-success-container,
+.result-failed-container {
+    margin-bottom: 1rem;
+}
+
+.result-icon-large {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+}
+
+.result-icon-large.success {
+    background-color: var(--success-bg-color);
+    color: var(--success-color);
+}
+
+.result-icon-large.warning {
+    background-color: var(--warning-bg-color);
+    color: var(--warning-color);
+}
+
+.result-main-title,
+.result-warning-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.result-main-title {
+    color: var(--success-color);
+}
+
+.result-warning-title {
+    color: var(--warning-color);
+}
+
+.result-main-message,
+.result-warning-message {
+    font-size: 1rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+
+/* 실패한 항목 섹션 */
+.failed-items-section {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.failed-items-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    gap: 0.5rem;
+}
+
+.failed-items-icon {
+    color: var(--warning-color);
+}
+
+.failed-items-title {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.failed-items-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.failed-item {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid var(--border-warning-color);
+}
+
+.failed-item-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 실패한 항목 텍스트 스타일 */
+.failed-item-text {
+    padding: 0.5rem;
+    background-color: var(--warning-bg-color);
+    border: 1px solid var(--border-warning-color);
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.failed-item-name {
+    font-weight: 500;
+    color: var(--warning-color);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.failed-item-reason {
+    color: var(--processing-secondary-color);
+    font-size: 0.7rem;
+}
