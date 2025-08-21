@@ -3,6 +3,7 @@ import { tagManager } from "../../module/tags/tagManager.js";
 import { UiHelpers } from "../../module/common/uiHelpers.js";
 import { ValidationService } from "../../module/common/validationService.js";
 import { NotificationHelper } from "../../module/notification/notificationHelper.js";
+import { ProcessingIndicator } from "../../module/processingIndicator/js/processingIndicator.js";
 
 // DOM 엘리먼트 관리자
 const DOM = {
@@ -17,7 +18,6 @@ const DOM = {
     get dateBox() { return document.getElementById("modalDateBox"); },
     get description() { return document.getElementById("modalDescription"); },
     get publicCheckbox() { return document.getElementById("modalPublic"); },
-    get whileUploadingModal() { return document.querySelector('.while-uploading-modal'); },
     get tagInput() { return document.querySelector('.tag-input'); },
     get tagAddButton() { return document.querySelector('.tag-add'); },
     get detailModal() { return document.getElementById('detailModal'); },
@@ -578,8 +578,11 @@ const EventHandlers = {
             UiHelpers.updateSelectedImageTags();
         }
 
-        DOM.whileUploadingModal.classList.add("show");
         const imageWrappers = document.querySelectorAll(".image-wrapper");
+        
+        // ProcessingIndicator를 사용한 업로드 모달 표시
+        const uploadIndicator = ProcessingIndicator.showWithResult("이미지를 업로드하는 중입니다...", "upload");
+        ProcessingIndicator.initializeProgress(uploadIndicator, imageWrappers.length);
 
         // SSE 연결 설정
         const eventSource = new EventSource('/api/sse/connect', {
@@ -625,7 +628,7 @@ const EventHandlers = {
                         // 모든 이미지가 처리되었는지 확인
                         if (processedImages.size === imageWrappers.length) {
                             console.log('모든 이미지 처리 완료 - handleAllImagesProcessed 호출');
-                            EventHandlers.handleAllImagesProcessed(eventSource, successImageUUIDs, failedImageUUIDs);
+                            EventHandlers.handleAllImagesProcessed(eventSource, successImageUUIDs, failedImageUUIDs, uploadIndicator);
                         }
                     } else {
                         console.log('알 수 없는 메시지 타입:', data.type);
@@ -647,6 +650,7 @@ const EventHandlers = {
         };
 
         // 이미지 업로드만 수행하고, 결과 표시는 SSE를 통해서만 처리
+        let uploadedCount = 0;
         for (const imageWrapper of imageWrappers) {
             const img = imageWrapper.querySelector(".gallery-image");
 
@@ -654,9 +658,16 @@ const EventHandlers = {
                 const url = await ApiService.requestPresignedPutUrl(img);
                 await ApiService.uploadImageToS3(img, url);
                 await ApiService.fetchImgMetaData(img);
+                
+                // 업로드 진행률 업데이트
+                uploadedCount++;
+                ProcessingIndicator.updateProgress(uploadIndicator, uploadedCount, imageWrappers.length);
+                
                 // 성공/실패 처리 제거 - SSE에서만 처리
             } catch (error) {
                 failedImageUUIDs.push(error.message);
+                uploadedCount++;
+                ProcessingIndicator.updateProgress(uploadIndicator, uploadedCount, imageWrappers.length);
                 // 실패한 경우에만 즉시 처리하거나, 타임아웃 설정 필요
                 console.error("업로드 실패:", error);
             }
@@ -664,25 +675,30 @@ const EventHandlers = {
     },
 
     // 모든 이미지 처리 완료 시 처리 함수 (SSE를 통해서만 호출됨)
-    async handleAllImagesProcessed(eventSource, successImageUUIDs, failedImageUUIDs) {
+    async handleAllImagesProcessed(eventSource, successImageUUIDs, failedImageUUIDs, uploadIndicator) {
         console.log('handleAllImagesProcessed 함수 시작');
         console.log('SSE 연결 종료 시도');
         eventSource.close();
 
-        console.log('UiHelpers.indicateResult 호출 - 성공:', successImageUUIDs.length, '실패:', failedImageUUIDs.length);
-        await UiHelpers.indicateResult(successImageUUIDs, failedImageUUIDs);
-
+        console.log('업로드 결과 표시 - 성공:', successImageUUIDs.length, '실패:', failedImageUUIDs.length);
+        
+        // 실패한 이미지 데이터 준비
+        const failedImages = [];
+        for (const failedUUID of failedImageUUIDs) {
+            const failedImage = document.querySelector(`[data-uuid="${failedUUID}"]`);
+            if (failedImage && failedImage.src) {
+                failedImages.push({ src: failedImage.src });
+            }
+        }
+        
+        // ProcessingIndicator로 결과 표시
+        ProcessingIndicator.showResult(uploadIndicator, successImageUUIDs.length, failedImageUUIDs.length, failedImages, {
+            successMessage: `${successImageUUIDs.length}장의 이미지를 성공적으로 업로드했습니다.`,
+            failedMessage: `${failedImageUUIDs.length}장의 이미지는 업로드에 실패했습니다.`
+        });
+        
         console.log("성공한 이미지 : {}", successImageUUIDs);
         console.log("실패한 이미지 : {}", failedImageUUIDs);
-
-        console.log('UiHelpers.addFailedImage 호출');
-        await UiHelpers.addFailedImage(failedImageUUIDs);
-
-        console.log('1초 대기 시작');
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        console.log('UiHelpers.hideUploadingBlockAndShowResultBlock 호출');
-        await UiHelpers.hideUploadingBlockAndShowResultBlock();
 
         // 모든 이미지 업로드 성공 시 홈에서 플래그로 지도 업데이트 처리
         if (failedImageUUIDs.length === 0) {
@@ -695,7 +711,7 @@ const EventHandlers = {
             // 5초 후 모달 닫고 새로고침
             setTimeout(() => {
                 console.log('모달 닫기 및 페이지 새로고침 실행');
-                DOM.whileUploadingModal.classList.remove("show");
+                ProcessingIndicator.hide(uploadIndicator);
                 window.location.reload();
             }, 5000);
         }
@@ -754,7 +770,6 @@ const EventHandlers = {
             tagManager.hideTagInput();
         }
     },
-
 
     // === 이미지 선택 모달 관련 핸들러들 ===
 
@@ -847,10 +862,10 @@ const EventHandlers = {
         EventHandlers.hideImageSelectModal();
 
         // 처리 중 표시 UI
-        const processingIndicator = EventHandlers.showProcessingIndicator();
+        const processingIndicator = ProcessingIndicator.show("이미지를 처리하는 중입니다...");
 
         // 총 개수 초기화
-        EventHandlers.initializeProcessingProgress(processingIndicator, files.length);
+        ProcessingIndicator.initializeProgress(processingIndicator, files.length);
 
         try {
             // 모든 이미지를 처리하고 메모리에 저장
@@ -871,12 +886,12 @@ const EventHandlers = {
                     processedImages.push(imageData);
 
                     processedCount++;
-                    EventHandlers.updateProcessingProgress(processingIndicator, processedCount, totalFiles);
+                    ProcessingIndicator.updateProgress(processingIndicator, processedCount, totalFiles);
 
                 } catch (error) {
                     NotificationHelper.showError(`${file.name}: ${error.message}`);
                     processedCount++;
-                    EventHandlers.updateProcessingProgress(processingIndicator, processedCount, totalFiles);
+                    ProcessingIndicator.updateProgress(processingIndicator, processedCount, totalFiles);
                 }
             }
 
@@ -889,85 +904,13 @@ const EventHandlers = {
 
         } finally {
             // 처리 중 표시 제거
-            EventHandlers.hideProcessingIndicator(processingIndicator);
+            ProcessingIndicator.hide(processingIndicator);
         }
     },
 
     // 취소 버튼 클릭
     onCancelBtnClick() {
         EventHandlers.hideImageSelectModal();
-    },
-
-    // 처리 중 표시 UI 생성 및 표시
-    showProcessingIndicator() {
-        const indicator = document.createElement('div');
-        indicator.className = 'processing-indicator';
-        indicator.innerHTML = `
-            <div class="processing-content">
-                <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
-                <h4 class="processing-message">이미지를 처리하는 중입니다...</h4>
-                <div class="progress-info">
-                    <div class="progress-text">
-                        <span class="current-count">0</span> / <span class="total-count">0</span> 완료
-                    </div>
-                    <div class="progress progress-sm mb-2">
-                        <div class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
-                    <div class="progress-percentage text-secondary">0%</div>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(indicator);
-
-        // 애니메이션 효과
-        requestAnimationFrame(() => {
-            indicator.style.opacity = '1';
-        });
-
-        return indicator;
-    },
-
-    // 진행률 업데이트
-    updateProcessingProgress(indicator, currentCount, totalCount) {
-        if (!indicator) return;
-
-        const percentage = Math.round((currentCount / totalCount) * 100);
-
-        const currentCountElement = indicator.querySelector('.current-count');
-        const totalCountElement = indicator.querySelector('.total-count');
-        const progressBar = indicator.querySelector('.progress-bar');
-        const progressPercentage = indicator.querySelector('.progress-percentage');
-
-        if (currentCountElement) currentCountElement.textContent = currentCount;
-        if (totalCountElement) totalCountElement.textContent = totalCount;
-        if (progressBar) {
-            progressBar.style.width = percentage + '%';
-            progressBar.setAttribute('aria-valuenow', percentage);
-        }
-        if (progressPercentage) progressPercentage.textContent = percentage + '%';
-    },
-
-    // 처리 시작 시 총 개수 설정
-    initializeProcessingProgress(indicator, totalCount) {
-        if (!indicator) return;
-
-        const totalCountElement = indicator.querySelector('.total-count');
-        if (totalCountElement) totalCountElement.textContent = totalCount;
-
-        this.updateProcessingProgress(indicator, 0, totalCount);
-    },
-
-    // 처리 중 표시 UI 제거
-    hideProcessingIndicator(indicator) {
-        if (indicator) {
-            indicator.style.opacity = '0';
-            setTimeout(() => {
-                if (indicator.parentNode) {
-                    indicator.parentNode.removeChild(indicator);
-                }
-            }, 300);
-        }
     },
 
 };

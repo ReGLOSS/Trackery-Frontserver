@@ -7,80 +7,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/l10n/ko.min.js"></script>
     <link rel="stylesheet" href="/upload/css/image-upload.css">
-    <link rel="stylesheet" href="/upload/css/processing-indicator.css">
+    <link rel="stylesheet" href="/module/processingIndicator/css/processingIndicator.css">
     <link th:replace="~{map/map-picker-modal :: mapPickerModalCss}">
     <script th:replace="~{map/map-picker-modal :: kostatMapScript}"></script>
 </head>
-
 <body>
     <section layout:fragment="content" class="image-upload-container">
-        <!--업로드 중 모달-->
-        <div class="while-uploading-modal" id="whileUploadingModal" style="display: none;">
-            <div class="uploading-modal-content">
-                <div id="uploadingBlock" class="uploading-block">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">업로드 중...</span>
-                    </div>
-                    <div class="uploading-message">이미지를 업로드하는 중입니다</div>
-                    <div class="uploading-submessage">잠시만 기다려주세요...</div>
-                </div>
-
-                <div id="resultInfoBlock" class="result-block" style="display: none;">
-                    <!-- 성공 결과 -->
-                    <div class="result-success-container">
-                        <div class="result-icon-large success">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
-                                stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                                <path d="M5 12l5 5l10 -10"></path>
-                            </svg>
-                        </div>
-                        <div class="result-main-title">업로드 완료!</div>
-                        <div class="result-main-message" id="uploadedImageCount">N장의 이미지를 성공적으로 업로드했습니다.</div>
-                    </div>
-
-                    <!-- 실패 결과 -->
-                    <div id="failedUploadInfoGroup" class="result-failed-container" style="display: none;">
-                        <div class="result-icon-large warning">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
-                                stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                                <path d="M12 9v2m0 4v.01"></path>
-                                <path
-                                    d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75">
-                                </path>
-                            </svg>
-                        </div>
-                        <div class="result-warning-title">일부 업로드 실패</div>
-                        <div class="result-warning-message" id="uploadFailedImageCount">N장의 이미지는 업로드에 실패했습니다.</div>
-                    </div>
-
-                    <!-- 실패한 이미지 갤러리 -->
-                    <div class="failed-images-section" style="display: none;">
-                        <div class="failed-images-header">
-                            <div class="failed-images-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                    stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
-                                    stroke-linejoin="round">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                                    <path d="M15 8h.01"></path>
-                                    <path
-                                        d="M3 6a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v12a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3v-12z">
-                                    </path>
-                                    <path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5"></path>
-                                    <path d="M14 14l1 -1c.928 -.893 2.072 -.893 3 0l3 3"></path>
-                                </svg>
-                            </div>
-                            <div class="failed-images-title">업로드에 실패한 이미지</div>
-                        </div>
-                        <div id="uploadingModalGallery" class="uploading-modal-gallery"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!--  메인탭-->
         <div class="base-container">
             <div class="gallery">
