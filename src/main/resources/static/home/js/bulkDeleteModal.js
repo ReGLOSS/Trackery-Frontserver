@@ -180,7 +180,10 @@ export class BulkDeleteModal {
                 imageElement.alt = image.imageName || '선택된 이미지';
                 imageElement.className = 'uploading-modal-gallery-image';
                 imageElement.style.cursor = 'default';
-                
+                imageElement.style.aspectRatio = '1 / 1';
+                imageElement.style.objectFit = 'cover';
+                imageElement.style.width = '8vh';
+
                 gallery.appendChild(imageElement);
             });
         } else {
