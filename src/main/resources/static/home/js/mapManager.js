@@ -8,13 +8,13 @@ export class MapManager {
         this.currentView = 'sido'; // 'sido', 'sigungu', 'detail'
         this.currentSidoId = null;
         this.currentSigunguId = null;
-        
+
         // 데이터 캐싱
         this.sidoData = null;
         this.sigunguData = null;
         this.userStats = null;
         this.cachedSigunguData = new Map();
-        
+
         // localStorage 캐시 관리
         this.CACHE_KEYS = {
             SIDO_DATA: 'trackery_sido_data',
@@ -23,31 +23,62 @@ export class MapManager {
             LAST_UPDATE: 'trackery_last_update'
         };
         this.CACHE_DURATION = 24 * 60 * 60 * 1000; // 24시간
-        
+
         // 네비게이션
         this.navigationHistory = [];
-        
+
         // 상태 관리
         this.isLoading = false;
         this.pendingRequests = new Set();
         this.debounceTimers = new Map();
-        
+
         // 외부 매니저들 참조
         this.renderer = null;
         this.imageManager = null;
         this.modalManager = null;
         this.statsRenderer = null;
+        
+        // 알림 헬퍼 (동적 import로 로드)
+        this.NotificationHelper = null;
     }
     
     // 의존성 주입
-    setDependencies({ renderer, imageManager, modalManager, statsRenderer }) {
+    setDependencies({ renderer, imageManager, modalManager, statsRenderer, bulkDeleteManager }) {
         this.renderer = renderer;
         this.imageManager = imageManager;
         this.modalManager = modalManager;
         this.statsRenderer = statsRenderer;
+        this.bulkDeleteManager = bulkDeleteManager;
+    }
+    
+    // 알림 헬퍼 로드
+    async loadNotificationHelper() {
+        try {
+            const { NotificationHelper } = await import('../../module/notification/notificationHelper.js');
+            this.NotificationHelper = NotificationHelper;
+        } catch (error) {
+            console.error('Failed to load NotificationHelper:', error);
+        }
+    }
+    
+    // 알림 메서드들
+    showMapUpdateNotification(message, type = 'info') {
+        if (this.NotificationHelper) {
+            return this.NotificationHelper.showMapUpdateNotification(message, type);
+        }
+        return null;
+    }
+    
+    hideNotification(notification) {
+        if (this.NotificationHelper && notification) {
+            this.NotificationHelper.hideNotification(notification);
+        }
     }
     
     async init() {
+        // 알림 헬퍼 로드
+        await this.loadNotificationHelper();
+        
         this.bindEvents();
         // 사용자가 로그인한 경우에만 통계 로드
         if (this.isUserLoggedIn()) {
@@ -67,6 +98,8 @@ export class MapManager {
     async loadSidoViewWithCache() {
         if (this.isLoading) return;
         
+        let loadingNotification = null;
+        
         try {
             this.setLoadingState(true);
             this.renderer.showLoading();
@@ -75,7 +108,7 @@ export class MapManager {
             this.currentSigunguId = null;
             
             // 캐시된 시도 데이터 로드
-            await this.fetchSidoDataWithCache();
+            loadingNotification = await this.fetchSidoDataWithCache();
             
             // SVG 지도 로드
             await this.renderer.loadSvgMap('/map/svg/simpleSido.svg');
@@ -92,15 +125,25 @@ export class MapManager {
             // 캐시된 이미지 상태로 지역 색상 표시
             await this.styleRegionsWithCachedImages();
             
+            // 로딩 알림 숨기기
+            if (loadingNotification) {
+                this.hideNotification(loadingNotification);
+            }
+            
         } catch (error) {
             console.error('Error loading sido view:', error);
             this.renderer.showError('지도를 불러오는 중 오류가 발생했습니다.');
+            
+            // 에러 발생 시 로딩 알림 숨기기
+            if (loadingNotification) {
+                this.hideNotification(loadingNotification);
+            }
         } finally {
             this.setLoadingState(false);
         }
     }
     
-// 시군구 뷰 로드
+    // 시군구 뷰 로드
     async loadSigunguView(sidoId) {
         return this._loadSigunguViewCommon(sidoId, {
             addToHistory: true,
@@ -253,15 +296,27 @@ export class MapManager {
         const cachedSidoData = this.getCachedData(this.CACHE_KEYS.SIDO_DATA);
         if (cachedSidoData) {
             this.sidoData = cachedSidoData;
-            return;
+            return null; // 캐시에서 로드했으므로 알림 없음
         }
         
-        // API 호출
-        await this.fetchSidoData();
+        // 캐시가 없으면 API 호출 시 알림 표시
+        const loadingNotification = this.showMapUpdateNotification('지도 데이터를 불러오는 중...', 'info');
         
-        // 캐시 저장
-        if (this.sidoData) {
-            this.setCachedData(this.CACHE_KEYS.SIDO_DATA, this.sidoData);
+        try {
+            // API 호출
+            await this.fetchSidoData();
+            
+            // 캐시 저장
+            if (this.sidoData) {
+                this.setCachedData(this.CACHE_KEYS.SIDO_DATA, this.sidoData);
+            }
+            
+            return loadingNotification;
+        } catch (error) {
+            // 에러 발생 시 알림 숨기고 에러 알림 표시
+            this.hideNotification(loadingNotification);
+            this.showMapUpdateNotification('지도 데이터 로드 중 오류가 발생했습니다.', 'error');
+            throw error;
         }
     }
     
@@ -291,8 +346,21 @@ export class MapManager {
             return;
         }
         
-        await this.fetchSigunguData(sidoId);
-        this.cachedSigunguData.set(cacheKey, this.sigunguData);
+        // 캐시가 없으면 API 호출 시 알림 표시
+        const loadingNotification = this.showMapUpdateNotification('시군구 데이터를 불러오는 중...', 'info');
+        
+        try {
+            await this.fetchSigunguData(sidoId);
+            this.cachedSigunguData.set(cacheKey, this.sigunguData);
+            
+            // 성공 시 알림 숨기기
+            this.hideNotification(loadingNotification);
+        } catch (error) {
+            // 에러 발생 시 알림 숨기고 에러 알림 표시
+            this.hideNotification(loadingNotification);
+            this.showMapUpdateNotification('시군구 데이터 로드 중 오류가 발생했습니다.', 'error');
+            throw error;
+        }
     }
     
     async loadUserStatsWithCache() {
@@ -303,12 +371,25 @@ export class MapManager {
             return;
         }
         
-        // API 호출
-        await this.loadUserStats();
+        // 캐시가 없으면 API 호출 시 알림 표시
+        const loadingNotification = this.showMapUpdateNotification('사용자 통계를 불러오는 중...', 'info');
         
-        // 캐시 저장
-        if (this.userStats) {
-            this.setCachedData(this.CACHE_KEYS.USER_STATS, this.userStats);
+        try {
+            // API 호출
+            await this.loadUserStats();
+            
+            // 캐시 저장
+            if (this.userStats) {
+                this.setCachedData(this.CACHE_KEYS.USER_STATS, this.userStats);
+            }
+            
+            // 성공 시 알림 숨기기
+            this.hideNotification(loadingNotification);
+        } catch (error) {
+            // 에러 발생 시 알림 숨기고 에러 알림 표시
+            this.hideNotification(loadingNotification);
+            this.showMapUpdateNotification('사용자 통계 로드 중 오류가 발생했습니다.', 'error');
+            throw error;
         }
     }
     
@@ -357,7 +438,12 @@ export class MapManager {
         paths.forEach(path => {
             path.addEventListener('click', (e) => {
                 if (this.isLoading) return;
-                
+
+                // 선택 모드가 활성화되어 있으면 해제
+                if (this.bulkDeleteManager && this.bulkDeleteManager.getIsSelectionMode()) {
+                    this.bulkDeleteManager.exitSelectionMode();
+                }
+
                 const sidoId = e.target.id;
                 if (sidoId) {
                     this.loadSigunguView(sidoId);
@@ -388,7 +474,12 @@ export class MapManager {
     
     async handleSigunguClick(sigunguId) {
         if (this.isLoading) return;
-        
+
+        // 선택 모드가 활성화되어 있으면 해제
+        if (this.bulkDeleteManager && this.bulkDeleteManager.getIsSelectionMode()) {
+            this.bulkDeleteManager.exitSelectionMode();
+        }
+
         // 상세 뷰로 전환하기 전에 탐색 기록에 추가
         this.navigationHistory.push({
             view: 'sigungu',
@@ -448,7 +539,12 @@ export class MapManager {
     // 네비게이션 메서드들
     goBack() {
         if (this.isLoading) return;
-        
+
+        // 선택 모드가 활성화되어 있으면 해제
+        if (this.bulkDeleteManager && this.bulkDeleteManager.getIsSelectionMode()) {
+            this.bulkDeleteManager.exitSelectionMode();
+        }
+
         if (this.currentView === 'detail') {
             // 상세 뷰에서 시군구 뷰로 돌아가기
             this.loadSigunguViewWithoutHistory(this.currentSidoId);
@@ -580,7 +676,16 @@ export class MapManager {
         const cachedImageStatus = this.getCachedData(this.CACHE_KEYS.IMAGE_STATUS);
         if (!cachedImageStatus) {
             // 캐시가 없으면 실시간 로드 후 캐시
-            await this.styleSidosWithImages();
+            const loadingNotification = this.showMapUpdateNotification('지도 색상을 업데이트하는 중...', 'info');
+            
+            try {
+                await this.styleSidosWithImages();
+                this.hideNotification(loadingNotification);
+            } catch (error) {
+                this.hideNotification(loadingNotification);
+                this.showMapUpdateNotification('지도 색상 업데이트 중 오류가 발생했습니다.', 'error');
+                throw error;
+            }
             return;
         }
         
@@ -665,7 +770,16 @@ export class MapManager {
         const cachedImageStatus = this.getCachedData(this.CACHE_KEYS.IMAGE_STATUS);
         if (!cachedImageStatus || !cachedImageStatus.sigungu) {
             // 캐시가 없으면 실시간 로드
-            await this.styleDistrictsWithImages();
+            const loadingNotification = this.showMapUpdateNotification('시군구 색상을 업데이트하는 중...', 'info');
+            
+            try {
+                await this.styleDistrictsWithImages();
+                this.hideNotification(loadingNotification);
+            } catch (error) {
+                this.hideNotification(loadingNotification);
+                this.showMapUpdateNotification('시군구 색상 업데이트 중 오류가 발생했습니다.', 'error');
+                throw error;
+            }
             return;
         }
         
@@ -868,9 +982,25 @@ export class MapManager {
     
     // 이미지 업로드/수정 완료 후 호출할 메서드
     async onImageUpdated() {
-        await this.refreshMapColors();
-        if (this.isUserLoggedIn()) {
-            await this.refreshUserStats();
+        // 지도 업데이트 시작 알림
+        const updateNotification = this.showMapUpdateNotification('지도를 업데이트하는 중...', 'info');
+        
+        try {
+            await this.refreshMapColors();
+            if (this.isUserLoggedIn()) {
+                await this.refreshUserStats();
+            }
+            
+            // 업데이트 완료 알림
+            this.hideNotification(updateNotification);
+            this.showMapUpdateNotification('지도 업데이트가 완료되었습니다.', 'success');
+            
+        } catch (error) {
+            console.error('Error updating map after image change:', error);
+            
+            // 에러 알림
+            this.hideNotification(updateNotification);
+            this.showMapUpdateNotification('지도 업데이트 중 오류가 발생했습니다.', 'error');
         }
     }
 }

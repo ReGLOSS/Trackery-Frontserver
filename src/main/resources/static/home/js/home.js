@@ -3,6 +3,7 @@ import { MapRenderer } from './mapRenderer.js';
 import { ImageManager } from './imageManager.js';
 import { ModalManager } from './modalManager.js';
 import { StatsRenderer } from './statsRenderer.js';
+import { BulkDeleteManager } from './bulkDeleteManager.js';
 import { NotificationHelper } from '../../module/notification/notificationHelper.js';
 
 /**
@@ -17,7 +18,8 @@ class MapApplication {
         this.imageManager = new ImageManager();
         this.modalManager = new ModalManager();
         this.statsRenderer = new StatsRenderer();
-        
+        this.bulkDeleteManager = new BulkDeleteManager();
+
         // 의존성 주입
         this.setupDependencies();
     }
@@ -29,18 +31,30 @@ class MapApplication {
             renderer: this.renderer,
             imageManager: this.imageManager,
             modalManager: this.modalManager,
-            statsRenderer: this.statsRenderer
+            statsRenderer: this.statsRenderer,
+            bulkDeleteManager: this.bulkDeleteManager
         });
-        
-        // ImageManager에 모달 매니저 주입
-        this.imageManager.setModalManager(this.modalManager);
-        
+
+        // ImageManager에 의존성 주입
+        this.imageManager.setDependencies({
+            modalManager: this.modalManager,
+            bulkDeleteManager: this.bulkDeleteManager
+        });
+
         // ModalManager에 의존성 주입
         this.modalManager.setDependencies({
             mapManager: this.mapManager,
             imageManager: this.imageManager
         });
-        
+
+        // BulkDeleteManager에 의존성 주입
+        this.bulkDeleteManager.setDependencies({
+            imageManager: this.imageManager,
+            modalManager: this.modalManager,
+            mapManager: this.mapManager,
+            notificationHelper: NotificationHelper
+        });
+
         // StatsRenderer에 렌더러 주입
         this.statsRenderer.setRenderer(this.renderer);
     }
