@@ -1,0 +1,567 @@
+/**
+ * 통합 사이드모달 CSS
+ */
+
+/* ===== 사이드모달 기본 스타일 ===== */
+.side-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: none;
+}
+
+.side-modal .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1001;
+}
+
+.side-modal .detail-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: clamp(18.75rem, 30vw, 37.5%) !important;
+    height: 100vh;
+    background-color: var(--primary-bg);
+    padding: 3vh 1.8vh;
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.2);
+    z-index: 1002;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-modal .detail-container::-webkit-scrollbar {
+    display: none;
+}
+
+.side-modal.show .detail-container {
+    transform: translateX(0);
+}
+
+/* ===== 모달 헤더 스타일 ===== */
+.side-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
+}
+
+.side-modal .modal-title {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.side-modal .modal-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.side-modal .modal-close-btn {
+    background: none;
+    border: none;
+    font-size: clamp(1.2rem, 3vh, 2rem);
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 0;
+    width: clamp(2rem, 4vh, 3rem);
+    height: clamp(2rem, 4vh, 3rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-sm);
+    transition: all 0.2s ease;
+}
+
+.side-modal .modal-close-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: var(--text-primary);
+}
+
+/* ===== 모달 바디 스타일 ===== */
+.side-modal .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: none;
+    padding-right: var(--spacing-xs);
+}
+
+.side-modal .modal-body::-webkit-scrollbar {
+    display: none;
+}
+
+/* ===== 액션 버튼 스타일 ===== */
+.side-modal .modal-actions .btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    border-radius: var(--border-radius-sm);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.side-modal .modal-actions .btn-primary {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.side-modal .modal-actions .btn-primary:hover {
+    background-color: #1a1a24;
+    box-shadow: 0 2px 4px var(--hover-shadow);
+}
+
+.side-modal .modal-actions .btn-secondary {
+    background-color: var(--text-secondary);
+    color: white;
+}
+
+.side-modal .modal-actions .btn-secondary:hover {
+    background-color: #5a6268;
+    box-shadow: 0 2px 4px var(--hover-shadow);
+}
+
+.side-modal .modal-actions .btn-success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.side-modal .modal-actions .btn-success:hover {
+    background-color: #218838;
+    box-shadow: 0 2px 4px var(--hover-shadow);
+}
+
+.side-modal .modal-actions .btn-warning {
+    background-color: var(--warning-color);
+    color: var(--text-primary);
+}
+
+.side-modal .modal-actions .btn-warning:hover {
+    background-color: #e0a800;
+    box-shadow: 0 2px 4px var(--hover-shadow);
+}
+
+.side-modal .modal-actions .btn-danger {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.side-modal .modal-actions .btn-danger:hover {
+    background-color: #c82333;
+    box-shadow: 0 2px 4px var(--hover-shadow);
+}
+
+/* ===== 애니메이션 ===== */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(100%);
+    }
+}
+
+/* 모달 오버레이 페이드 애니메이션 */
+.side-modal .modal-overlay {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    will-change: opacity; /* 오버레이 페이드 최적화 */
+}
+
+.side-modal.show .modal-overlay {
+    opacity: 1;
+}
+
+/* ===== 기존 .detail-modal 클래스와의 호환성 보장 ===== */
+.detail-modal {
+    /* 기존 .detail-modal이 side-modal 클래스 없이도 동작하도록 기본 스타일 적용 */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: none;
+}
+
+.detail-modal .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1001;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    will-change: opacity;
+}
+
+.detail-modal .detail-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: clamp(18.75rem, 30vw, 37.5%) !important;
+    height: 100vh;
+    background-color: var(--primary-bg);
+    padding: 3vh 1.8vh;
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.2);
+    z-index: 1002;
+    transform: translateZ(0) translateX(100%); /* 초기 상태: 우측 밖에 위치 */
+    transition: transform 0.3s ease-in-out;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.detail-modal .detail-container::-webkit-scrollbar {
+    display: none;
+}
+
+/* 모달이 열릴 때 애니메이션 (요구사항 1.3, 3.1) */
+.detail-modal.show .modal-overlay,
+.side-modal.show .modal-overlay {
+    opacity: 1;
+}
+
+.detail-modal.show .detail-container,
+.side-modal.show .detail-container {
+    transform: translateZ(0) translateX(0); /* 슬라이드 인: 중앙으로 이동 */
+}
+
+/* side-modal 클래스가 추가된 경우 (통합 모달 사용 시) */
+.detail-modal.side-modal {
+    /* 기존 .detail-modal 클래스를 사용하는 경우에도 동일하게 작동 */
+}
+
+/* 하드웨어 가속 최적화 및 성능 향상 */
+.side-modal .detail-container,
+.detail-modal .detail-container {
+    /* GPU 가속을 위한 3D transform 사용 */
+    transform: translateZ(0) translateX(100%);
+    /* 애니메이션 성능 최적화 */
+    will-change: transform;
+    backface-visibility: hidden;
+}
+
+.side-modal.show .detail-container,
+.detail-modal.show .detail-container {
+    transform: translateZ(0) translateX(0);
+}
+
+/* ===== 동적 커스터마이징 지원 스타일 (요구사항 7.2) ===== */
+
+/* 제목 커스터마이징 스타일 */
+.side-modal .modal-title-container {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.side-modal .modal-title-container.modal-title-vertical {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+}
+
+.side-modal .modal-title-container.modal-title-center {
+    justify-content: center;
+    text-align: center;
+}
+
+.side-modal .modal-title-container.modal-title-right {
+    justify-content: flex-end;
+    text-align: right;
+}
+
+.side-modal .modal-title-main {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.side-modal .modal-title-icon {
+    display: inline-flex;
+    align-items: center;
+    font-size: 1.2em;
+}
+
+.side-modal .modal-title-text {
+    font-weight: 600;
+}
+
+.side-modal .modal-title-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2em 0.5em;
+    font-size: 0.75em;
+    background-color: var(--accent-color);
+    color: white;
+    border-radius: var(--border-radius-sm);
+    margin-left: var(--spacing-xs);
+}
+
+.side-modal .modal-title-subtitle {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    font-weight: normal;
+    margin-top: var(--spacing-xs);
+}
+
+/* 버튼 커스터마이징 스타일 */
+.side-modal .btn-loading-icon {
+    display: inline-block;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.side-modal .btn-icon {
+    display: inline-flex;
+    align-items: center;
+}
+
+.side-modal .btn-text {
+    display: inline-block;
+}
+
+.side-modal .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.side-modal .btn:disabled:hover {
+    background-color: inherit;
+    box-shadow: none;
+}
+
+/* 툴팁 스타일 */
+.side-modal [data-tooltip] {
+    position: relative;
+}
+
+.side-modal [data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 0.5em 0.75em;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.8em;
+    white-space: nowrap;
+    z-index: 1003;
+    margin-bottom: 0.5em;
+}
+
+.side-modal [data-tooltip]:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.8);
+    z-index: 1003;
+}
+
+/* 커스텀 클래스 지원 */
+.side-modal.modal-large .detail-container {
+    width: clamp(25rem, 40vw, 50%) !important;
+}
+
+.side-modal.modal-small .detail-container {
+    width: clamp(15rem, 25vw, 30%) !important;
+}
+
+.side-modal.modal-full-height .detail-container {
+    height: 100vh;
+}
+
+.side-modal.modal-compact .detail-container {
+    padding: 2vh 1.2vh;
+}
+
+.side-modal.modal-spacious .detail-container {
+    padding: 4vh 2.4vh;
+}
+
+/* 테마 지원 */
+.side-modal.modal-theme-dark .detail-container {
+    background-color: #2a2a36;
+    color: #ffffff;
+}
+
+.side-modal.modal-theme-dark .modal-title {
+    color: #ffffff;
+}
+
+.side-modal.modal-theme-dark .modal-close-btn {
+    color: #cccccc;
+}
+
+.side-modal.modal-theme-dark .modal-close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.side-modal.modal-theme-light .detail-container {
+    background-color: #ffffff;
+    color: #333333;
+}
+
+/* 애니메이션 커스터마이징 */
+.side-modal.modal-animation-fast .detail-container,
+.side-modal.modal-animation-fast .modal-overlay {
+    transition-duration: 0.15s;
+}
+
+.side-modal.modal-animation-slow .detail-container,
+.side-modal.modal-animation-slow .modal-overlay {
+    transition-duration: 0.5s;
+}
+
+.side-modal.modal-animation-bounce .detail-container {
+    transition-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* 상태 표시 클래스 */
+.side-modal.modal-loading .detail-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1004;
+}
+
+.side-modal.modal-loading .detail-container::after {
+    content: '로딩 중...';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2em;
+    color: var(--text-primary);
+    z-index: 1005;
+}
+
+/* 반응형 디자인 강화 */
+@media (max-width: 768px) {
+    .side-modal .detail-container,
+    .detail-modal .detail-container {
+        width: 100% !important;
+        padding: 2vh 1.5vh;
+    }
+    
+    .side-modal.modal-large .detail-container,
+    .side-modal.modal-small .detail-container {
+        width: 100% !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .side-modal .detail-container,
+    .detail-modal .detail-container {
+        padding: 1.5vh 1vh;
+    }
+    
+    .side-modal .modal-header {
+        padding-bottom: var(--spacing-xs);
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .side-modal .modal-title {
+        font-size: var(--font-size-md);
+    }
+    
+    .side-modal .modal-actions .btn {
+        padding: var(--spacing-xs);
+        font-size: var(--font-size-xs);
+    }
+}
+
+/* 접근성 개선 */
+.side-modal:focus-within .detail-container {
+    outline: 2px solid var(--accent-color);
+    outline-offset: -2px;
+}
+
+.side-modal .modal-close-btn:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+.side-modal .btn:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+    .side-modal .modal-overlay {
+        background: rgba(0, 0, 0, 0.8);
+    }
+    
+    .side-modal .detail-container {
+        border: 2px solid var(--text-primary);
+    }
+    
+    .side-modal .btn {
+        border: 1px solid currentColor;
+    }
+}
+
+/* 애니메이션 감소 모드 지원 */
+@media (prefers-reduced-motion: reduce) {
+    .side-modal .detail-container,
+    .side-modal .modal-overlay,
+    .detail-modal .detail-container,
+    .detail-modal .modal-overlay {
+        transition: none;
+    }
+    
+    .side-modal .btn-loading-icon {
+        animation: none;
+    }
+}
