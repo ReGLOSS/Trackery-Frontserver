@@ -1,4 +1,3 @@
-
 /**
  * 통합 사이드모달 관리 클래스
  * 
@@ -310,10 +309,6 @@ class SideModal {
         return this;
     }
 
-
-
-
-
     /**
      * 이벤트 콜백 등록
      */
@@ -337,7 +332,6 @@ class SideModal {
         console.log(`콜백 등록됨: ${eventName}`);
         return this; // 메서드 체이닝 지원
     }
-
 
     /**
      * 이벤트 리스너 등록
