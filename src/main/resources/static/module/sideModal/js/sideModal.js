@@ -5,7 +5,7 @@
 *
  * 주요 특징:
  * - 기존 DOM 구조 재활용으로 메모리 효율성 극대화
- * - 0.3s ease-in-out 슬라이드 애니메이션 (이미지 업로드 모달과 동일)
+ * - 0.3s ease-in-out 슬라이드 애니메이션
  * - 오버레이 클릭, ESC 키, 닫기 버튼을 통한 모달 닫기 지원
  * - onBeforeOpen, onOpen, onClose, onBeforeClose 생명주기 콜백
  * - 메모리 누수 방지를 위한 자동 정리 시스템
@@ -26,7 +26,7 @@ class SideModal {
     static _isCleanupRunning = false;       // 정리 작업 진행 상태
 
     constructor(options = {}) {
-        // 기본 옵션 설정 (이미지 업로드 모달과 동일한 크기와 애니메이션)
+        // 기본 옵션 설정
         this.options = {
             width: 'clamp(18.75rem, 30vw, 37.5%)',
             height: '100vh',
