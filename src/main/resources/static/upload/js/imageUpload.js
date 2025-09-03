@@ -7,10 +7,6 @@ import { ProcessingIndicator } from "../../module/processingIndicator/js/process
 import { SideModal } from "../../module/sideModal/js/sideModal.js";
 
 // ===== 상수 정의 =====
-/**
- * 이미지 업로드 관련 상수들
- * 파일 크기, 확장자, MIME 타입 등의 제한사항을 정의
- */
 const CONSTANTS = {
     MAX_FILES: 50,
     MAX_FILE_SIZE: 30 * 1024 * 1024, // 30MB
@@ -28,61 +24,24 @@ const CONSTANTS = {
 // ===== 전역 변수 =====
 let detailModal = null;
 
-// ===== SideModal 헬퍼 함수들 =====
-/**
- * SideModal 안전 접근을 위한 헬퍼 함수들
- */
-const SideModalHelper = {
-    /**
-     * SideModal이 사용 가능한지 확인
-     */
-    isAvailable() {
-        return detailModal && detailModal.isInitialized;
-    },
-
-    /**
-     * SideModal 내부 요소 안전 접근
-     */
-    getElement(selector) {
-        if (!this.isAvailable()) return null;
-        return detailModal.modalBody?.querySelector(selector) || null;
-    },
-
-    /**
-     * SideModal 열기
-     */
-    open() {
-        if (this.isAvailable()) {
-            detailModal.open();
-            return true;
-        }
-        console.error('SideModal을 열 수 없습니다.');
-        return false;
-    },
-
-    /**
-     * SideModal 닫기
-     */
-    close() {
-        if (this.isAvailable()) {
-            detailModal.close();
-            return true;
-        }
-        return false;
-    }
-};
-
 // ===== DOM 관리자 =====
-/**
- * DOM 요소 접근을 위한 중앙화된 관리자
- * getter 패턴을 사용하여 동적으로 DOM 요소를 찾아 반환
- */
 const DOM = {
     get fileInput() { return document.getElementById("imageInput"); },
     get addImageButton() { return document.querySelector(".add-image"); },
     get gallery() { return document.querySelector(".gallery"); },
-    // 기본 업로드 기능
+    get imageNotSelectedBlock() { return document.querySelector("#detailModal .image-not-selected"); },
+    get imageSelectedBlock() { return document.querySelector("#detailModal .image-selected"); },
     get imageUploadBtn() { return document.querySelector("#imageUploadBtn"); },
+    get locationBox() { return document.querySelector("#modalLocationBox"); },
+    get dateBox() { return document.querySelector("#modalDateBox"); },
+    get description() { return document.querySelector("#modalDescription"); },
+    get publicCheckbox() { return document.querySelector("#modalPublic"); },
+    get tagInput() { return document.querySelector('#detailModal .tag-input'); },
+    get tagAddButton() { return document.querySelector('#detailModal .tag-add'); },
+    // 재구현된 SideModal의 DOM 요소 접근
+    get detailModal() { return detailModal && detailModal.isInitialized ? detailModal.container : null; },
+    get detailModalOverlay() { return detailModal && detailModal.isInitialized ? detailModal.overlay : null; },
+    get detailModalBody() { return detailModal && detailModal.isInitialized ? detailModal.modalBody : null; },
 
     // 이미지 선택 모달
     get imageSelectModal() { return document.getElementById('imageSelectModal'); },
@@ -97,8 +56,20 @@ const DOM = {
     get addFilesBtn() { return document.getElementById('addFilesBtn'); },
 
     validateRequiredElements() {
+        // 재구현된 SideModal의 초기화 상태 확인
+        if (!detailModal || !detailModal.isInitialized) {
+            console.error('SideModal이 초기화되지 않았습니다.');
+            return false;
+        }
+
+        // SideModal의 필수 요소들 확인
+        if (!detailModal.container) {
+            console.error('SideModal 컨테이너가 초기화되지 않았습니다.');
+            return false;
+        }
+
         // 업로드 페이지의 필수 DOM 요소들 확인
-        const required = ['fileInput', 'addImageButton', 'gallery', 'imageUploadBtn'];
+        const required = ['fileInput', 'addImageButton', 'gallery'];
         const missing = required.filter(name => !this[name]);
 
         if (missing.length > 0) {
@@ -112,10 +83,6 @@ const DOM = {
 };
 
 // ===== Object URL 관리자 =====
-/**
- * 메모리 누수 방지를 위한 Object URL 관리 클래스
- * 생성된 blob URL들을 추적하고 적절한 시점에 해제
- */
 const ObjectURLManager = {
     objectUrls: new Set(),
 
@@ -139,10 +106,6 @@ const ObjectURLManager = {
 };
 
 // ===== 이미지 처리 유틸리티 =====
-/**
- * 이미지 파일 처리 관련 유틸리티 함수들
- * MIME 타입 변환, EXIF 날짜 포맷팅 등의 기능 제공
- */
 const ImageProcessor = {
     extensionToMimeType(extension) {
         const mimeType = CONSTANTS.MIME_TYPE_MAP[extension.toLowerCase()];
@@ -162,10 +125,6 @@ const ImageProcessor = {
 };
 
 // ===== API 서비스 =====
-/**
- * 백엔드 API와의 통신을 담당하는 서비스 클래스
- * 위치 정보 요청, S3 업로드, 메타데이터 전송 등의 기능 제공
- */
 const ApiService = {
     async fetchLocation(file) {
         const exif = await parseExif(file);
@@ -276,10 +235,6 @@ const ApiService = {
 };
 
 // ===== 파일 검증 유틸리티 =====
-/**
- * 업로드 파일의 유효성을 검증하는 유틸리티 클래스
- * 파일 크기, 타입, 이름 등의 보안 검증 수행
- */
 const FileValidator = {
     validate(file) {
         this.validateFileSize(file);
@@ -321,10 +276,6 @@ const FileValidator = {
 };
 
 // ===== 이미지 요소 팩토리 =====
-/**
- * 이미지 DOM 요소 생성을 담당하는 팩토리 클래스
- * 이미지 데이터 구조체 생성, DOM 요소 생성, 래퍼 생성 등의 기능 제공
- */
 const ImageElementFactory = {
     createImageData(file, fileExtension, parsedData) {
         const { location = '', dateTime = '', tags = [] } = parsedData;
@@ -385,11 +336,28 @@ const ImageElementFactory = {
 };
 
 // ===== 모달 관리자 =====
-/**
- * 이미지 선택 모달의 표시/숨김을 관리하는 클래스
- * SideModal은 detailModal 인스턴스를 통해 직접 제어
- */
 const ModalManager = {
+    /**
+     * SideModal API를 사용하여 사이드모달 표시
+     */
+    showDetailModal() {
+        if (detailModal && detailModal.isInitialized) {
+            detailModal.open();
+        } else {
+            console.error('SideModal이 초기화되지 않아 모달을 열 수 없습니다.');
+        }
+    },
+
+    /**
+     * SideModal API를 사용하여 사이드모달 숨김
+     */
+    hideDetailModal() {
+        if (detailModal && detailModal.isInitialized) {
+            detailModal.close();
+        } else {
+            console.error('SideModal이 초기화되지 않아 모달을 닫을 수 없습니다.');
+        }
+    },
 
     /**
      * 이미지 선택 모달 표시
@@ -417,10 +385,6 @@ const ModalManager = {
 };
 
 // ===== 이벤트 핸들러 =====
-/**
- * 사용자 상호작용 이벤트를 처리하는 핸들러 집합
- * 파일 업로드, 모달 제어, 이미지 선택 등의 이벤트 처리
- */
 const EventHandlers = {
     onAddImageClick() {
         ModalManager.showImageSelectModal();
@@ -463,18 +427,20 @@ const EventHandlers = {
             UiHelpers.updateSelectedImageTags();
         }
 
-        // SideModal 열기
-        SideModalHelper.open();
+        ModalManager.showDetailModal();
 
-        // 모달 내부 상태 변경
-        const imageNotSelectedBlock = SideModalHelper.getElement(".image-not-selected");
-        const imageSelectedBlock = SideModalHelper.getElement(".image-selected");
-        
-        if (imageNotSelectedBlock && imageSelectedBlock) {
-            const notSelectedImageDisplay = window.getComputedStyle(imageNotSelectedBlock).display;
-            if (notSelectedImageDisplay === "flex") {
-                imageNotSelectedBlock.style.display = "none";
-                imageSelectedBlock.style.display = "flex";
+        // 모달 내부 요소들을 통해 상태 변경
+        const modalBody = detailModal?.modalBody;
+        if (modalBody) {
+            const imageNotSelectedBlock = modalBody.querySelector(".image-not-selected");
+            const imageSelectedBlock = modalBody.querySelector(".image-selected");
+            
+            if (imageNotSelectedBlock && imageSelectedBlock) {
+                const notSelectedImageDisplay = window.getComputedStyle(imageNotSelectedBlock).display;
+                if (notSelectedImageDisplay === "flex") {
+                    imageNotSelectedBlock.style.display = "none";
+                    imageSelectedBlock.style.display = "flex";
+                }
             }
         }
 
@@ -492,12 +458,15 @@ const EventHandlers = {
     updateModalContent(target) {
         const { preview, location, dateTime, description, tags, public: isPublic } = target.dataset;
 
-        // SideModal 요소들 안전 접근
-        const imageDetail = SideModalHelper.getElement(".image-detail");
-        const descriptionInput = SideModalHelper.getElement("#modalDescription");
-        const locationBox = SideModalHelper.getElement("#modalLocationBox");
-        const dateBox = SideModalHelper.getElement("#modalDateBox");
-        const publicCheckbox = SideModalHelper.getElement("#modalPublic");
+        // SideModal의 modalBody를 통해 요소 접근
+        const modalBody = detailModal?.modalBody;
+        if (!modalBody) return;
+
+        const imageDetail = modalBody.querySelector(".image-detail");
+        const descriptionInput = modalBody.querySelector("#modalDescription");
+        const locationBox = modalBody.querySelector("#modalLocationBox");
+        const dateBox = modalBody.querySelector("#modalDateBox");
+        const publicCheckbox = modalBody.querySelector("#modalPublic");
 
         if (imageDetail) imageDetail.src = preview;
         if (descriptionInput) descriptionInput.value = description;
@@ -520,8 +489,11 @@ const EventHandlers = {
     },
 
     updateFieldValidation() {
-        const dateBox = SideModalHelper.getElement("#modalDateBox");
-        const locationBox = SideModalHelper.getElement("#modalLocationBox");
+        const modalBody = detailModal?.modalBody;
+        if (!modalBody) return;
+
+        const dateBox = modalBody.querySelector("#modalDateBox");
+        const locationBox = modalBody.querySelector("#modalLocationBox");
 
         if (dateBox) {
             dateBox.classList.remove("invalid", "valid");
@@ -631,7 +603,7 @@ const EventHandlers = {
 
         if (img?.classList.contains("selected")) {
             this.clearDetailView();
-            SideModalHelper.close();
+            ModalManager.hideDetailModal();
         }
         
         imageWrapper.remove();
@@ -639,12 +611,15 @@ const EventHandlers = {
     },
 
     clearDetailView() {
-        const imageSelectedBlock = SideModalHelper.getElement(".image-selected");
-        const imageNotSelectedBlock = SideModalHelper.getElement(".image-not-selected");
-        const description = SideModalHelper.getElement("#modalDescription");
-        const locationBox = SideModalHelper.getElement("#modalLocationBox");
-        const dateBox = SideModalHelper.getElement("#modalDateBox");
-        const publicCheckbox = SideModalHelper.getElement("#modalPublic");
+        const modalBody = detailModal?.modalBody;
+        if (!modalBody) return;
+
+        const imageSelectedBlock = modalBody.querySelector(".image-selected");
+        const imageNotSelectedBlock = modalBody.querySelector(".image-not-selected");
+        const description = modalBody.querySelector("#modalDescription");
+        const locationBox = modalBody.querySelector("#modalLocationBox");
+        const dateBox = modalBody.querySelector("#modalDateBox");
+        const publicCheckbox = modalBody.querySelector("#modalPublic");
 
         if (imageSelectedBlock) imageSelectedBlock.style.display = "none";
         if (imageNotSelectedBlock) imageNotSelectedBlock.style.display = "flex";
@@ -767,10 +742,6 @@ const EventHandlers = {
 };
 
 // ===== SSE 핸들러 =====
-/**
- * Server-Sent Events를 통한 실시간 업로드 진행상황 처리 클래스
- * 업로드 완료 알림, 실패한 이미지 추적 등의 기능 제공
- */
 class SSEHandler {
     constructor(totalImages, uploadIndicator) {
         this.totalImages = totalImages;
@@ -851,10 +822,6 @@ class SSEHandler {
 }
 
 // ===== 이미지 선택 모달 관리 =====
-/**
- * 드래그 앤 드롭 이미지 선택 모달의 상태와 UI를 관리하는 클래스
- * 파일 목록 관리, UI 업데이트, 중복 파일 검사 등의 기능 제공
- */
 const ImageSelectModal = {
     selectedFiles: [],
 
@@ -965,12 +932,8 @@ const ImageSelectModal = {
 };
 
 // ===== 전체화면 이미지 토글 =====
-/**
- * 이미지 전체화면 보기 토글 기능
- * 모달 내의 이미지를 전체화면 오버레이로 표시
- */
 function toggleImageFullscreen() {
-    const imageDetail = SideModalHelper.getElement('.image-container .image-detail');
+    const imageDetail = detailModal?.modalBody?.querySelector('.image-container .image-detail');
     if (!imageDetail) return;
 
     let existingOverlay = document.querySelector('.fullSize-image-overlay');
@@ -1001,55 +964,57 @@ function toggleImageFullscreen() {
 }
 
 // ===== SideModal 초기화 =====
-/**
- * SideModal 인스턴스 생성 및 초기화
- * 상세 정보 입력을 위한 우측 사이드 모달 설정
- */
 function initializeSideModal() {
-    detailModal = new SideModal({
-        showCloseButton: false,
-        customClass: 'upload-detail-modal'
-    });
+    try {
+        detailModal = new SideModal({
+            width: 'clamp(18.75rem, 30vw, 37.5%)',
+            height: '100vh',
+            closeOnOverlay: true,
+            closeOnEscape: true,
+            showCloseButton: false,
+            customClass: 'upload-detail-modal'
+        });
 
-    detailModal.init('#detailModal');
+        detailModal.init('#detailModal');
 
-    // SideModal 이벤트 콜백 등록
-    detailModal.on('onClose', () => {
-        // 선택된 이미지 상태 초기화
-        document.querySelectorAll(".gallery-image").forEach(img => img.classList.remove("selected"));
-        
-        // 모달 내부 상태 초기화
-        const imageNotSelectedBlock = SideModalHelper.getElement(".image-not-selected");
-        const imageSelectedBlock = SideModalHelper.getElement(".image-selected");
-        if (imageNotSelectedBlock) imageNotSelectedBlock.style.display = "flex";
-        if (imageSelectedBlock) imageSelectedBlock.style.display = "none";
+        detailModal.on('onClose', () => {
+            document.querySelectorAll(".gallery-image").forEach(img => img.classList.remove("selected"));
+            
+            const imageNotSelectedBlock = document.querySelector("#detailModal .image-not-selected");
+            const imageSelectedBlock = document.querySelector("#detailModal .image-selected");
 
-        // 기타 모달 닫기
-        document.querySelector('#mapPickerModal')?.classList.remove('show');
-    });
+            if (imageNotSelectedBlock) imageNotSelectedBlock.style.display = "flex";
+            if (imageSelectedBlock) imageSelectedBlock.style.display = "none";
 
-    detailModal.on('onOpen', () => {
-        console.log('업로드 페이지 사이드모달 열림');
-    });
+            document.querySelector('#mapPickerModal')?.classList.remove('show');
+        });
 
-    setupModalEventListeners();
+        detailModal.on('onOpen', () => {
+            console.log('업로드 페이지 사이드모달이 열렸습니다.');
+        });
+
+        setupModalEventListeners();
+        console.log('업로드 페이지 SideModal 초기화 완료');
+    } catch (error) {
+        console.error('SideModal 생성 실패:', error);
+        throw error;
+    }
 }
 
 // ===== 모달 이벤트 리스너 설정 =====
-/**
- * SideModal 내부 요소들에 이벤트 리스너 등록
- * 설명, 공개 설정, 위치/날짜 변경, 태그 관리 등
- */
 function setupModalEventListeners() {
-    if (!SideModalHelper.isAvailable()) return;
+    if (!detailModal) return;
 
     // 모달 내부 요소들에 이벤트 리스너 등록
-    const description = SideModalHelper.getElement('#modalDescription');
-    const publicCheckbox = SideModalHelper.getElement('#modalPublic');
-    const locationBox = SideModalHelper.getElement('#modalLocationBox');
-    const dateBox = SideModalHelper.getElement('#modalDateBox');
-    const tagAddButton = SideModalHelper.getElement('.tag-add');
-    const tagInput = SideModalHelper.getElement('.tag-input');
+    const modalBody = detailModal.modalBody;
+    if (!modalBody) return;
+
+    const description = modalBody.querySelector('#modalDescription');
+    const publicCheckbox = modalBody.querySelector('#modalPublic');
+    const locationBox = modalBody.querySelector('#modalLocationBox');
+    const dateBox = modalBody.querySelector('#modalDateBox');
+    const tagAddButton = modalBody.querySelector('.tag-add');
+    const tagInput = modalBody.querySelector('.tag-input');
 
     description?.addEventListener("input", EventHandlers.onDescriptionInput);
     publicCheckbox?.addEventListener("change", EventHandlers.onPublicChange);
@@ -1060,66 +1025,61 @@ function setupModalEventListeners() {
     tagInput?.addEventListener("blur", EventHandlers.onTagInputBlur);
 
     // 위치 편집 버튼
-    SideModalHelper.getElement('#modalEditLocationBtn')?.addEventListener('click', (e) => {
+    modalBody.querySelector('#modalEditLocationBtn')?.addEventListener('click', (e) => {
         e.preventDefault();
         document.querySelector('#mapPickerModal')?.classList.add('show');
     });
 
     // 날짜 편집 버튼
-    SideModalHelper.getElement('#modalEditDateBtn')?.addEventListener('click', (e) => {
+    modalBody.querySelector('#modalEditDateBtn')?.addEventListener('click', (e) => {
         e.preventDefault();
         window.uploadPageFlatpickr?.open();
     });
 }
 
 // ===== 초기화 함수 =====
-/**
- * 이미지 업로드 페이지 전체 초기화
- * SideModal 설정, DOM 요소 검증, 이벤트 리스너 등록 등
- */
 function initialize() {
     console.log('이미지 업로드 페이지 초기화 시작');
 
-    // DOM 요소 검증
-    if (!DOM.validateRequiredElements()) {
-        console.error('초기화 실패: 필수 DOM 엘리먼트가 누락되었습니다.');
-        return;
-    }
-
-    // SideModal 초기화
     try {
         initializeSideModal();
-        console.log('SideModal 초기화 성공');
+        
+        if (!DOM.validateRequiredElements()) {
+            console.error('초기화 실패: 필수 DOM 엘리먼트가 누락되었습니다.');
+            return;
+        }
     } catch (error) {
         console.error('SideModal 초기화 실패:', error);
-        // SideModal 없이도 기본 기능은 사용 가능
         detailModal = null;
+        alert('사이드모달 초기화에 실패했습니다. 기본 기능만 사용 가능합니다.');
     }
 
     ValidationService.setupValidationListeners();
 
     // 데이트피커 설정
-    const dateBox = SideModalHelper.getElement("#modalDateBox");
-    if (dateBox) {
-        window.uploadPageFlatpickr = flatpickr(dateBox, {
-            dateFormat: "Y / m / d",
-            maxDate: "today",
-            locale: "ko",
-            onClose: async function () {
-                const selectedImage = document.querySelector(".gallery-image.selected");
-                if (selectedImage && dateBox) {
-                    selectedImage.dataset.dateTime = dateBox.value;
+    if (detailModal?.modalBody) {
+        const dateBox = detailModal.modalBody.querySelector("#modalDateBox");
+        if (dateBox) {
+            window.uploadPageFlatpickr = flatpickr(dateBox, {
+                dateFormat: "Y / m / d",
+                maxDate: "today",
+                locale: "ko",
+                onClose: async function () {
+                    const selectedImage = document.querySelector(".gallery-image.selected");
+                    if (selectedImage && dateBox) {
+                        selectedImage.dataset.dateTime = dateBox.value;
 
-                    if (dateBox.classList.contains("invalid")) {
-                        dateBox.classList.remove("invalid");
-                        dateBox.classList.add("valid");
+                        if (dateBox.classList.contains("invalid")) {
+                            dateBox.classList.remove("invalid");
+                            dateBox.classList.add("valid");
+                        }
+
+                        ValidationService.validateLocationAndDate();
+                        await EventHandlers.updateSeasonalTags(selectedImage);
                     }
-
-                    ValidationService.validateLocationAndDate();
-                    await EventHandlers.updateSeasonalTags(selectedImage);
                 }
-            }
-        });
+            });
+        }
     }
 
     // 이벤트 리스너 등록
@@ -1151,10 +1111,12 @@ function initialize() {
     }
 
     // 이미지 전체화면 토글
-    SideModalHelper.getElement('.image-container')?.addEventListener("click", (e) => {
-        e.stopPropagation();
-        toggleImageFullscreen();
-    });
+    if (detailModal?.modalBody) {
+        detailModal.modalBody.querySelector('.image-container')?.addEventListener("click", (e) => {
+            e.stopPropagation();
+            toggleImageFullscreen();
+        });
+    }
 
     // 이미지 선택 모달의 ESC 키 이벤트 (SideModal과 별도로 처리)
     document.addEventListener('keydown', (e) => {
