@@ -1,0 +1,320 @@
+/**
+ * 통합 사이드모달 CSS
+ */
+
+/* ===== 사이드모달 기본 스타일 ===== */
+.side-modal,
+.detail-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: none;
+}
+
+.side-modal .modal-overlay,
+.detail-modal .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1001;
+}
+
+.side-modal .detail-container,
+.detail-modal .detail-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: clamp(18.75rem, 30vw, 37.5%) !important;
+    height: 100vh;
+    background-color: var(--primary-bg);
+    padding: 3vh 1.8vh;
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.2);
+    z-index: 1002;
+    transform: translateZ(0) translateX(100%);
+    transition: transform 0.3s ease-in-out;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.side-modal .detail-container::-webkit-scrollbar,
+.detail-modal .detail-container::-webkit-scrollbar {
+    display: none;
+}
+
+.side-modal.show .detail-container,
+.detail-modal.show .detail-container {
+    transform: translateZ(0) translateX(0);
+}
+
+/* ===== 모달 헤더 스타일 ===== */
+.side-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
+}
+
+.side-modal .modal-title {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.side-modal .modal-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.side-modal .modal-close-btn {
+    background: none;
+    border: none;
+    font-size: clamp(1.2rem, 3vh, 2rem);
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 0;
+    width: clamp(2rem, 4vh, 3rem);
+    height: clamp(2rem, 4vh, 3rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-sm);
+    transition: all 0.2s ease;
+}
+
+.side-modal .modal-close-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: var(--text-primary);
+}
+
+/* ===== 모달 바디 스타일 ===== */
+.side-modal .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: none;
+    padding-right: var(--spacing-xs);
+}
+
+.side-modal .modal-body::-webkit-scrollbar {
+    display: none;
+}
+
+/* ===== 액션 버튼 스타일 ===== */
+.side-modal .modal-actions .btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    border-radius: var(--border-radius-sm);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.side-modal .modal-actions .btn-primary {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.side-modal .modal-actions .btn-primary:hover {
+    background-color: #1a1a24;
+    box-shadow: 0 2px 4px var(--hover-shadow);
+}
+
+.side-modal .modal-actions .btn-secondary {
+    background-color: var(--text-secondary);
+    color: white;
+}
+
+.side-modal .modal-actions .btn-secondary:hover {
+    background-color: #5a6268;
+    box-shadow: 0 2px 4px var(--hover-shadow);
+}
+
+.side-modal .modal-actions .btn-success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.side-modal .modal-actions .btn-success:hover {
+    background-color: #218838;
+    box-shadow: 0 2px 4px var(--hover-shadow);
+}
+
+.side-modal .modal-actions .btn-warning {
+    background-color: var(--warning-color);
+    color: var(--text-primary);
+}
+
+.side-modal .modal-actions .btn-warning:hover {
+    background-color: #e0a800;
+    box-shadow: 0 2px 4px var(--hover-shadow);
+}
+
+.side-modal .modal-actions .btn-danger {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.side-modal .modal-actions .btn-danger:hover {
+    background-color: #c82333;
+    box-shadow: 0 2px 4px var(--hover-shadow);
+}
+
+/* ===== 애니메이션 ===== */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(100%);
+    }
+}
+
+/* 모달 오버레이 페이드 애니메이션 */
+.side-modal .modal-overlay,
+.detail-modal .modal-overlay {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    will-change: opacity;
+}
+
+.side-modal.show .modal-overlay,
+.detail-modal.show .modal-overlay {
+    opacity: 1;
+}
+
+/* ===== 동적 커스터마이징 지원 스타일 ===== */
+
+/* 제목 커스터마이징 스타일 */
+.side-modal .modal-title-container {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.side-modal .modal-title-container.modal-title-vertical {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+}
+
+.side-modal .modal-title-container.modal-title-center {
+    justify-content: center;
+    text-align: center;
+}
+
+.side-modal .modal-title-container.modal-title-right {
+    justify-content: flex-end;
+    text-align: right;
+}
+
+.side-modal .modal-title-main {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.side-modal .modal-title-icon {
+    display: inline-flex;
+    align-items: center;
+    font-size: 1.2em;
+}
+
+.side-modal .modal-title-text {
+    font-weight: 600;
+}
+
+.side-modal .modal-title-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2em 0.5em;
+    font-size: 0.75em;
+    background-color: var(--accent-color);
+    color: white;
+    border-radius: var(--border-radius-sm);
+    margin-left: var(--spacing-xs);
+}
+
+.side-modal .modal-title-subtitle {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    font-weight: normal;
+    margin-top: var(--spacing-xs);
+}
+
+/* 버튼 커스터마이징 스타일 */
+.side-modal .btn-loading-icon {
+    display: inline-block;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.side-modal .btn-icon {
+    display: inline-flex;
+    align-items: center;
+}
+
+.side-modal .btn-text {
+    display: inline-block;
+}
+
+.side-modal .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.side-modal .btn:disabled:hover {
+    background-color: inherit;
+    box-shadow: none;
+}
+
+/* 커스텀 클래스 지원 */
+.side-modal.modal-large .detail-container {
+    width: clamp(25rem, 40vw, 50%) !important;
+}
+
+.side-modal.modal-small .detail-container {
+    width: clamp(15rem, 25vw, 30%) !important;
+}
+
+.side-modal.modal-full-height .detail-container {
+    height: 100vh;
+}
+
+.side-modal.modal-compact .detail-container {
+    padding: 2vh 1.2vh;
+}
+
+.side-modal.modal-spacious .detail-container {
+    padding: 4vh 2.4vh;
+}

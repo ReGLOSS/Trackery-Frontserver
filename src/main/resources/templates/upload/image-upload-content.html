@@ -7,6 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/l10n/ko.min.js"></script>
     <link rel="stylesheet" href="/upload/css/image-upload.css">
+    <link rel="stylesheet" href="/module/sideModal/css/sideModal.css">
     <link rel="stylesheet" href="/module/processingIndicator/css/processingIndicator.css">
     <link th:replace="~{map/map-picker-modal :: mapPickerModalCss}">
     <script th:replace="~{map/map-picker-modal :: kostatMapScript}"></script>
@@ -114,8 +115,9 @@
     </section>
     <div layout:fragment="scripts">
         <script src="/common/js/exif-js/exif.js"></script>
-        <script type="module" src="/upload/js/imageUploadV2.js"></script>
+        <script type="module" src="/module/sideModal/js/sideModal.js"></script>
         <script th:replace="~{map/map-picker-modal :: mapPickerModalJs}"></script>
+        <script type="module" src="/upload/js/imageUpload.js" defer></script>
     </div>
 </body>
 
