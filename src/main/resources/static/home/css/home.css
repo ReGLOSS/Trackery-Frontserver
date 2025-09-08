@@ -112,26 +112,20 @@
     transition: fill 0.2s ease, stroke-width 0.2s ease;
 }
 
+.region-path.coverage-complete {
+    fill: #28a745;
+}
+
+.region-path.coverage-partial {
+    fill: #ffc107;
+}
+
 .region-path:hover {
-    fill: #007bff !important;
+    fill: #007bff;
     stroke-width: 0.2%;
 }
 
 .region-path.selected {
-    fill: #dc3545 !important;
-    stroke-width: 0.2%;
-}
-
-.region-path.has-images {
-    fill: #28a745 !important;
-}
-
-.region-path.has-images:hover {
-    fill: #007bff !important;
-    stroke-width: 0.2%;
-}
-
-.region-path.has-images.selected {
     fill: #dc3545 !important;
     stroke-width: 0.2%;
 }
