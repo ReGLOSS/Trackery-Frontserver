@@ -685,19 +685,9 @@ export class MapManager {
             return;
         }
 
-        for (const sido of this.sidoData) {
-            const sidoId = sido.sd_id || sido.id || sido.sidoId;
-            const pathElement = document.getElementById(sidoId);
-
-            if (pathElement && cachedImageStatus.sido) {
-                const coverageData = cachedImageStatus.sido;
-
-                if (coverageData.COMPLETE?.includes(sidoId)) {
-                    pathElement.classList.add('coverage-complete');
-                } else if (coverageData.PARTIAL?.includes(sidoId)) {
-                    pathElement.classList.add('coverage-partial');
-                }
-            }
+        // 캐시된 데이터로 스타일 적용
+        if (cachedImageStatus.sido) {
+            this.applyCachedSidoStyles(cachedImageStatus.sido);
         }
     }
 
@@ -729,6 +719,18 @@ export class MapManager {
         this.setCachedData(this.CACHE_KEYS.IMAGE_STATUS, cachedImageStatus);
     }
 
+    // 지도에 시도 커버리지 적용
+    applySidoStyleToElement(pathElement, sidoId, coverageData) {
+        if (coverageData.COMPLETE?.includes(sidoId)) {
+            pathElement.classList.add('coverage-complete');
+            return true; // 색상이 적용됨
+        } else if (coverageData.PARTIAL?.includes(sidoId)) {
+            pathElement.classList.add('coverage-partial');
+            return true; // 색상이 적용됨
+        }
+        return false; // 색상이 적용되지 않음
+    }
+
     // 시도 스타일 적용 도우미 메서드
     applySidoStyles(coverageData) {
         let styledCount = 0;
@@ -740,11 +742,8 @@ export class MapManager {
 
             if (pathElement) {
                 styledCount++;
-                if (coverageData.COMPLETE?.includes(sidoId)) {
-                    pathElement.classList.add('coverage-complete');
-                    coloredCount++;
-                } else if (coverageData.PARTIAL?.includes(sidoId)) {
-                    pathElement.classList.add('coverage-partial');
+                // 공통 헬퍼 메서드 사용
+                if (this.applySidoStyleToElement(pathElement, sidoId, coverageData)) {
                     coloredCount++;
                 }
             } else {
@@ -761,11 +760,8 @@ export class MapManager {
             const pathElement = document.getElementById(sidoId);
 
             if (pathElement) {
-                if (cachedData.COMPLETE?.includes(sidoId)) {
-                    pathElement.classList.add('coverage-complete');
-                } else if (cachedData.PARTIAL?.includes(sidoId)) {
-                    pathElement.classList.add('coverage-partial');
-                }
+                // 공통 헬퍼 메서드 사용
+                this.applySidoStyleToElement(pathElement, sidoId, cachedData);
             }
         }
     }
