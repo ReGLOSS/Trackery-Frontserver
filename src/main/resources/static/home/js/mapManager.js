@@ -224,9 +224,9 @@ export class MapManager {
         await this.fetchSigunguDataCached(sidoId);
         
         // 시도 이름이 없다면 시군구 데이터에서 가져오기
-        if (sidoName === '지역' && this.sigunguData && this.sigunguData.length > 0) {
+        if (sidoName === '지역' && this.sigunguData?.length > 0) {
             const firstSigungu = this.sigunguData[0];
-            if (firstSigungu.sido && firstSigungu.sido.sidoName) {
+            if (firstSigungu.sido?.sidoName) {
                 sidoName = firstSigungu.sido.sidoName;
             }
         }
@@ -693,13 +693,13 @@ export class MapManager {
             const sidoId = sido.sd_id || sido.id || sido.sidoId;
             const pathElement = document.getElementById(sidoId);
             
-            if (pathElement && cachedImageStatus.sido && cachedImageStatus.sido[sidoId]) {
-                const imageStatus = cachedImageStatus.sido[sidoId];
+            if (pathElement && cachedImageStatus.sido) {
+                const coverageData = cachedImageStatus.sido;
                 
-                if (imageStatus.hasAll) {
+                if (coverageData.COMPLETE?.includes(sidoId)) {
                     pathElement.style.setProperty('fill', '#28a745', 'important');
                     pathElement.classList.add('has-images');
-                } else if (imageStatus.hasAny) {
+                } else if (coverageData.PARTIAL?.includes(sidoId)) {
                     pathElement.style.setProperty('fill', '#ffc107', 'important');
                     pathElement.classList.add('has-images');
                 }
@@ -715,52 +715,73 @@ export class MapManager {
         
         console.log(`Styling ${this.sidoData.length} sido regions with fresh image data...`);
         
-        // 기존 캐시 데이터를 가져오되, sigungu 정보를 보존
-        let cachedImageStatus = this.getCachedData(this.CACHE_KEYS.IMAGE_STATUS);
-        if (!cachedImageStatus) {
-            cachedImageStatus = { sido: {}, sigungu: {} };
-        }
-        // sido 객체가 없으면 초기화하되, sigungu는 기존 값 유지
-        if (!cachedImageStatus.sido) {
-            cachedImageStatus.sido = {};
-        }
-        
-        let styledCount = 0;
-        let coloredCount = 0;
-        
-        for (const sido of this.sidoData) {
-            const sidoId = sido.sd_id || sido.id || sido.sidoId;
-            const pathElement = document.getElementById(sidoId);
-            
-            if (pathElement) {
-                styledCount++;
-                console.log(`Checking images for sido ${sidoId}...`);
-                
-                const sidoImageStatus = await this.checkSidoHasImages(sidoId);
-                cachedImageStatus.sido[sidoId] = sidoImageStatus;
-                
-                if (sidoImageStatus.hasAll) {
-                    pathElement.style.setProperty('fill', '#28a745', 'important');
-                    pathElement.classList.add('has-images');
-                    coloredCount++;
-                    console.log(`Sido ${sidoId} colored GREEN (has all images)`);
-                } else if (sidoImageStatus.hasAny) {
-                    pathElement.style.setProperty('fill', '#ffc107', 'important');
-                    pathElement.classList.add('has-images');
-                    coloredCount++;
-                    console.log(`Sido ${sidoId} colored YELLOW (has some images)`);
-                } else {
-                    console.log(`Sido ${sidoId} not colored (no images)`);
+        try {
+            // 새 API로 한 번에 모든 시도 이미지 상태 가져오기
+            console.log("시도 커버리지 들고오기")
+            const response = await fetch('/api/images/me/coverage/sido', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
                 }
-            } else {
-                console.warn(`SVG path element not found for sido ${sidoId}`);
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch sido coverage: ${response.status}`);
             }
+
+            const responseData = await response.json();
+            const coverageData = responseData.data || { PARTIAL: [], COMPLETE: [] };
+            
+            console.log('Coverage data received:', coverageData);
+            
+            // 기존 캐시 데이터를 가져오되, sigungu 정보를 보존
+            let cachedImageStatus = this.getCachedData(this.CACHE_KEYS.IMAGE_STATUS);
+            if (!cachedImageStatus) {
+                cachedImageStatus = { sido: {}, sigungu: {} };
+            }
+            
+            // sido 정보를 새 구조로 업데이트
+            cachedImageStatus.sido = coverageData;
+            
+            let styledCount = 0;
+            let coloredCount = 0;
+            
+            // 시도별 색상 적용
+            for (const sido of this.sidoData) {
+                const sidoId = sido.sd_id || sido.id || sido.sidoId;
+                const pathElement = document.getElementById(sidoId);
+                
+                if (pathElement) {
+                    styledCount++;
+                    
+                    if (coverageData.COMPLETE?.includes(sidoId)) {
+                        pathElement.style.setProperty('fill', '#28a745', 'important');
+                        pathElement.classList.add('has-images');
+                        coloredCount++;
+                        console.log(`Sido ${sidoId} colored GREEN (complete coverage)`);
+                    } else if (coverageData.PARTIAL?.includes(sidoId)) {
+                        pathElement.style.setProperty('fill', '#ffc107', 'important');
+                        pathElement.classList.add('has-images');
+                        coloredCount++;
+                        console.log(`Sido ${sidoId} colored YELLOW (partial coverage)`);
+                    } else {
+                        console.log(`Sido ${sidoId} not colored (no coverage)`);
+                    }
+                } else {
+                    console.warn(`SVG path element not found for sido ${sidoId}`);
+                }
+            }
+            
+            console.log(`Map styling complete: ${coloredCount}/${styledCount} regions colored`);
+            
+            // 이미지 상태 캐시 업데이트 (sigungu 정보 보존)
+            this.setCachedData(this.CACHE_KEYS.IMAGE_STATUS, cachedImageStatus);
+            
+        } catch (error) {
+            console.error('Error styling sidos with images:', error);
+            throw error;
         }
-        
-        console.log(`Completed styling: ${styledCount} processed, ${coloredCount} colored`);
-        
-        // 이미지 상태 캐시 업데이트 (sigungu 정보 보존)
-        this.setCachedData(this.CACHE_KEYS.IMAGE_STATUS, cachedImageStatus);
     }
     
     // 캐시된 이미지 상태로 시군구 스타일링
@@ -768,7 +789,7 @@ export class MapManager {
         if (!this.sigunguData || !this.currentSidoId) return;
         
         const cachedImageStatus = this.getCachedData(this.CACHE_KEYS.IMAGE_STATUS);
-        if (!cachedImageStatus || !cachedImageStatus.sigungu) {
+        if (!cachedImageStatus?.sigungu) {
             // 캐시가 없으면 실시간 로드
             const loadingNotification = this.showMapUpdateNotification('시군구 색상을 업데이트하는 중...', 'info');
             
@@ -888,33 +909,43 @@ export class MapManager {
         
         console.log(`Updating sido image cache for ${this.sidoData.length} regions...`);
         
-        // 기존 캐시 데이터를 가져오되, sigungu 정보를 보존
-        let cachedImageStatus = this.getCachedData(this.CACHE_KEYS.IMAGE_STATUS);
-        if (!cachedImageStatus) {
-            cachedImageStatus = { sido: {}, sigungu: {} };
-        }
-        // sido 객체가 없으면 초기화하되, sigungu는 기존 값 유지
-        if (!cachedImageStatus.sido) {
-            cachedImageStatus.sido = {};
-        }
-        
-        let updatedCount = 0;
-        
-        for (const sido of this.sidoData) {
-            const sidoId = sido.sd_id || sido.id || sido.sidoId;
-            console.log(`📦 Caching image status for sido ${sidoId}...`);
+        try {
+            // 새 API로 시도 커버리지 데이터 가져오기
+            const response = await fetch('/api/images/me/coverage/sido', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch sido coverage: ${response.status}`);
+            }
+
+            const responseData = await response.json();
+            const coverageData = responseData.data || { PARTIAL: [], COMPLETE: [] };
             
-            const sidoImageStatus = await this.checkSidoHasImages(sidoId);
-            cachedImageStatus.sido[sidoId] = sidoImageStatus;
-            updatedCount++;
+            console.log('Coverage data received for cache update:', coverageData);
             
-            console.log(`Sido ${sidoId} cache updated: hasAny=${sidoImageStatus.hasAny}, hasAll=${sidoImageStatus.hasAll}`);
+            // 기존 캐시 데이터를 가져오되, sigungu 정보를 보존
+            let cachedImageStatus = this.getCachedData(this.CACHE_KEYS.IMAGE_STATUS);
+            if (!cachedImageStatus) {
+                cachedImageStatus = { sido: {}, sigungu: {} };
+            }
+            
+            // sido 정보를 새 구조로 업데이트
+            cachedImageStatus.sido = coverageData;
+            
+            console.log(`Completed cache update for sido regions`);
+            
+            // 이미지 상태 캐시 업데이트 (sigungu 정보 보존)
+            this.setCachedData(this.CACHE_KEYS.IMAGE_STATUS, cachedImageStatus);
+            
+        } catch (error) {
+            console.error('Error updating sido image cache:', error);
+            throw error;
         }
-        
-        console.log(`Completed cache update: ${updatedCount} sido regions cached`);
-        
-        // 이미지 상태 캐시 업데이트 (sigungu 정보 보존)
-        this.setCachedData(this.CACHE_KEYS.IMAGE_STATUS, cachedImageStatus);
     }
 
     // 새로고침 메서드들 (이미지 업로드/수정 후 호출)
