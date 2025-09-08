@@ -13,7 +13,6 @@ import { Navigation } from './navigation.js';
 export const EventHandlers = {
     // 앨범 생성 모달 열기
     openAlbumCreateModal() {
-        
         // 상태 초기화
         State.isCreatingMode = true;
         State.currentAlbumId = null;
@@ -48,12 +47,12 @@ export const EventHandlers = {
 
             if (!actualData) {
                 console.error("응답에서 'data' 필드를 찾을 수 없습니다.", apiResponse);
-                alert("앨범 데이터를 올바르게 가져오지 못했습니다.");
+                UiUpdater.showNotification("앨범 데이터를 올바르게 가져오지 못했습니다.", 'error');
                 return;
             }
 
             if (actualData.albumCount === null) {
-                alert("앨범 개수 정보가 올바르지 않습니다.");
+                UiUpdater.showNotification("앨범 개수 정보가 올바르지 않습니다.", 'error');
                 return;
             }
 
@@ -74,7 +73,7 @@ export const EventHandlers = {
             }
         } catch (error) {
             console.error('앨범 조회 중 오류 발생:', error);
-            alert('앨범을 불러오는 중 오류가 발생했습니다: ' + error.message);
+            UiUpdater.showNotification(`앨범을 불러오는 중 오류가 발생했습니다: ${error.message}`, 'error');
         }
     },
 
@@ -104,7 +103,7 @@ export const EventHandlers = {
             // 드롭다운 이벤트 리스너 설정
             setTimeout(() => {
                 this.addDropdownClickEvents();
-            }, 100);
+            }, CONSTANTS.TIMEOUTS.DROPDOWN_SETUP);
             
         } catch (error) {
             console.error("앨범 상세 모달 열기 실패:", error);
@@ -116,14 +115,11 @@ export const EventHandlers = {
     async loadAlbumDetail(albumId) {
         try {
             // 새 앨범 로드 전 이전 데이터 초기화
-            const albumImageContainer = document.querySelector('.album-image-container');
-            const albumDetailGallery = document.querySelector('.album-detail-gallery');
-            
-            if (albumImageContainer) {
-                albumImageContainer.innerHTML = '';
+            if (DOM.albumImageContainer) {
+                DOM.albumImageContainer.innerHTML = '';
             }
-            if (albumDetailGallery) {
-                albumDetailGallery.innerHTML = '';
+            if (DOM.albumDetailGallery) {
+                DOM.albumDetailGallery.innerHTML = '';
             }
             
             State.currentAlbumId = albumId;
@@ -154,11 +150,8 @@ export const EventHandlers = {
                 await UiUpdater.renderAlbumDetailGallery(imageList);
                 UiUpdater.renderAlbumImagesPagination(paginationData);
                 
-                // 갤러리 카드 클릭 이벤트 추가 (이미지 뷰어 연결은 외부에서 처리)
-                this.addGalleryCardClickEvents();
-                
-                // 페이지네이션 클릭 이벤트 추가
-                this.addPaginationClickEvents();
+                // 갤러리 이벤트 설정
+                this.setupGalleryEvents();
             }
         } catch (error) {
             console.error("앨범 상세 정보 조회 실패:", error);
@@ -186,7 +179,6 @@ export const EventHandlers = {
 
     // 모달 상태 초기화
     resetModalState() {
-        
         // 드롭다운 이벤트 리스너 제거
         this.removeDropdownClickEvents();
         
@@ -199,21 +191,18 @@ export const EventHandlers = {
         }
         
         // 앨범 이미지 컨테이너 초기화
-        const albumImageContainer = document.querySelector('.album-image-container');
-        if (albumImageContainer) {
-            albumImageContainer.innerHTML = '';
+        if (DOM.albumImageContainer) {
+            DOM.albumImageContainer.innerHTML = '';
         }
 
         // 앨범 상세 갤러리 초기화
-        const albumDetailGallery = document.querySelector('.album-detail-gallery');
-        if (albumDetailGallery) {
-            albumDetailGallery.innerHTML = '';
+        if (DOM.albumDetailGallery) {
+            DOM.albumDetailGallery.innerHTML = '';
         }
 
         // 내 이미지 갤러리 초기화
-        const albumDetailEditMyImagesGallery = document.querySelector('.album-detail-edit-image-my-images-gallery');
-        if (albumDetailEditMyImagesGallery) {
-            albumDetailEditMyImagesGallery.innerHTML = '';
+        if (DOM.albumDetailEditMyImagesGallery) {
+            DOM.albumDetailEditMyImagesGallery.innerHTML = '';
         }
 
         // 페이지네이션 컨테이너 초기화
@@ -227,22 +216,17 @@ export const EventHandlers = {
         }
 
         // 앨범 정보 초기화
-        const albumDetailTitle = document.querySelector('.album-detail-title');
-        const albumDetailDescription = document.querySelector('.album-detail-description');
-        const albumDetailPublic = document.querySelector('.album-detail-is-public');
-        const albumDetailImageCount = document.querySelector('.album-detail-image-count');
-        
-        if (albumDetailTitle) {
-            albumDetailTitle.textContent = '앨범 제목';
+        if (DOM.albumDetailTitle) {
+            DOM.albumDetailTitle.textContent = '앨범 제목';
         }
-        if (albumDetailDescription) {
-            albumDetailDescription.textContent = '앨범 설명';
+        if (DOM.albumDetailDescription) {
+            DOM.albumDetailDescription.textContent = '앨범 설명';
         }
-        if (albumDetailPublic) {
-            albumDetailPublic.textContent = '공개 앨범';
+        if (DOM.albumDetailPublic) {
+            DOM.albumDetailPublic.textContent = '공개 앨범';
         }
-        if (albumDetailImageCount) {
-            albumDetailImageCount.textContent = '사진 매수';
+        if (DOM.albumDetailImageCount) {
+            DOM.albumDetailImageCount.textContent = '사진 매수';
         }
 
         // 편집 모드가 활성화되어 있다면 종료
@@ -260,12 +244,10 @@ export const EventHandlers = {
         State.originalAlbumData = {};
         State.selectedImages.clear();
         State.isCreatingMode = false;
-
     },
 
     // 모달 닫기
     closeModal() {
-        
         // 모달 숨기기
         DOM.albumDetailContainer.style.display = "none";
         
@@ -273,7 +255,7 @@ export const EventHandlers = {
         this.resetModalState();
     },
 
-    //앨범 공개 상태 편집
+    // 앨범 공개 상태 편집
     async changeAlbumPublicStatus() {
         try {
             if (!State.currentAlbumId) {
@@ -300,11 +282,7 @@ export const EventHandlers = {
             const statusText = newIsPublic === 1 ? '공개' : '비공개';
             UiUpdater.showNotification(`앨범이 ${statusText}로 변경되었습니다.`, 'success');
 
-            const activeNavBtn = document.querySelector('.nav-btn.active');
-            if (activeNavBtn) {
-                const currentFilter = activeNavBtn.dataset.filter;
-                Navigation.filterAlbums(currentFilter);
-            }
+            this.refreshActiveAlbumFilter();
 
         } catch (error) {
             console.error('앨범 공개 상태 변경 중 오류:', error);
@@ -424,7 +402,7 @@ export const EventHandlers = {
     },
 
     // 앨범 페이지네이션 클릭 핸들러
-    handleAlbumPaginationClick: (e) => {
+    handleAlbumPaginationClick(e) {
         e.preventDefault();
         const link = e.target.closest('.page-link');
         if (link && !link.closest('.disabled')) {
@@ -436,7 +414,7 @@ export const EventHandlers = {
     },
 
     // 내 이미지 페이지네이션 클릭 핸들러
-    handleMyImagesPaginationClick: (e) => {
+    handleMyImagesPaginationClick(e) {
         e.preventDefault();
         const link = e.target.closest('.page-link');
         if (link && !link.closest('.disabled')) {
@@ -458,21 +436,14 @@ export const EventHandlers = {
             const imageList = imageApiResponse.data.list;
             const paginationData = imageApiResponse.data;
 
-
             await UiUpdater.renderAlbumDetailGallery(imageList);
             UiUpdater.renderAlbumImagesPagination(paginationData);
 
             // 이미지 편집 모드가 활성화되어 있다면 체크박스 다시 추가
-            if (State.isImageEditingMode) {
-                // 렌더링 완료 후 체크박스 추가
-                setTimeout(() => {
-                    ImageEditMode.addCheckboxesToGallery('.gallery-card');
-                }, 100);
-            }
+            this.setupImageEditCheckboxes('.gallery-card');
 
             // 갤러리 카드 클릭 이벤트 다시 추가
-            this.addGalleryCardClickEvents();
-            this.addPaginationClickEvents();
+            this.setupGalleryEvents();
 
 
         } catch (error) {
@@ -492,35 +463,51 @@ export const EventHandlers = {
             UiUpdater.showNotification(`${pageNum}페이지 로딩 중...`, 'info');
 
             // 현재 앨범에 있는 이미지를 제외하고 조회
-            const response = await ApiService.fetchMyImages(pageNum, 9, State.currentAlbumId);
+            const response = await ApiService.fetchMyImages(pageNum, CONSTANTS.PAGINATION.IMAGES_PER_PAGE, State.currentAlbumId);
             const imageList = response.data.list;
             const paginationData = response.data;
 
-
             // 갤러리 렌더링 전에 잠시 대기 (비동기 충돌 방지)
-            await new Promise(resolve => setTimeout(resolve, 50));
+            await new Promise(resolve => setTimeout(resolve, CONSTANTS.TIMEOUTS.GALLERY_RENDER_DELAY));
 
             await UiUpdater.renderMyImagesGallery(imageList);
             UiUpdater.renderMyImagesPagination(paginationData);
 
             // 이미지 편집 모드가 활성화되어 있다면 체크박스 다시 추가
-            if (State.isImageEditingMode) {
-                // 렌더링 완료 후 체크박스 추가
-                setTimeout(() => {
-                    ImageEditMode.addCheckboxesToGallery('.my-image-card');
-                }, 100);
-            }
+            this.setupImageEditCheckboxes('.my-image-card');
 
-            // 갤러리 카드 클릭 이벤트 다시 추가 (기존 이벤트는 제거되지 않음)
-            this.addGalleryCardClickEvents();
-            
-            // 페이지네이션 이벤트는 한 번만 등록되도록 수정됨
-            this.addPaginationClickEvents();
-
+            // 갤러리 카드 클릭 이벤트 다시 추가
+            this.setupGalleryEvents();
 
         } catch (error) {
             console.error('내 이미지 페이지 로드 실패:', error);
             UiUpdater.showNotification('페이지 로드 실패', 'error');
+        }
+    },
+
+    // 공통 메서드들
+
+    // 갤러리 렌더링 후 이벤트 설정
+    setupGalleryEvents() {
+        this.addGalleryCardClickEvents();
+        this.addPaginationClickEvents();
+    },
+
+    // 이미지 편집 모드 체크박스 설정
+    setupImageEditCheckboxes(selector) {
+        if (State.isImageEditingMode) {
+            setTimeout(() => {
+                ImageEditMode.addCheckboxesToGallery(selector);
+            }, CONSTANTS.TIMEOUTS.CHECKBOX_SETUP);
+        }
+    },
+
+    // 활성 앨범 필터 새로고침
+    refreshActiveAlbumFilter() {
+        const activeNavBtn = document.querySelector('.nav-btn.active');
+        if (activeNavBtn) {
+            const currentFilter = activeNavBtn.dataset.filter;
+            Navigation.filterAlbums(currentFilter);
         }
     }
 };

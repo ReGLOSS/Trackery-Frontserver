@@ -44,5 +44,17 @@ export const CONSTANTS = {
     IS_PUBLIC: {
         0: "비공개",
         1: "공개"
+    },
+    
+    // 지연 시간 상수 (밀리초)
+    TIMEOUTS: {
+        DROPDOWN_SETUP: 100,
+        CHECKBOX_SETUP: 100,
+        GALLERY_RENDER_DELAY: 50
+    },
+    
+    // 페이지네이션 상수
+    PAGINATION: {
+        IMAGES_PER_PAGE: 9
     }
 };
