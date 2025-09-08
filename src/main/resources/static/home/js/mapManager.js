@@ -640,13 +640,12 @@ export class MapManager {
     // 지도 요소 스타일링 공통 함수
     _stylePathElement(pathElement, hasImages) {
         if (hasImages) {
-            pathElement.style.fill = '#28a745';
-            pathElement.classList.add('has-images');
+            pathElement.classList.add('coverage-complete');
             pathElement.classList.remove('selected');
         } else {
-            pathElement.classList.remove('has-images');
+            pathElement.classList.remove('coverage-complete', 'coverage-partial');
             pathElement.classList.remove('selected');
-            pathElement.style.setProperty('fill', '#e0e0e0', 'important');
+            // 기본 색상은 CSS의 .sido, .sigungu 클래스에서 처리
         }
     }
     
@@ -697,11 +696,9 @@ export class MapManager {
                 const coverageData = cachedImageStatus.sido;
                 
                 if (coverageData.COMPLETE?.includes(sidoId)) {
-                    pathElement.style.setProperty('fill', '#28a745', 'important');
-                    pathElement.classList.add('has-images');
+                    pathElement.classList.add('coverage-complete');
                 } else if (coverageData.PARTIAL?.includes(sidoId)) {
-                    pathElement.style.setProperty('fill', '#ffc107', 'important');
-                    pathElement.classList.add('has-images');
+                    pathElement.classList.add('coverage-partial');
                 }
             }
         }
@@ -756,13 +753,11 @@ export class MapManager {
                     styledCount++;
                     
                     if (coverageData.COMPLETE?.includes(sidoId)) {
-                        pathElement.style.setProperty('fill', '#28a745', 'important');
-                        pathElement.classList.add('has-images');
+                        pathElement.classList.add('coverage-complete');
                         coloredCount++;
                         console.log(`Sido ${sidoId} colored GREEN (complete coverage)`);
                     } else if (coverageData.PARTIAL?.includes(sidoId)) {
-                        pathElement.style.setProperty('fill', '#ffc107', 'important');
-                        pathElement.classList.add('has-images');
+                        pathElement.classList.add('coverage-partial');
                         coloredCount++;
                         console.log(`Sido ${sidoId} colored YELLOW (partial coverage)`);
                     } else {
