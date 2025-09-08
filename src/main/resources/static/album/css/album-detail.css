@@ -56,6 +56,11 @@
     justify-content: center;
 }
 
+.dropdown-menu {
+    right: 0;
+    left: auto;
+}
+
 .dropdown-item {
     align-items: center;
     cursor: pointer;

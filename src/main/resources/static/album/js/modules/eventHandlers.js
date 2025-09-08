@@ -372,6 +372,9 @@ export const EventHandlers = {
             dropdownBtn.removeEventListener('click', this.handleDropdownClick);
             dropdownBtn.addEventListener('click', this.handleDropdownClick);
         }
+        
+        // 드롭다운 외부 클릭 시 닫기 이벤트 추가
+        this.addDropdownOutsideClickEvent();
     },
 
     // 드롭다운 클릭 이벤트 제거
@@ -380,6 +383,9 @@ export const EventHandlers = {
         if (dropdownBtn) {
             dropdownBtn.removeEventListener('click', this.handleDropdownClick);
         }
+        
+        // 드롭다운 외부 클릭 이벤트도 제거
+        this.removeDropdownOutsideClickEvent();
     },
 
     // 드롭다운 클릭 핸들러
@@ -508,6 +514,39 @@ export const EventHandlers = {
         if (activeNavBtn) {
             const currentFilter = activeNavBtn.dataset.filter;
             Navigation.filterAlbums(currentFilter);
+        }
+    },
+
+    // 드롭다운 메뉴 닫기
+    closeDropdown() {
+        const dropdownMenu = document.querySelector('.dropdown-menu');
+        const dropdownBtn = document.querySelector('.dropdown-btn');
+        
+        if (dropdownMenu && dropdownMenu.classList.contains('show')) {
+            dropdownMenu.classList.remove('show');
+            if (dropdownBtn) {
+                dropdownBtn.setAttribute('aria-expanded', 'false');
+            }
+        }
+    },
+
+    // 드롭다운 외부 클릭 이벤트 추가
+    addDropdownOutsideClickEvent() {
+        // 기존 이벤트 리스너 제거 후 새로 추가
+        document.removeEventListener('click', this.handleDropdownOutsideClick);
+        document.addEventListener('click', this.handleDropdownOutsideClick);
+    },
+
+    // 드롭다운 외부 클릭 이벤트 제거
+    removeDropdownOutsideClickEvent() {
+        document.removeEventListener('click', this.handleDropdownOutsideClick);
+    },
+
+    // 드롭다운 외부 클릭 핸들러
+    handleDropdownOutsideClick(e) {
+        const dropdown = e.target.closest('.dropdown');
+        if (!dropdown) {
+            EventHandlers.closeDropdown();
         }
     }
 };

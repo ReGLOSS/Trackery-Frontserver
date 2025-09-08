@@ -54,6 +54,7 @@ function setupEventListeners() {
     if (DOM.editBtn) {
         DOM.editBtn.addEventListener("click", function(e) {
             e.preventDefault();
+            EventHandlers.closeDropdown();
             EditMode.toggleEditMode();
         });
     }
@@ -85,6 +86,7 @@ function setupEventListeners() {
     if (DOM.albumChangePublicBtn) {
         DOM.albumChangePublicBtn.addEventListener("click", function(e) {
             e.preventDefault();
+            EventHandlers.closeDropdown();
             EventHandlers.changeAlbumPublicStatus();
         });
     }
@@ -93,6 +95,7 @@ function setupEventListeners() {
     if (DOM.albumDeleteBtn) {
         DOM.albumDeleteBtn.addEventListener("click", function(e) {
             e.preventDefault();
+            EventHandlers.closeDropdown();
             EventHandlers.deleteAlbum();
         });
     }
