@@ -29,13 +29,11 @@ export class MapManager {
 
         // 상태 관리
         this.isLoading = false;
-        this.pendingRequests = new Set();
         this.debounceTimers = new Map();
 
         // 외부 매니저들 참조
         this.renderer = null;
         this.imageManager = null;
-        this.modalManager = null;
         this.statsRenderer = null;
         
         // 알림 헬퍼 (동적 import로 로드)
@@ -43,10 +41,9 @@ export class MapManager {
     }
     
     // 의존성 주입
-    setDependencies({ renderer, imageManager, modalManager, statsRenderer, bulkDeleteManager }) {
+    setDependencies({ renderer, imageManager, statsRenderer, bulkDeleteManager }) {
         this.renderer = renderer;
         this.imageManager = imageManager;
-        this.modalManager = modalManager;
         this.statsRenderer = statsRenderer;
         this.bulkDeleteManager = bulkDeleteManager;
     }
@@ -418,7 +415,7 @@ export class MapManager {
             const responseData = await response.json();
             
             // API 응답 구조 처리
-            if (responseData.data && responseData.data.stats) {
+            if (responseData?.data?.stats) {
                 this.userStats = responseData.data.stats;
             } else if (responseData.data) {
                 this.userStats = responseData.data;
@@ -440,7 +437,7 @@ export class MapManager {
                 if (this.isLoading) return;
 
                 // 선택 모드가 활성화되어 있으면 해제
-                if (this.bulkDeleteManager && this.bulkDeleteManager.getIsSelectionMode()) {
+                if (this.bulkDeleteManager?.getIsSelectionMode()) {
                     this.bulkDeleteManager.exitSelectionMode();
                 }
 
@@ -476,7 +473,7 @@ export class MapManager {
         if (this.isLoading) return;
 
         // 선택 모드가 활성화되어 있으면 해제
-        if (this.bulkDeleteManager && this.bulkDeleteManager.getIsSelectionMode()) {
+        if (this.bulkDeleteManager?.getIsSelectionMode()) {
             this.bulkDeleteManager.exitSelectionMode();
         }
 
@@ -541,7 +538,7 @@ export class MapManager {
         if (this.isLoading) return;
 
         // 선택 모드가 활성화되어 있으면 해제
-        if (this.bulkDeleteManager && this.bulkDeleteManager.getIsSelectionMode()) {
+        if (this.bulkDeleteManager?.getIsSelectionMode()) {
             this.bulkDeleteManager.exitSelectionMode();
         }
 
@@ -713,7 +710,6 @@ export class MapManager {
         console.log(`Styling ${this.sidoData.length} sido regions with fresh image data...`);
         
         try {
-            // 새 API로 한 번에 모든 시도 이미지 상태 가져오기
             console.log("시도 커버리지 들고오기")
             const response = await fetch('/api/images/me/coverage/sido', {
                 method: 'GET',
@@ -901,11 +897,10 @@ export class MapManager {
             console.warn('No sidoData available for cache update');
             return;
         }
-        
+
         console.log(`Updating sido image cache for ${this.sidoData.length} regions...`);
         
         try {
-            // 새 API로 시도 커버리지 데이터 가져오기
             const response = await fetch('/api/images/me/coverage/sido', {
                 method: 'GET',
                 credentials: 'include',
