@@ -103,27 +103,7 @@ export const EventHandlers = {
             
             // 드롭다운 이벤트 리스너 설정
             setTimeout(() => {
-                // 드롭다운 토글 버튼 이벤트
-                const dropdownBtn = document.querySelector('.dropdown-btn');
-                if (dropdownBtn) {
-                    dropdownBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        
-                        const dropdownMenu = document.querySelector('.dropdown-menu');
-                        if (dropdownMenu) {
-                            // 드롭다운 토글 로직
-                            if (dropdownMenu.classList.contains('show')) {
-                                // 닫기
-                                dropdownMenu.classList.remove('show');
-                                dropdownBtn.setAttribute('aria-expanded', 'false');
-                            } else {
-                                // 열기
-                                dropdownMenu.classList.add('show');
-                                dropdownBtn.setAttribute('aria-expanded', 'true');
-                            }
-                        }
-                    });
-                }
+                this.addDropdownClickEvents();
             }, 100);
             
         } catch (error) {
@@ -206,6 +186,9 @@ export const EventHandlers = {
 
     // 모달 상태 초기화
     resetModalState() {
+        
+        // 드롭다운 이벤트 리스너 제거
+        this.removeDropdownClickEvents();
         
         // 페이지네이션 이벤트 리스너 제거
         this.removePaginationClickEvents();
@@ -401,6 +384,42 @@ export const EventHandlers = {
         const myImagesPagination = document.querySelector('.my-images-page-num .pagination');
         if (myImagesPagination) {
             myImagesPagination.removeEventListener('click', this.handleMyImagesPaginationClick);
+        }
+    },
+
+    // 드롭다운 클릭 이벤트 추가
+    addDropdownClickEvents() {
+        const dropdownBtn = document.querySelector('.dropdown-btn');
+        if (dropdownBtn) {
+            dropdownBtn.removeEventListener('click', this.handleDropdownClick);
+            dropdownBtn.addEventListener('click', this.handleDropdownClick);
+        }
+    },
+
+    // 드롭다운 클릭 이벤트 제거
+    removeDropdownClickEvents() {
+        const dropdownBtn = document.querySelector('.dropdown-btn');
+        if (dropdownBtn) {
+            dropdownBtn.removeEventListener('click', this.handleDropdownClick);
+        }
+    },
+
+    // 드롭다운 클릭 핸들러
+    handleDropdownClick(e) {
+        e.preventDefault();
+        
+        const dropdownMenu = document.querySelector('.dropdown-menu');
+        if (dropdownMenu) {
+            // 드롭다운 토글 로직
+            if (dropdownMenu.classList.contains('show')) {
+                // 닫기
+                dropdownMenu.classList.remove('show');
+                e.target.closest('.dropdown-btn').setAttribute('aria-expanded', 'false');
+            } else {
+                // 열기
+                dropdownMenu.classList.add('show');
+                e.target.closest('.dropdown-btn').setAttribute('aria-expanded', 'true');
+            }
         }
     },
 
