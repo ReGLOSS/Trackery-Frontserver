@@ -709,6 +709,24 @@ export class MapManager {
         return responseData.data || {partiallyCoveredSidoIds: [], completelyCoveredSidoIds: []};
     }
 
+    // 시군구 커버리지 배치 API 호출
+    async fetchSigunguCoverageData(sidoId) {
+        const response = await fetch(`/api/images/me/coverage/sido/${sidoId}/sigungu`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json',
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch sigungu coverage: ${response.status}`);
+        }
+
+        const responseData = await response.json();
+        return responseData.data || {coveredSigunguIds: []};
+    }
+
     // 캐시 업데이트 도우미 메서드
     updateImageCacheWithSidoData(coverageData) {
         let cachedImageStatus = this.getCachedData(this.CACHE_KEYS.IMAGE_STATUS);
@@ -716,6 +734,31 @@ export class MapManager {
             cachedImageStatus = {sido: {}, sigungu: {}};
         }
         cachedImageStatus.sido = coverageData;
+        this.setCachedData(this.CACHE_KEYS.IMAGE_STATUS, cachedImageStatus);
+    }
+
+    // 시군구 캐시 업데이트 도우미 메서드
+    updateImageCacheWithSigunguData(coveredSigunguIds, sidoId) {
+        let cachedImageStatus = this.getCachedData(this.CACHE_KEYS.IMAGE_STATUS);
+        if (!cachedImageStatus) {
+            cachedImageStatus = {sido: {}, sigungu: {}};
+        }
+        if (!cachedImageStatus.sigungu) {
+            cachedImageStatus.sigungu = {};
+        }
+
+        // 모든 시군구를 false로 초기화 (현재 sidoId의 시군구들만)
+        if (this.sigunguData) {
+            for (const sigungu of this.sigunguData) {
+                cachedImageStatus.sigungu[sigungu.sigunguId] = false;
+            }
+        }
+
+        // coveredSigunguIds에 포함된 시군구들을 true로 설정
+        for (const sigunguId of coveredSigunguIds) {
+            cachedImageStatus.sigungu[sigunguId] = true;
+        }
+
         this.setCachedData(this.CACHE_KEYS.IMAGE_STATUS, cachedImageStatus);
     }
 
@@ -748,6 +791,30 @@ export class MapManager {
                 }
             } else {
                 console.warn(`SVG path element not found for sido ${sidoId}`);
+            }
+        }
+        return {styledCount, coloredCount};
+    }
+
+    // 시군구 스타일 적용 도우미 메서드
+    applySigunguStyles(coveredSigunguIds) {
+        let styledCount = 0;
+        let coloredCount = 0;
+
+        for (const sigungu of this.sigunguData) {
+            const sigunguId = sigungu.sigunguId;
+            const pathElement = document.getElementById(sigunguId);
+
+            if (pathElement) {
+                styledCount++;
+                const hasImages = coveredSigunguIds.includes(sigunguId);
+                this._stylePathElement(pathElement, hasImages);
+                
+                if (hasImages) {
+                    coloredCount++;
+                }
+            } else {
+                console.warn(`SVG path element not found for sigungu ${sigunguId}`);
             }
         }
         return {styledCount, coloredCount};
@@ -863,33 +930,26 @@ export class MapManager {
     async styleDistrictsWithImages() {
         if (!this.sigunguData || !this.currentSidoId) return;
 
-        // 기존 캐시 데이터를 가져오되, sido 정보를 보존
-        let cachedImageStatus = this.getCachedData(this.CACHE_KEYS.IMAGE_STATUS);
-        if (!cachedImageStatus) {
-            cachedImageStatus = {sido: {}, sigungu: {}};
+        try {
+            // 배치 API로 시군구 커버리지 데이터 가져오기
+            const coverageData = await this.fetchSigunguCoverageData(this.currentSidoId);
+            
+            // 캐시 업데이트
+            this.updateImageCacheWithSigunguData(coverageData.coveredSigunguIds, this.currentSidoId);
+            
+            // 스타일 적용
+            this.applySigunguStyles(coverageData.coveredSigunguIds);
+            
+        } catch (error) {
+            console.error('Error styling sigungu with images:', error);
+            // 에러 발생 시 기본 상태로 복원
+            this.resetMapStyles();
         }
-        // sigungu 객체가 없으면 초기화하되, sido는 기존 값 유지
-        if (!cachedImageStatus.sigungu) {
-            cachedImageStatus.sigungu = {};
-        }
-
-        for (const sigungu of this.sigunguData) {
-            const sigunguId = sigungu.sigunguId;
-            const pathElement = document.getElementById(sigunguId);
-
-            if (pathElement) {
-                const hasImages = await this.checkSigunguHasImages(sigunguId);
-                cachedImageStatus.sigungu[sigunguId] = hasImages;
-                this._stylePathElement(pathElement, hasImages);
-            }
-        }
-
-        // 이미지 상태 캐시 업데이트 (sido 정보 보존)
-        this.setCachedData(this.CACHE_KEYS.IMAGE_STATUS, cachedImageStatus);
     }
 
     async checkSidoHasImages(sidoId) {
         try {
+            // 시군구 목록 가져오기
             const sigunguResponse = await fetch(`/api/location/sido/${sidoId}/sigungu`);
             if (!sigunguResponse.ok) {
                 return {hasAny: false, hasAll: false};
@@ -902,16 +962,9 @@ export class MapManager {
                 return {hasAny: false, hasAll: false};
             }
 
-            let sigunguWithImages = 0;
-
-            for (const sigungu of sigunguList) {
-                const sigunguId = sigungu.sigunguId;
-                const hasImages = await this.checkSigunguHasImages(sigunguId);
-
-                if (hasImages) {
-                    sigunguWithImages++;
-                }
-            }
+            // 배치 API로 커버리지 데이터 가져오기
+            const coverageData = await this.fetchSigunguCoverageData(sidoId);
+            const sigunguWithImages = coverageData.coveredSigunguIds.length;
 
             return {
                 hasAny: sigunguWithImages > 0,
@@ -923,27 +976,6 @@ export class MapManager {
         }
     }
 
-    async checkSigunguHasImages(sigunguId) {
-        try {
-            const response = await fetch(`/api/location/sigungu/${sigunguId}/images`, {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json',
-                }
-            });
-
-            if (response.ok) {
-                const responseData = await response.json();
-                const images = responseData.data || [];
-                return images.length > 0;
-            }
-            return false;
-        } catch (error) {
-            console.error('Error checking sigungu images:', error);
-            return false;
-        }
-    }
 
     // 시도 이미지 캐시만 업데이트 (SVG 스타일 적용 없이)
     async updateSidoImageCache() {
