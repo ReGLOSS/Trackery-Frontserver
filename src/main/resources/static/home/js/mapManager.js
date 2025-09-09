@@ -202,7 +202,7 @@ export class MapManager {
 
             // 시도 이미지 로드 (옵션에 따라)
             if (loadImages) {
-                this.imageManager.loadSidoImages(sidoId);
+                await this.imageManager.loadSidoImages(sidoId);
             }
 
         } catch (error) {
@@ -433,7 +433,7 @@ export class MapManager {
     bindSidoClickEvents() {
         const paths = document.querySelectorAll('#map-display path');
         paths.forEach(path => {
-            path.addEventListener('click', (e) => {
+            path.addEventListener('click', async (e) => {
                 if (this.isLoading) return;
 
                 // 선택 모드가 활성화되어 있으면 해제
@@ -446,7 +446,7 @@ export class MapManager {
                     this.loadSigunguView(sidoId);
 
                     // 시도 클릭 시 해당 시도의 이미지들 로드
-                    this.imageManager.loadSidoImages(sidoId);
+                    await this.imageManager.loadSidoImages(sidoId);
                 }
             });
         });
