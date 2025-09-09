@@ -646,6 +646,8 @@ export class MapManager {
         }
     }
 
+    // ==================== 지도 스타일링 메서드들 ====================
+    
     // 지역 색상 스타일링 (캐시 활용)
     async styleRegionsWithCachedImages() {
         if (this.currentView === 'sido') {
@@ -691,9 +693,11 @@ export class MapManager {
         }
     }
 
-    // 공통 API 호출 메서드
-    async fetchSidoCoverageData() {
-        const response = await fetch('/api/images/me/coverage/sido', {
+    // ==================== API 호출 메서드들 ====================
+    
+    // 공통 API fetch helper
+    async _fetchCoverageData(url, errorMessage, defaultData) {
+        const response = await fetch(url, {
             method: 'GET',
             credentials: 'include',
             headers: {
@@ -702,43 +706,35 @@ export class MapManager {
         });
 
         if (!response.ok) {
-            throw new Error(`Failed to fetch sido coverage: ${response.status}`);
+            throw new Error(`${errorMessage}: ${response.status}`);
         }
 
         const responseData = await response.json();
-        return responseData.data || {partiallyCoveredSidoIds: [], completelyCoveredSidoIds: []};
+        return responseData.data || defaultData;
+    }
+
+    // 공통 API 호출 메서드
+    async fetchSidoCoverageData() {
+        return this._fetchCoverageData(
+            '/api/images/me/coverage/sido',
+            'Failed to fetch sido coverage',
+            {partiallyCoveredSidoIds: [], completelyCoveredSidoIds: []}
+        );
     }
 
     // 시군구 커버리지 배치 API 호출
     async fetchSigunguCoverageData(sidoId) {
-        const response = await fetch(`/api/images/me/coverage/sido/${sidoId}/sigungu`, {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Accept': 'application/json',
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Failed to fetch sigungu coverage: ${response.status}`);
-        }
-
-        const responseData = await response.json();
-        return responseData.data || {coveredSigunguIds: []};
+        return this._fetchCoverageData(
+            `/api/images/me/coverage/sido/${sidoId}/sigungu`,
+            'Failed to fetch sigungu coverage',
+            {coveredSigunguIds: []}
+        );
     }
 
-    // 캐시 업데이트 도우미 메서드
-    updateImageCacheWithSidoData(coverageData) {
-        let cachedImageStatus = this.getCachedData(this.CACHE_KEYS.IMAGE_STATUS);
-        if (!cachedImageStatus) {
-            cachedImageStatus = {sido: {}, sigungu: {}};
-        }
-        cachedImageStatus.sido = coverageData;
-        this.setCachedData(this.CACHE_KEYS.IMAGE_STATUS, cachedImageStatus);
-    }
-
-    // 시군구 캐시 업데이트 도우미 메서드
-    updateImageCacheWithSigunguData(coveredSigunguIds, sidoId) {
+    // ==================== 캐시 관리 helper 메서드들 ====================
+    
+    // 이미지 캐시 초기화 helper 메서드
+    _getOrInitializeImageCache() {
         let cachedImageStatus = this.getCachedData(this.CACHE_KEYS.IMAGE_STATUS);
         if (!cachedImageStatus) {
             cachedImageStatus = {sido: {}, sigungu: {}};
@@ -746,8 +742,24 @@ export class MapManager {
         if (!cachedImageStatus.sigungu) {
             cachedImageStatus.sigungu = {};
         }
+        if (!cachedImageStatus.sido) {
+            cachedImageStatus.sido = {};
+        }
+        return cachedImageStatus;
+    }
 
-        // 모든 시군구를 false로 초기화 (현재 sidoId의 시군구들만)
+    // 캐시 업데이트 도우미 메서드
+    updateImageCacheWithSidoData(coverageData) {
+        const cachedImageStatus = this._getOrInitializeImageCache();
+        cachedImageStatus.sido = coverageData;
+        this.setCachedData(this.CACHE_KEYS.IMAGE_STATUS, cachedImageStatus);
+    }
+
+    // 시군구 캐시 업데이트 도우미 메서드
+    updateImageCacheWithSigunguData(coveredSigunguIds) {
+        const cachedImageStatus = this._getOrInitializeImageCache();
+
+        // 모든 시군구를 false로 초기화 (현재 로드된 시군구들만)
         if (this.sigunguData) {
             for (const sigungu of this.sigunguData) {
                 cachedImageStatus.sigungu[sigungu.sigunguId] = false;
@@ -774,50 +786,52 @@ export class MapManager {
         return false; // 색상이 적용되지 않음
     }
 
-    // 시도 스타일 적용 도우미 메서드
-    applySidoStyles(coverageData) {
+    // 공통 스타일링 통계 수집 helper
+    _collectStylingStats(dataArray, styleFunction, entityType) {
         let styledCount = 0;
         let coloredCount = 0;
 
-        for (const sido of this.sidoData) {
-            const sidoId = sido.sd_id || sido.id || sido.sidoId;
-            const pathElement = document.getElementById(sidoId);
+        for (const item of dataArray) {
+            const elementId = entityType === 'sido' 
+                ? (item.sd_id || item.id || item.sidoId)
+                : item.sigunguId;
+            const pathElement = document.getElementById(elementId);
 
             if (pathElement) {
                 styledCount++;
-                // 공통 헬퍼 메서드 사용
-                if (this.applySidoStyleToElement(pathElement, sidoId, coverageData)) {
+                if (styleFunction(pathElement, item)) {
                     coloredCount++;
                 }
             } else {
-                console.warn(`SVG path element not found for sido ${sidoId}`);
+                console.warn(`SVG path element not found for ${entityType} ${elementId}`);
             }
         }
         return {styledCount, coloredCount};
     }
 
+    // 시도 스타일 적용 도우미 메서드
+    applySidoStyles(coverageData) {
+        return this._collectStylingStats(
+            this.sidoData,
+            (pathElement, sido) => {
+                const sidoId = sido.sd_id || sido.id || sido.sidoId;
+                return this.applySidoStyleToElement(pathElement, sidoId, coverageData);
+            },
+            'sido'
+        );
+    }
+
     // 시군구 스타일 적용 도우미 메서드
     applySigunguStyles(coveredSigunguIds) {
-        let styledCount = 0;
-        let coloredCount = 0;
-
-        for (const sigungu of this.sigunguData) {
-            const sigunguId = sigungu.sigunguId;
-            const pathElement = document.getElementById(sigunguId);
-
-            if (pathElement) {
-                styledCount++;
-                const hasImages = coveredSigunguIds.includes(sigunguId);
+        return this._collectStylingStats(
+            this.sigunguData,
+            (pathElement, sigungu) => {
+                const hasImages = coveredSigunguIds.includes(sigungu.sigunguId);
                 this._stylePathElement(pathElement, hasImages);
-                
-                if (hasImages) {
-                    coloredCount++;
-                }
-            } else {
-                console.warn(`SVG path element not found for sigungu ${sigunguId}`);
-            }
-        }
-        return {styledCount, coloredCount};
+                return hasImages;
+            },
+            'sigungu'
+        );
     }
 
     // 캐시된 데이터로 시도 스타일 적용
@@ -864,6 +878,42 @@ export class MapManager {
         
         // 사용자에게 에러 알림
         this.showMapUpdateNotification('지도 색상 업데이트에 실패했습니다.', 'error');
+        
+        // 지도를 기본 상태로 복원
+        this.resetMapStyles();
+        
+        // 상위로 에러 전파 (필요한 경우만)
+        if (this.shouldPropagateError(error)) {
+            throw error;
+        }
+    }
+
+    // 시군구 스타일링 에러 처리
+    handleSigunguStyleError(error) {
+        console.error('Error styling sigungu with images:', error);
+        
+        // 에러 타입에 따른 처리
+        if (error.message.includes('Failed to fetch')) {
+            // 네트워크 에러인 경우 - 캐시된 데이터 사용 시도
+            const cachedData = this.getCachedData(this.CACHE_KEYS.IMAGE_STATUS);
+            if (cachedData?.sigungu && this.currentSidoId) {
+                // 캐시된 시군구 데이터로 폴백
+                for (const sigungu of this.sigunguData) {
+                    const sigunguId = sigungu.sigunguId;
+                    const pathElement = document.getElementById(sigunguId);
+                    
+                    if (pathElement) {
+                        const hasImages = cachedData.sigungu[sigunguId] || false;
+                        this._stylePathElement(pathElement, hasImages);
+                    }
+                }
+                this.showMapUpdateNotification('캐시된 데이터로 시군구 지도를 표시합니다.', 'warning');
+                return;
+            }
+        }
+        
+        // 사용자에게 에러 알림
+        this.showMapUpdateNotification('시군구 색상 업데이트에 실패했습니다.', 'error');
         
         // 지도를 기본 상태로 복원
         this.resetMapStyles();
@@ -935,15 +985,14 @@ export class MapManager {
             const coverageData = await this.fetchSigunguCoverageData(this.currentSidoId);
             
             // 캐시 업데이트
-            this.updateImageCacheWithSigunguData(coverageData.coveredSigunguIds, this.currentSidoId);
+            this.updateImageCacheWithSigunguData(coverageData.coveredSigunguIds);
             
             // 스타일 적용
             this.applySigunguStyles(coverageData.coveredSigunguIds);
             
         } catch (error) {
-            console.error('Error styling sigungu with images:', error);
-            // 에러 발생 시 기본 상태로 복원
-            this.resetMapStyles();
+            // 개선된 에러 처리
+            this.handleSigunguStyleError(error);
         }
     }
 
@@ -997,6 +1046,8 @@ export class MapManager {
         }
     }
 
+    // ==================== 새로고침 및 업데이트 메서드들 ====================
+    
     // 새로고침 메서드들 (이미지 업로드/수정 후 호출)
     async refreshMapColors() {
         // 이미지 상태 캐시 완전 삭제
