@@ -706,7 +706,7 @@ export class MapManager {
         }
 
         const responseData = await response.json();
-        return responseData.data || {PARTIAL: [], COMPLETE: []};
+        return responseData.data || {partiallyCoveredSidoIds: [], completelyCoveredSidoIds: []};
     }
 
     // 캐시 업데이트 도우미 메서드
@@ -721,10 +721,10 @@ export class MapManager {
 
     // 지도에 시도 커버리지 적용
     applySidoStyleToElement(pathElement, sidoId, coverageData) {
-        if (coverageData.COMPLETE?.includes(sidoId)) {
+        if (coverageData.completelyCoveredSidoIds?.includes(sidoId)) {
             pathElement.classList.add('coverage-complete');
             return true; // 색상이 적용됨
-        } else if (coverageData.PARTIAL?.includes(sidoId)) {
+        } else if (coverageData.partiallyCoveredSidoIds?.includes(sidoId)) {
             pathElement.classList.add('coverage-partial');
             return true; // 색상이 적용됨
         }
